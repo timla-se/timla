@@ -59,6 +59,7 @@ def seed_org(cur):
 
 
 def seed_staff(cur, org_id):
+    """Returns (staff_ids, sunday_blocked_ids) so scheduling can respect the blocks."""
     staff_ids = []
     for i, (name, role, max_hours) in enumerate(STAFF):
         cur.execute(
@@ -68,6 +69,7 @@ def seed_staff(cur, org_id):
         )
         staff_ids.append(cur.fetchone()['id'])
 
+    sunday_blocked = []
     for i, staff_id in enumerate(staff_ids):
         # Wishes: even indexes prefer daytime Mon–Fri, odd prefer evenings Tue–Sat.
         days, span = ((1, 2, 3, 4, 5), (9 * 60, 17 * 60)) if i % 2 == 0 else ((2, 3, 4, 5, 6), (15 * 60, 23 * 60))
@@ -86,6 +88,7 @@ def seed_staff(cur, org_id):
                    VALUES (%s, %s, 'block', 7, 0, 1440)""",
                 (org_id, staff_id),
             )
+            sunday_blocked.append(staff_id)
 
     # One dated vacation block: staff #2 is away Wednesday next week.
     next_monday = week_monday(iso_week_of(datetime.now(timezone.utc), TZ)) + timedelta(days=7)
@@ -95,11 +98,15 @@ def seed_staff(cur, org_id):
            VALUES (%s, %s, 'block', %s, 0, 1440)""",
         (org_id, staff_ids[2], next_monday + timedelta(days=2)),
     )
-    return staff_ids
+    return staff_ids, sunday_blocked
 
 
-def seed_week(cur, org_id, staff_ids, monday):
-    """Schedule one week: 3 on lunch + 1 on evening daily, Saturday close overnight."""
+def seed_week(cur, org_id, staff_ids, sunday_ok, monday):
+    """Schedule one week: 3 on lunch + 1 on evening daily, Saturday close overnight.
+
+    Sunday shifts rotate over ``sunday_ok`` only, so the demo data never
+    contradicts its own hard blocks once conflict checking exists.
+    """
     shifts = []
     turn = 0
     for day_offset in range(7):
@@ -107,8 +114,9 @@ def seed_week(cur, org_id, staff_ids, monday):
         assignments = [LUNCH] * 3 + [EVENING]
         if day_offset == 5:  # Saturday: an overnight closing shift into Sunday
             assignments.append(SATURDAY_CLOSE)
+        pool = sunday_ok if day_offset == 6 else staff_ids
         for start_min, end_min in assignments:
-            staff_id = staff_ids[turn % len(staff_ids)]
+            staff_id = pool[turn % len(pool)]
             turn += 1
             end_day, end_minute = (day + timedelta(days=1), end_min - 1440) if end_min > 1440 else (day, end_min)
             cur.execute(
@@ -146,10 +154,11 @@ def main():
     with get_db() as conn:
         with conn.cursor() as cur:
             org_id = seed_org(cur)
-            staff_ids = seed_staff(cur, org_id)
-            published_shifts = seed_week(cur, org_id, staff_ids, monday)
+            staff_ids, sunday_blocked = seed_staff(cur, org_id)
+            sunday_ok = [s for s in staff_ids if s not in sunday_blocked]
+            published_shifts = seed_week(cur, org_id, staff_ids, sunday_ok, monday)
             publish_week(cur, org_id, this_week, published_shifts)
-            draft_shifts = seed_week(cur, org_id, staff_ids, monday + timedelta(days=7))
+            draft_shifts = seed_week(cur, org_id, staff_ids, sunday_ok, monday + timedelta(days=7))
             cur.execute(
                 'SELECT share_token FROM staff WHERE org_id = %s LIMIT 1', (org_id,)
             )

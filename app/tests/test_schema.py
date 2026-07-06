@@ -127,12 +127,41 @@ def test_publication_upsert_one_per_week(db, org_id):
     assert 'replaced' in shifts
 
 
-def test_publication_rejects_malformed_week(db, org_id):
+@pytest.mark.parametrize('week', ['vecka-28', '2026-W00', '2026-W99'])
+def test_publication_rejects_malformed_or_out_of_range_week(db, org_id, week):
     with pytest.raises(psycopg.errors.CheckViolation):
         with db.cursor() as cur:
             cur.execute(
-                "INSERT INTO publication (org_id, week, shifts) VALUES (%s, 'vecka-28', '[]')",
-                (org_id,),
+                'INSERT INTO publication (org_id, week, shifts) VALUES (%s, %s, \'[]\')',
+                (org_id, week),
+            )
+
+
+@pytest.fixture
+def other_org_id(db):
+    with db.cursor() as cur:
+        cur.execute("INSERT INTO organization (name) VALUES ('Other org') RETURNING id")
+        return cur.fetchone()[0]
+
+
+def test_shift_staff_must_belong_to_same_org(db, staff_id, other_org_id):
+    with pytest.raises(psycopg.errors.ForeignKeyViolation):
+        with db.cursor() as cur:
+            cur.execute(
+                """INSERT INTO shift (org_id, staff_id, starts_at, ends_at)
+                   VALUES (%s, %s, '2026-07-11T18:00Z', '2026-07-11T20:00Z')""",
+                (other_org_id, staff_id),
+            )
+
+
+def test_availability_staff_must_belong_to_same_org(db, staff_id, other_org_id):
+    with pytest.raises(psycopg.errors.ForeignKeyViolation):
+        with db.cursor() as cur:
+            cur.execute(
+                """INSERT INTO availability_interval
+                       (org_id, staff_id, kind, weekday, start_minute, end_minute)
+                   VALUES (%s, %s, 'block', 7, 0, 1440)""",
+                (other_org_id, staff_id),
             )
 
 
@@ -145,5 +174,8 @@ def test_deleting_staff_leaves_shift_as_open(db, org_id, staff_id):
         )
         shift_id = cur.fetchone()[0]
         cur.execute('DELETE FROM staff WHERE id = %s', (staff_id,))
-        cur.execute('SELECT staff_id FROM shift WHERE id = %s', (shift_id,))
-        assert cur.fetchone()[0] is None
+        cur.execute('SELECT staff_id, org_id FROM shift WHERE id = %s', (shift_id,))
+        remaining_staff, remaining_org = cur.fetchone()
+        # Only staff_id is nulled by the composite FK; the shift stays in its org.
+        assert remaining_staff is None
+        assert remaining_org == org_id
