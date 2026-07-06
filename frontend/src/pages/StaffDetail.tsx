@@ -86,12 +86,14 @@ export default function StaffDetail() {
   const [blocks, setBlocks] = useState<PatternRow[]>([])
   const [dirty, setDirty] = useState(false)
   useEffect(() => {
-    if (doc) {
+    // Only sync from the server while the form is clean: the exceptions
+    // mutations invalidate the same query, and a refetched doc must not
+    // wipe unsaved pattern edits.
+    if (doc && !dirty) {
       setWishes(toRows(doc.wishes))
       setBlocks(toRows(doc.blocks))
-      setDirty(false)
     }
-  }, [doc])
+  }, [doc, dirty])
 
   const [newExceptionDate, setNewExceptionDate] = useState<Date | null>(null)
   const [newExceptionStart, setNewExceptionStart] = useState('00:00')
@@ -104,7 +106,7 @@ export default function StaffDetail() {
   // saving them separately from stale state could wipe the other section.
   const save = useMutation({
     mutationFn: () => putAvailability(staffId, { wishes, blocks }),
-    onSuccess: invalidate,
+    onSuccess: () => { setDirty(false); invalidate() },
   })
 
   const createException = useMutation({
@@ -134,7 +136,10 @@ export default function StaffDetail() {
     )
   }
 
-  const invalidRows = [...wishes, ...blocks].some((r) => r.start_minute >= r.end_minute)
+  // A cleared time input parses to NaN, which passes >= comparisons —
+  // catch it explicitly so the friendly message shows instead of the API's.
+  const invalidRows = [...wishes, ...blocks].some((r) =>
+    Number.isNaN(r.start_minute) || Number.isNaN(r.end_minute) || r.start_minute >= r.end_minute)
 
   return (
     <Flex direction="column" gap="5" style={{ maxWidth: 640 }}>
@@ -168,7 +173,7 @@ export default function StaffDetail() {
               disabled={!dirty || invalidRows || save.isPending}
               onClick={() => save.mutate()}
             />
-            {invalidRows && <Text size="2" color="red">Sluttid måste vara efter starttid.</Text>}
+            {invalidRows && <Text size="2" color="red">Ange giltiga tider — sluttid måste vara efter starttid.</Text>}
             {save.isError && <Callout semantic="error" message={errorText(save.error)} />}
             {!dirty && !save.isPending && doc && <Text size="2" color="gray">Sparat.</Text>}
           </Flex>

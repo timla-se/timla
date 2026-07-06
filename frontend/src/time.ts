@@ -20,8 +20,11 @@ export function minutesToTime(minutes: number): string {
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
 }
 
-/** "00:00" as an end time means end-of-day (minute 1440). */
+/** "00:00" as an end time means end-of-day (minute 1440).
+ * A cleared/incomplete input ('' from the browser) returns NaN so callers
+ * can flag the row as invalid instead of silently treating it as 00:00. */
 export function timeToMinutes(time: string, isEnd = false): number {
+  if (!/^\d{2}:\d{2}$/.test(time)) return NaN
   const [h = 0, m = 0] = time.split(':').map(Number)
   const minutes = h * 60 + m
   return isEnd && minutes === 0 ? 1440 : minutes

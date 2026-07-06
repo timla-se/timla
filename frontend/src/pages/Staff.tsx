@@ -151,7 +151,17 @@ export default function Staff() {
   })
   const regenerate = useMutation({
     mutationFn: (id: string) => regenerateLink(id),
-    onSuccess: () => { invalidate(); setRegenerateTarget(null) },
+    onSuccess: (updated) => {
+      // Write the fresh token straight into the cache: the old token is
+      // already dead server-side, so the table must not keep offering it
+      // while the refetch is in flight.
+      for (const archived of [false, true]) {
+        queryClient.setQueryData<StaffRow[]>(['staff', archived], (old) =>
+          old?.map((s) => (s.id === updated.id ? updated : s)))
+      }
+      invalidate()
+      setRegenerateTarget(null)
+    },
   })
 
   const copyLink = async (row: StaffRow) => {
@@ -180,6 +190,16 @@ export default function Staff() {
           <Button semantic="action" icon={Plus} text="Ny person" onClick={() => setShowNew(true)} />
         </Flex>
       </Flex>
+
+      {regenerate.isError && (
+        // ConfirmModal closes itself on confirm, so link errors must
+        // surface at page level or they vanish silently.
+        <Callout
+          semantic="error" title="Kunde inte hantera länken"
+          message={errorText(regenerate.error)}
+          dismissible onDismiss={() => regenerate.reset()}
+        />
+      )}
 
       {isLoading ? (
         <Flex justify="center" py="8"><Spinner /></Flex>
@@ -228,10 +248,12 @@ export default function Staff() {
                         text={copiedId === row.id ? 'kopierad!' : 'kopiera'}
                         onClick={() => void copyLink(row)}
                       />
-                      <Button
-                        semantic="neutral" variant="ghost" size="1" icon={RefreshCw} text="regenerera"
-                        onClick={() => setRegenerateTarget(row)}
-                      />
+                      {!row.archived && (
+                        <Button
+                          semantic="neutral" variant="ghost" size="1" icon={RefreshCw} text="regenerera"
+                          onClick={() => setRegenerateTarget(row)}
+                        />
+                      )}
                     </Flex>
                   ) : row.archived ? (
                     <Text size="2" color="gray">–</Text>
