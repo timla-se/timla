@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 
 import '@radix-ui/themes/styles.css'
+import '@swedev/ui/styles.css'
 import './index.css'
 
 const queryClient = new QueryClient({
