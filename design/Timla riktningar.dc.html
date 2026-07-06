@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#e9e7e2;font-family:system-ui,sans-serif}
+  .dv-turn{padding:44px 48px 36px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+  .dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+  .dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+  .dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}
+  .dv-tsub{margin:0 0 24px;font:400 12.5px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5);max-width:640px}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+  .dv-opt{flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:16px}
+  .dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+  .dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+  .dv-card{max-width:100%;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.09);overflow:hidden}
+  .dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+  .dv-next{margin:26px 0 0;font:12px/1.6 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+  .dv-next a{color:rgba(0,0,0,.7)}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t12">
+  <div class="dv-thd"><a class="dv-tid" href="#t12">12</a><span class="dv-tname">Mönster — hexagoner, kalender, block</span></div>
+  <p class="dv-tsub">Nu riktiga mönster istället för nätverk: en hexagon-kupa, en kalender-tessellation och isometriska moduler. Kort + band.</p>
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="12a">
+      <div class="dv-olabel"><a class="dv-oid" href="#12a">12a</a>Hexagon-kupa · celler som fogas ihop</div>
+      <div style="display:flex;flex-direction:column;gap:12px"><div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)"><svg width="100%" height="100%" viewBox="0 0 360 233" style="position:absolute;inset:0"><polygon points="64,52 53,71.05199999999999 31,71.05199999999999 20,52 31,32.948 53,32.948" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="64,90.104 53,109.156 31,109.156 20,90.104 31,71.05199999999999 53,71.05199999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="64,128.208 53,147.26 31,147.26 20,128.208 31,109.156 53,109.156" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="64,166.312 53,185.364 31,185.364 20,166.312 31,147.26000000000002 53,147.26000000000002" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="97,71.05199999999999 86,90.10399999999998 64,90.10399999999998 53,71.05199999999999 64,51.99999999999999 86,51.99999999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="97,109.15599999999999 86,128.208 64,128.208 53,109.15599999999999 64,90.10399999999998 86,90.10399999999998" fill="#c05a3a"></polygon><polygon points="97,147.26 86,166.31199999999998 64,166.31199999999998 53,147.26 64,128.208 86,128.208" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="97,185.36399999999998 86,204.41599999999997 64,204.41599999999997 53,185.36399999999998 64,166.31199999999998 86,166.31199999999998" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="130,52 119,71.05199999999999 97,71.05199999999999 86,52 97,32.948 119,32.948" fill="#e69a2e"></polygon><polygon points="130,90.104 119,109.156 97,109.156 86,90.104 97,71.05199999999999 119,71.05199999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="130,128.208 119,147.26 97,147.26 86,128.208 97,109.156 119,109.156" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="130,166.312 119,185.364 97,185.364 86,166.312 97,147.26000000000002 119,147.26000000000002" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="163,71.05199999999999 152,90.10399999999998 130,90.10399999999998 119,71.05199999999999 130,51.99999999999999 152,51.99999999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="163,109.15599999999999 152,128.208 130,128.208 119,109.15599999999999 130,90.10399999999998 152,90.10399999999998" fill="#f2c14e"></polygon><polygon points="163,147.26 152,166.31199999999998 130,166.31199999999998 119,147.26 130,128.208 152,128.208" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="163,185.36399999999998 152,204.41599999999997 130,204.41599999999997 119,185.36399999999998 130,166.31199999999998 152,166.31199999999998" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="196,52 185,71.05199999999999 163,71.05199999999999 152,52 163,32.948 185,32.948" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="196,90.104 185,109.156 163,109.156 152,90.104 163,71.05199999999999 185,71.05199999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="196,128.208 185,147.26 163,147.26 152,128.208 163,109.156 185,109.156" fill="#4f7358"></polygon><polygon points="196,166.312 185,185.364 163,185.364 152,166.312 163,147.26000000000002 185,147.26000000000002" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="229,71.05199999999999 218,90.10399999999998 196,90.10399999999998 185,71.05199999999999 196,51.99999999999999 218,51.99999999999999" fill="#e69a2e"></polygon><polygon points="229,109.15599999999999 218,128.208 196,128.208 185,109.15599999999999 196,90.10399999999998 218,90.10399999999998" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="229,147.26 218,166.31199999999998 196,166.31199999999998 185,147.26 196,128.208 218,128.208" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="229,185.36399999999998 218,204.41599999999997 196,204.41599999999997 185,185.36399999999998 196,166.31199999999998 218,166.31199999999998" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="262,52 251,71.05199999999999 229,71.05199999999999 218,52 229,32.948 251,32.948" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="262,90.104 251,109.156 229,109.156 218,90.104 229,71.05199999999999 251,71.05199999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="262,128.208 251,147.26 229,147.26 218,128.208 229,109.156 251,109.156" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="262,166.312 251,185.364 229,185.364 218,166.312 229,147.26000000000002 251,147.26000000000002" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="295,71.05199999999999 284,90.10399999999998 262,90.10399999999998 251,71.05199999999999 262,51.99999999999999 284,51.99999999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="295,109.15599999999999 284,128.208 262,128.208 251,109.15599999999999 262,90.10399999999998 284,90.10399999999998" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="295,147.26 284,166.31199999999998 262,166.31199999999998 251,147.26 262,128.208 284,128.208" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="295,185.36399999999998 284,204.41599999999997 262,204.41599999999997 251,185.36399999999998 262,166.31199999999998 284,166.31199999999998" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="328,52 317,71.05199999999999 295,71.05199999999999 284,52 295,32.948 317,32.948" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="328,90.104 317,109.156 295,109.156 284,90.104 295,71.05199999999999 317,71.05199999999999" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="328,128.208 317,147.26 295,147.26 284,128.208 295,109.156 317,109.156" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon><polygon points="328,166.312 317,185.364 295,185.364 284,166.312 295,147.26000000000002 317,147.26000000000002" fill="none" stroke="#3a3126" stroke-width="3" stroke-linejoin="round"></polygon></svg><div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div></div><div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">gruppbokning</span><svg width="180" height="60" viewBox="0 0 180 60" style="position:absolute;right:0;top:0"><polygon points="28,30 22,40.4 10,40.4 4,30 10,19.6 22,19.6" fill="none" stroke="#e4d9c2" stroke-width="2.5"></polygon><polygon points="46,45 40,55.4 28,55.4 22,45 28,34.6 40,34.6" fill="none" stroke="#e4d9c2" stroke-width="2.5"></polygon><polygon points="64,30 58,40.4 46,40.4 40,30 46,19.6 58,19.6" fill="#e69a2e"></polygon><polygon points="82,45 76,55.4 64,55.4 58,45 64,34.6 76,34.6" fill="none" stroke="#e4d9c2" stroke-width="2.5"></polygon><polygon points="100,30 94,40.4 82,40.4 76,30 82,19.6 94,19.6" fill="#f2c14e"></polygon><polygon points="118,45 112,55.4 100,55.4 94,45 100,34.6 112,34.6" fill="none" stroke="#e4d9c2" stroke-width="2.5"></polygon><polygon points="136,30 130,40.4 118,40.4 112,30 118,19.6 130,19.6" fill="none" stroke="#e4d9c2" stroke-width="2.5"></polygon></svg></div></div>
+    </div>
+
+    <div class="dv-opt" id="12b">
+      <div class="dv-olabel"><a class="dv-oid" href="#12b">12b</a>Kalender-tessellation · rutor, några bokade</div>
+      <div style="display:flex;flex-direction:column;gap:12px"><div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)"><svg width="100%" height="100%" viewBox="0 0 360 233" style="position:absolute;inset:0"><rect x="30" y="30" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="78" y="30" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="126" y="30" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="174" y="30" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="222" y="30" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="270" y="30" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="30" y="67" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="78" y="67" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="126" y="67" width="42" height="30" rx="7" fill="#e69a2e"></rect><rect x="174" y="67" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="222" y="67" width="42" height="30" rx="7" fill="#f2c14e"></rect><rect x="270" y="67" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="30" y="104" width="42" height="30" rx="7" fill="#c05a3a"></rect><rect x="78" y="104" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="126" y="104" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="174" y="104" width="42" height="30" rx="7" fill="#e69a2e"></rect><rect x="222" y="104" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="270" y="104" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="30" y="141" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="78" y="141" width="42" height="30" rx="7" fill="#4f7358"></rect><rect x="126" y="141" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="174" y="141" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="222" y="141" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="270" y="141" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="30" y="178" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="78" y="178" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="126" y="178" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="174" y="178" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="222" y="178" width="42" height="30" rx="7" fill="#2c261c"></rect><rect x="270" y="178" width="42" height="30" rx="7" fill="#2c261c"></rect></svg><div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div></div><div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">kalender</span><svg width="190" height="60" viewBox="0 0 190 60" style="position:absolute;right:0;top:0"><rect x="12" y="12" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="12" y="34" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="36" y="12" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="36" y="34" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="60" y="12" width="18" height="16" rx="4" fill="#e69a2e"></rect><rect x="60" y="34" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="84" y="12" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="84" y="34" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="108" y="12" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="108" y="34" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="132" y="12" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="132" y="34" width="18" height="16" rx="4" fill="#f2c14e"></rect><rect x="156" y="12" width="18" height="16" rx="4" fill="#e4d9c2"></rect><rect x="156" y="34" width="18" height="16" rx="4" fill="#e4d9c2"></rect></svg></div></div>
+    </div>
+
+    <div class="dv-opt" id="12c">
+      <div class="dv-olabel"><a class="dv-oid" href="#12c">12c</a>Isometriska moduler · composable i 3D</div>
+      <div style="display:flex;flex-direction:column;gap:12px"><div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)"><svg width="100%" height="100%" viewBox="0 0 360 233" style="position:absolute;inset:0"><polygon points="120,71 146,84 120,97 94,84" fill="#e69a2e"></polygon><polygon points="94,84 120,97 120,123 94,110" fill="#b8781f"></polygon><polygon points="146,84 120,97 120,123 146,110" fill="#8a5a16"></polygon><polygon points="176,71 202,84 176,97 150,84" fill="#3a3126"></polygon><polygon points="150,84 176,97 176,123 150,110" fill="#2c261c"></polygon><polygon points="202,84 176,97 176,123 202,110" fill="#221d16"></polygon><polygon points="232,71 258,84 232,97 206,84" fill="#f2c14e"></polygon><polygon points="206,84 232,97 232,123 206,110" fill="#c79a34"></polygon><polygon points="258,84 232,97 232,123 258,110" fill="#9a7726"></polygon><polygon points="148,111 174,124 148,137 122,124" fill="#3a3126"></polygon><polygon points="122,124 148,137 148,163 122,150" fill="#2c261c"></polygon><polygon points="174,124 148,137 148,163 174,150" fill="#221d16"></polygon><polygon points="204,111 230,124 204,137 178,124" fill="#4f7358"></polygon><polygon points="178,124 204,137 204,163 178,150" fill="#3c5a44"></polygon><polygon points="230,124 204,137 204,163 230,150" fill="#2e4634"></polygon><polygon points="176,151 202,164 176,177 150,164" fill="#3a3126"></polygon><polygon points="150,164 176,177 176,203 150,190" fill="#2c261c"></polygon><polygon points="202,164 176,177 176,203 202,190" fill="#221d16"></polygon></svg><div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div></div><div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">moduler</span><svg width="150" height="60" viewBox="0 0 150 60" style="position:absolute;right:0;top:0"><polygon points="40,25 54,32 40,39 26,32" fill="#e69a2e"></polygon><polygon points="26,32 40,39 40,53 26,46" fill="#b8781f"></polygon><polygon points="54,32 40,39 40,53 54,46" fill="#8a5a16"></polygon><polygon points="70,25 84,32 70,39 56,32" fill="#e4d9c2"></polygon><polygon points="56,32 70,39 70,53 56,46" fill="#cdbfa6"></polygon><polygon points="84,32 70,39 70,53 84,46" fill="#b7a789"></polygon><polygon points="55,9 69,16 55,23 41,16" fill="#f2c14e"></polygon><polygon points="41,16 55,23 55,37 41,30" fill="#c79a34"></polygon><polygon points="69,16 55,23 55,37 69,30" fill="#9a7726"></polygon></svg></div></div>
+    </div>
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#12a">12a</a>" · "<a class="dv-oid" href="#12b">12b</a> tätare rutor" · "<a class="dv-oid" href="#12c">12c</a> fler kuber" · "helt andra mönster"</p>
+</section>
+
+<section class="dv-turn" id="t11">
+  <div class="dv-thd"><a class="dv-tid" href="#t11">11</a><span class="dv-tname">Nätverk — tunnelbanekarta</span></div>
+  <p class="dv-tsub">Banor med 45°-böjar, stationsprickar och bytespunkter — pricken blir stationen, den rundade linjen blir spåret. Mer komplext men fortfarande loggans DNA. Kort + band.</p>
+  <div class="dv-opts">
+
+    <!-- 11a — Nätverk, flera linjer -->
+    <div class="dv-opt" id="11a">
+      <div class="dv-olabel"><a class="dv-oid" href="#11a">11a</a>Nätverk · flera linjer som korsar</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" fill="none" style="position:absolute;inset:0" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M-10 92 H30 L70 52 H160 L200 92 H300 L340 128 H370" stroke="#3a3126" stroke-width="7"></path>
+            <path d="M-10 56 H110 L150 96 H240 L280 56 H370" stroke="#e69a2e" stroke-width="7"></path>
+            <path d="M-10 150 H70 L110 110 H200 L240 150 H320 L360 116" stroke="#f2c14e" stroke-width="7"></path>
+            <path d="M-10 192 H150 L190 152 H260 L300 192 H370" stroke="#4f7358" stroke-width="7"></path>
+            <circle cx="150" cy="96" r="6.5" fill="#e69a2e"></circle>
+            <circle cx="280" cy="56" r="6.5" fill="#e69a2e"></circle>
+            <circle cx="110" cy="110" r="6.5" fill="#f2c14e"></circle>
+            <circle cx="300" cy="192" r="6.5" fill="#4f7358"></circle>
+            <circle cx="240" cy="150" r="11" fill="#231d16" stroke="#fbf1dc" stroke-width="4"></circle>
+            <circle cx="70" cy="52" r="11" fill="#231d16" stroke="#fbf1dc" stroke-width="4"></circle>
+          </svg>
+          <div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">bokningssida</span>
+          <svg width="200" height="60" viewBox="0 0 200 60" fill="none" style="position:absolute;right:0;top:0" stroke-linecap="round" stroke-linejoin="round"><path d="M0 22 H60 L84 40 H150 L174 22 H210" stroke="#e69a2e" stroke-width="5"></path><path d="M0 40 H100 L124 22 H210" stroke="#e4d9c2" stroke-width="5"></path><circle cx="84" cy="40" r="5" fill="#e69a2e"></circle></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11b — Stamlinje med grenar -->
+    <div class="dv-opt" id="11b">
+      <div class="dv-olabel"><a class="dv-oid" href="#11b">11b</a>Stamlinje · en huvudbana, 45°-grenar</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" fill="none" style="position:absolute;inset:0" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 116 H80 L120 76 H200 L240 76" stroke="#f2c14e" stroke-width="7"></path>
+            <path d="M60 116 L100 156 H180 L220 156" stroke="#4f7358" stroke-width="7"></path>
+            <path d="M200 116 L240 76 H300 L340 40" stroke="#c05a3a" stroke-width="7"></path>
+            <path d="M-10 116 H360" stroke="#e69a2e" stroke-width="9"></path>
+            <circle cx="20" cy="116" r="8" fill="#231d16" stroke="#e69a2e" stroke-width="4"></circle>
+            <circle cx="80" cy="116" r="11" fill="#231d16" stroke="#fbf1dc" stroke-width="4"></circle>
+            <circle cx="200" cy="116" r="11" fill="#231d16" stroke="#fbf1dc" stroke-width="4"></circle>
+            <circle cx="340" cy="116" r="8" fill="#231d16" stroke="#e69a2e" stroke-width="4"></circle>
+            <circle cx="240" cy="76" r="6.5" fill="#f2c14e"></circle>
+            <circle cx="220" cy="156" r="6.5" fill="#4f7358"></circle>
+            <circle cx="340" cy="40" r="6.5" fill="#c05a3a"></circle>
+          </svg>
+          <div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">arbetsschema</span>
+          <svg width="200" height="60" viewBox="0 0 200 60" fill="none" style="position:absolute;right:0;top:0" stroke-linecap="round" stroke-linejoin="round"><path d="M0 30 H210" stroke="#e69a2e" stroke-width="6"></path><path d="M70 30 L94 12 H150" stroke="#e4d9c2" stroke-width="5"></path><circle cx="40" cy="30" r="7" fill="#fbf1dc" stroke="#e69a2e" stroke-width="3.5"></circle><circle cx="150" cy="12" r="5" fill="#e69a2e"></circle></svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#11a">11a</a>" · "<a class="dv-oid" href="#11b">11b</a> med fler grenar" · "<a class="dv-oid" href="#11a">11a</a> tätare nätverk" · "blanda med större stationer"</p>
+</section>
+
+<section class="dv-turn" id="t10">
+  <div class="dv-thd"><a class="dv-tid" href="#t10">10</a><span class="dv-tname">Motiv som delar märkets DNA</span></div>
+  <p class="dv-tsub">Alla tre bygger på loggans egna byggstenar — rundade ändar, stapelvikten och i-pricken. Så blir motivet kompletterande på riktigt, inte bara "en snygg grafik bredvid". Kort + band.</p>
+  <div class="dv-opts">
+
+    <!-- 10a — Spår & hållpunkter -->
+    <div class="dv-opt" id="10a">
+      <div class="dv-olabel"><a class="dv-oid" href="#10a">10a</a>Spår &amp; hållpunkter · pricken på tidslinjen</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" fill="none" style="position:absolute;inset:0"><line x1="40" y1="34" x2="300" y2="34" stroke="#3a3126" stroke-width="8" stroke-linecap="round"></line><line x1="40" y1="66" x2="255" y2="66" stroke="#3a3126" stroke-width="8" stroke-linecap="round"></line><line x1="40" y1="98" x2="320" y2="98" stroke="#3a3126" stroke-width="8" stroke-linecap="round"></line><line x1="40" y1="130" x2="240" y2="130" stroke="#3a3126" stroke-width="8" stroke-linecap="round"></line><line x1="40" y1="162" x2="285" y2="162" stroke="#3a3126" stroke-width="8" stroke-linecap="round"></line><circle cx="150" cy="34" r="9" fill="#e69a2e"></circle><circle cx="210" cy="66" r="9" fill="#f2c14e"></circle><circle cx="96" cy="98" r="9" fill="#e69a2e"></circle><circle cx="200" cy="130" r="9" fill="#e69a2e"></circle><circle cx="130" cy="162" r="9" fill="#e69a2e"></circle></svg>
+          <div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">bokningssida</span>
+          <svg width="180" height="60" viewBox="0 0 180 60" fill="none" style="position:absolute;right:0;top:0"><line x1="14" y1="20" x2="150" y2="20" stroke="#e4d9c2" stroke-width="6" stroke-linecap="round"></line><line x1="14" y1="40" x2="120" y2="40" stroke="#e4d9c2" stroke-width="6" stroke-linecap="round"></line><circle cx="80" cy="20" r="7" fill="#e69a2e"></circle><circle cx="60" cy="40" r="7" fill="#e69a2e"></circle></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10b — Flöde med hållpunkt -->
+    <div class="dv-opt" id="10b">
+      <div class="dv-olabel"><a class="dv-oid" href="#10b">10b</a>Flöde med hållpunkt · 9c, nu kopplat</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" fill="none" style="position:absolute;inset:0"><path d="M-10 78 C 70 42, 130 118, 205 80 S 330 42, 380 76" stroke="#3a3126" stroke-width="6" stroke-linecap="round"></path><path d="M-10 116 C 70 80, 130 156, 205 118 S 330 80, 380 114" stroke="#e69a2e" stroke-width="6" stroke-linecap="round"></path><path d="M-10 154 C 70 118, 130 194, 205 156 S 330 118, 380 152" stroke="#3a3126" stroke-width="6" stroke-linecap="round"></path><circle cx="205" cy="118" r="9" fill="#f2c14e"></circle></svg>
+          <div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">påminnelse</span>
+          <svg width="190" height="60" viewBox="0 0 190 60" fill="none" style="position:absolute;right:0;top:0"><path d="M0 24 C 45 8, 75 44, 115 26 S 190 10, 200 24" stroke="#e4d9c2" stroke-width="5" stroke-linecap="round"></path><path d="M0 40 C 45 24, 75 58, 115 42 S 190 26, 200 40" stroke="#e69a2e" stroke-width="5" stroke-linecap="round"></path><circle cx="115" cy="42" r="7" fill="#e69a2e"></circle></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10c — Rundade lanor -->
+    <div class="dv-opt" id="10c">
+      <div class="dv-olabel"><a class="dv-oid" href="#10c">10c</a>Rundade lanor · schemat, stramt</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" style="position:absolute;inset:0"><rect x="40" y="34" width="180" height="13" rx="6.5" fill="#3a3126"></rect><rect x="96" y="66" width="150" height="13" rx="6.5" fill="#3a3126"></rect><rect x="60" y="98" width="128" height="13" rx="6.5" fill="#e69a2e"></rect><rect x="120" y="130" width="170" height="13" rx="6.5" fill="#3a3126"></rect><rect x="52" y="162" width="205" height="13" rx="6.5" fill="#3a3126"></rect></svg>
+          <div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">arbetsschema</span>
+          <svg width="180" height="60" viewBox="0 0 180 60" style="position:absolute;right:0;top:0"><rect x="14" y="16" width="120" height="10" rx="5" fill="#e4d9c2"></rect><rect x="40" y="34" width="90" height="10" rx="5" fill="#e69a2e"></rect><rect x="70" y="34" width="0" height="10"></rect></svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#10a">10a</a>" · "<a class="dv-oid" href="#10b">10b</a> med tjockare linjer" · "<a class="dv-oid" href="#10a">10a</a> men glesare spår" · "helt andra motiv"</p>
+</section>
+
+<section class="dv-turn" id="t9">
+  <div class="dv-thd"><a class="dv-tid" href="#t9">9</a><span class="dv-tname">Kompletterande motiv — eget grafiskt språk</span></div>
+  <p class="dv-tsub">Inte loggan, inte ett rutnät. Tre egna motiv som spelar mot det geometriska märket och bär en idé. Varje visas på mörkt kort + ljust band så du ser att det flexar över scenarion.</p>
+  <div class="dv-opts">
+
+    <!-- 9a — Länkade moduler -->
+    <div class="dv-opt" id="9a">
+      <div class="dv-olabel"><a class="dv-oid" href="#9a">9a</a>Länkade moduler · "composable"</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" fill="none" style="position:absolute;inset:0"><rect x="18" y="34" width="72" height="72" rx="22" stroke="#3a3126" stroke-width="7"></rect><rect x="80" y="96" width="72" height="72" rx="22" stroke="#e69a2e" stroke-width="7"></rect><rect x="142" y="34" width="72" height="72" rx="22" stroke="#3a3126" stroke-width="7"></rect><rect x="204" y="96" width="72" height="72" rx="22" stroke="#f2c14e" stroke-width="7"></rect><rect x="266" y="34" width="72" height="72" rx="22" stroke="#3a3126" stroke-width="7"></rect></svg>
+          <div style="position:absolute;left:26px;bottom:24px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">bokningsbekräftelse</span>
+          <svg width="150" height="60" viewBox="0 0 150 60" fill="none" style="position:absolute;right:0;top:0"><rect x="8" y="14" width="30" height="30" rx="9" stroke="#e4d9c2" stroke-width="4"></rect><rect x="34" y="14" width="30" height="30" rx="9" stroke="#e69a2e" stroke-width="4"></rect><rect x="60" y="14" width="30" height="30" rx="9" stroke="#e4d9c2" stroke-width="4"></rect><rect x="86" y="14" width="30" height="30" rx="9" stroke="#f2c14e" stroke-width="4"></rect><rect x="112" y="14" width="30" height="30" rx="9" stroke="#e4d9c2" stroke-width="4"></rect></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9b — Överlappande tidsblock -->
+    <div class="dv-opt" id="9b">
+      <div class="dv-olabel"><a class="dv-oid" href="#9b">9b</a>Överlappande tidsblock · schemadjup</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" style="position:absolute;inset:0"><rect x="30" y="30" width="152" height="92" rx="15" fill="#e69a2e" opacity=".9"></rect><rect x="196" y="42" width="98" height="66" rx="15" fill="#4f7358" opacity=".85"></rect><rect x="118" y="78" width="116" height="72" rx="15" fill="#f2c14e" opacity=".92"></rect><rect x="150" y="120" width="150" height="80" rx="15" fill="#c05a3a" opacity=".82"></rect></svg>
+          <div style="position:absolute;left:26px;bottom:24px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">veckoschema</span>
+          <svg width="170" height="60" viewBox="0 0 170 60" style="position:absolute;right:0;top:0"><rect x="10" y="12" width="70" height="26" rx="8" fill="#e69a2e" opacity=".9"></rect><rect x="66" y="24" width="60" height="26" rx="8" fill="#f2c14e" opacity=".92"></rect><rect x="112" y="14" width="52" height="24" rx="8" fill="#4f7358" opacity=".85"></rect></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9c — Böljande konturer -->
+    <div class="dv-opt" id="9c">
+      <div class="dv-olabel"><a class="dv-oid" href="#9c">9c</a>Böljande konturer · tiden som flöde</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="100%" height="100%" viewBox="0 0 360 233" fill="none" style="position:absolute;inset:0"><path d="M-10 66 C 70 26, 130 116, 200 70 S 330 26, 380 62" stroke="#4a3f30" stroke-width="3.5"></path><path d="M-10 98 C 70 58, 130 148, 200 102 S 330 58, 380 94" stroke="#e69a2e" stroke-width="3.5"></path><path d="M-10 130 C 70 90, 130 180, 200 134 S 330 90, 380 126" stroke="#4a3f30" stroke-width="3.5"></path><path d="M-10 162 C 70 122, 130 212, 200 166 S 330 122, 380 158" stroke="#f2c14e" stroke-width="3.5"></path></svg>
+          <div style="position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:10px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:60px;border-radius:10px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 18px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a7a5c;z-index:1">påminnelse</span>
+          <svg width="180" height="60" viewBox="0 0 180 60" fill="none" style="position:absolute;right:0;top:0"><path d="M0 22 C 40 6, 70 42, 110 24 S 180 8, 190 22" stroke="#e4d9c2" stroke-width="3"></path><path d="M0 38 C 40 22, 70 58, 110 40 S 180 24, 190 38" stroke="#e69a2e" stroke-width="3"></path></svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#9b">9b</a>" · "<a class="dv-oid" href="#9a">9a</a> med fler länkar" · "<a class="dv-oid" href="#9c">9c</a> tätare linjer" · "helt andra motiv"</p>
+</section>
+
+<section class="dv-turn" id="t8">
+  <div class="dv-thd"><a class="dv-tid" href="#t8">8</a><span class="dv-tname">Visitkort v2 — komposition, inte mönster</span></div>
+  <p class="dv-tsub">Inga upprepade rutnät eller prickar. Motivet är märket eller ordmärket i stor skala, tonalt — det kan aldrig hamna i ofas, och kompositionen bär flera scenarion (grundare, community, roller).</p>
+  <div class="dv-opts">
+
+    <!-- 8a — Beskuret jättemärke -->
+    <div class="dv-opt" id="8a">
+      <div class="dv-olabel"><a class="dv-oid" href="#8a">8a</a>Beskuret jättemärke · tonalt, blöder ut</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <svg width="300" height="300" viewBox="0 0 48 48" style="position:absolute;top:-66px;right:-58px"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#322a20"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#322a20"></rect></svg>
+          <div style="position:absolute;left:30px;bottom:28px;display:flex;align-items:center;gap:11px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="28" height="28" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:24px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:233px;border-radius:13px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.12)">
+          <svg width="230" height="230" viewBox="0 0 48 48" style="position:absolute;bottom:-52px;right:-44px"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#efe3cd"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e6c88f"></rect><circle cx="24" cy="17" r="2.9" fill="#e6c88f"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#efe3cd"></rect></svg>
+          <div style="padding:26px 28px;position:relative;z-index:1;font-family:'Hanken Grotesk',sans-serif">
+            <div style="font-weight:800;font-size:21px;letter-spacing:-.02em;color:#231d16;margin-top:22px">Johanna Berg</div>
+            <div style="font-size:13.5px;color:#8a7a5c;margin-bottom:14px">Grundare &amp; utvecklare</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a4d38;line-height:1.75">johanna@timla.se<br>070 123 45 67 · timla.se</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8b — Tonalt ordmärke -->
+    <div class="dv-opt" id="8b">
+      <div class="dv-olabel"><a class="dv-oid" href="#8b">8b</a>Tonalt ordmärke · ordet som yta</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <div style="position:absolute;left:-10px;bottom:-40px;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:150px;letter-spacing:-.055em;color:#2c2519;line-height:1;white-space:nowrap">timla</div>
+          <div style="position:absolute;left:30px;top:28px;display:flex;align-items:center;gap:11px;font-family:'Hanken Grotesk',sans-serif;z-index:1"><svg width="28" height="28" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:24px;letter-spacing:-.03em;color:#fff">timla</span></div>
+        </div>
+        <div style="width:360px;height:233px;border-radius:13px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.12)">
+          <div style="position:absolute;right:-14px;top:-38px;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:150px;letter-spacing:-.055em;color:#f3e9d3;line-height:1">.</div>
+          <div style="padding:26px 28px;position:relative;z-index:1;font-family:'Hanken Grotesk',sans-serif;display:flex;flex-direction:column;justify-content:space-between;height:100%;box-sizing:border-box">
+            <div style="display:flex;align-items:center;gap:9px"><svg width="24" height="24" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:20px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+            <div>
+              <div style="font-weight:800;font-size:21px;letter-spacing:-.02em;color:#231d16">Johanna Berg</div>
+              <div style="font-size:13.5px;color:#8a7a5c;margin-bottom:12px">Grundare &amp; utvecklare</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a4d38;line-height:1.75">johanna@timla.se<br>070 123 45 67 · timla.se</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8c — Delad komposition -->
+    <div class="dv-opt" id="8c">
+      <div class="dv-olabel"><a class="dv-oid" href="#8c">8c</a>Delad · panel + info, editorial</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="width:360px;height:233px;border-radius:13px;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16);display:flex">
+          <div style="width:132px;flex:none;background:#231d16;display:flex;align-items:center;justify-content:center"><svg width="60" height="60" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg></div>
+          <div style="flex:1;background:#fbf1dc;display:flex;flex-direction:column;justify-content:center;padding:0 26px;font-family:'Hanken Grotesk',sans-serif">
+            <span style="font-weight:800;font-size:34px;letter-spacing:-.035em;color:#231d16;line-height:1">timla</span>
+            <span style="font-size:12.5px;color:#8a7a5c;margin-top:6px;line-height:1.4">Tid, bokning &amp; schema<br>— öppet och composable.</span>
+          </div>
+        </div>
+        <div style="width:360px;height:233px;border-radius:13px;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.12);display:flex">
+          <div style="width:8px;flex:none;background:#e69a2e"></div>
+          <div style="flex:1;background:#fbf1dc;border:1px solid #efe3cd;border-left:none;display:flex;flex-direction:column;justify-content:space-between;padding:26px 28px;font-family:'Hanken Grotesk',sans-serif">
+            <div style="display:flex;align-items:center;gap:9px"><svg width="22" height="22" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:19px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+            <div>
+              <div style="font-weight:800;font-size:21px;letter-spacing:-.02em;color:#231d16">Johanna Berg</div>
+              <div style="font-size:13.5px;color:#8a7a5c;margin-bottom:12px">Grundare &amp; utvecklare</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a4d38;line-height:1.75">johanna@timla.se<br>070 123 45 67 · timla.se</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#8a">8a</a>" · "<a class="dv-oid" href="#8b">8b</a> med ordet ännu större" · "<a class="dv-oid" href="#8c">8c</a> med bredare panel" · "helt andra idéer"</p>
+</section>
+
+<section class="dv-turn" id="t7">
+  <div class="dv-thd"><a class="dv-tid" href="#t7">7</a><span class="dv-tname">Visitkort med kompletterande motiv</span></div>
+  <p class="dv-tsub">Tre förslag, vart och ett fram- och baksida. Motivet är härlett ur systemet men är inte bara loggan upprepad — en stapel-skyline, ett schema-rutnät och en pricke-rytm.</p>
+  <div class="dv-opts">
+
+    <!-- 7a — Stapel-skyline -->
+    <div class="dv-opt" id="7a">
+      <div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a>Stapel-skyline · rytmen som fält</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <!-- front -->
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16)">
+          <div style="padding:28px 30px;display:flex;align-items:center;gap:11px;font-family:'Hanken Grotesk',sans-serif">
+            <svg width="30" height="30" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg>
+            <span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#fff">timla</span>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;height:96px;display:flex;align-items:flex-end;gap:6px;padding:0 22px">
+            <div style="flex:1;height:34px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:58px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:24px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:72px;border-radius:4px 4px 0 0;background:#e69a2e"></div><div style="flex:1;height:44px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:88px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:30px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:64px;border-radius:4px 4px 0 0;background:#f2c14e"></div><div style="flex:1;height:40px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:78px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:26px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:54px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:36px;border-radius:4px 4px 0 0;background:#3a3126"></div><div style="flex:1;height:68px;border-radius:4px 4px 0 0;background:#e69a2e"></div>
+          </div>
+        </div>
+        <!-- back -->
+        <div style="width:360px;height:233px;border-radius:13px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.12);padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:9px;font-family:'Hanken Grotesk',sans-serif"><svg width="24" height="24" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:20px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+          <div style="font-family:'Hanken Grotesk',sans-serif">
+            <div style="font-weight:800;font-size:21px;letter-spacing:-.02em;color:#231d16">Johanna Berg</div>
+            <div style="font-size:13.5px;color:#8a7a5c;margin-bottom:12px">Grundare &amp; utvecklare</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a4d38;line-height:1.75">johanna@timla.se<br>070 123 45 67 · timla.se</div>
+          </div>
+          <div style="position:absolute;right:24px;top:24px;display:flex;align-items:flex-end;gap:3px;height:26px;opacity:.9"><div style="width:4px;height:12px;border-radius:2px;background:#e4d9c2"></div><div style="width:4px;height:20px;border-radius:2px;background:#e4d9c2"></div><div style="width:4px;height:9px;border-radius:2px;background:#e69a2e"></div><div style="width:4px;height:16px;border-radius:2px;background:#e4d9c2"></div><div style="width:4px;height:26px;border-radius:2px;background:#e4d9c2"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7b — Schema-rutnät -->
+    <div class="dv-opt" id="7b">
+      <div class="dv-olabel"><a class="dv-oid" href="#7b">7b</a>Schema-rutnät · en bokad ruta</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <!-- front -->
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16);background-image:repeating-linear-gradient(rgba(251,241,220,.08) 0 1px, transparent 1px 33px),repeating-linear-gradient(90deg,rgba(251,241,220,.08) 0 1px, transparent 1px 45px)">
+          <div style="position:absolute;left:135px;top:99px;width:44px;height:32px;border-radius:5px;background:#e69a2e"></div>
+          <div style="position:absolute;left:135px;top:99px;width:44px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#231d16;font-weight:500">14:00</div>
+          <div style="padding:28px 30px;display:flex;align-items:center;gap:11px;font-family:'Hanken Grotesk',sans-serif;position:relative">
+            <svg width="30" height="30" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg>
+            <span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#fff">timla</span>
+          </div>
+        </div>
+        <!-- back -->
+        <div style="width:360px;height:233px;border-radius:13px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.12);background-image:repeating-linear-gradient(rgba(35,29,22,.055) 0 1px, transparent 1px 33px),repeating-linear-gradient(90deg,rgba(35,29,22,.055) 0 1px, transparent 1px 45px)">
+          <div style="position:absolute;right:26px;top:26px;width:38px;height:26px;border-radius:5px;background:#e69a2e"></div>
+          <div style="padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between;height:100%;box-sizing:border-box;position:relative">
+            <div style="display:flex;align-items:center;gap:9px;font-family:'Hanken Grotesk',sans-serif"><svg width="24" height="24" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:20px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+            <div style="font-family:'Hanken Grotesk',sans-serif">
+              <div style="font-weight:800;font-size:21px;letter-spacing:-.02em;color:#231d16">Johanna Berg</div>
+              <div style="font-size:13.5px;color:#8a7a5c;margin-bottom:12px">Grundare &amp; utvecklare</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a4d38;line-height:1.75">johanna@timla.se<br>070 123 45 67 · timla.se</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7c — Pricke-rytm -->
+    <div class="dv-opt" id="7c">
+      <div class="dv-olabel"><a class="dv-oid" href="#7c">7c</a>Pricke-rytm · titteln som textur</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <!-- front -->
+        <div style="width:360px;height:233px;border-radius:13px;background:#231d16;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.16);background-image:radial-gradient(circle, rgba(251,241,220,.13) 1.6px, transparent 1.7px);background-size:19px 19px">
+          <div style="position:absolute;left:26px;top:150px;display:flex;gap:12px"><span style="width:6px;height:6px;border-radius:50%;background:#e69a2e"></span><span style="width:6px;height:6px;border-radius:50%;background:#e69a2e"></span><span style="width:6px;height:6px;border-radius:50%;background:#f2c14e"></span><span style="width:6px;height:6px;border-radius:50%;background:#e69a2e"></span></div>
+          <div style="padding:28px 30px;display:flex;align-items:center;gap:11px;font-family:'Hanken Grotesk',sans-serif;position:relative">
+            <svg width="30" height="30" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg>
+            <span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#fff">timla</span>
+          </div>
+        </div>
+        <!-- back -->
+        <div style="width:360px;height:233px;border-radius:13px;background:#fbf1dc;border:1px solid #efe3cd;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(90,60,20,.12);background-image:radial-gradient(circle, rgba(35,29,22,.09) 1.5px, transparent 1.6px);background-size:19px 19px">
+          <div style="padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between;height:100%;box-sizing:border-box">
+            <div style="display:flex;align-items:center;gap:9px;font-family:'Hanken Grotesk',sans-serif"><svg width="24" height="24" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:20px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+            <div style="font-family:'Hanken Grotesk',sans-serif;background:#fbf1dc;display:inline-block">
+              <div style="font-weight:800;font-size:21px;letter-spacing:-.02em;color:#231d16">Johanna Berg</div>
+              <div style="font-size:13.5px;color:#8a7a5c;margin-bottom:12px">Grundare &amp; utvecklare</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a4d38;line-height:1.75">johanna@timla.se<br>070 123 45 67 · timla.se</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#7a">7a</a>" · "<a class="dv-oid" href="#7b">7b</a> utan tidsetiketten" · "<a class="dv-oid" href="#7c">7c</a> med tätare prickar" · "blanda <a class="dv-oid" href="#7a">7a</a> fram med <a class="dv-oid" href="#7b">7b</a> bak"</p>
+</section>
+
+<section class="dv-turn" id="t6">
+  <div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">Varianter av <a class="dv-oid" href="#4c">4c</a> — ascender-rytmen</span></div>
+  <p class="dv-tsub">Samma idé: abstrakta staplar ur t‑i‑l med i-pricken i ockra. Här varierar jag antal, rytm och lutning för att hitta den kristallklara.</p>
+  <div class="dv-opts">
+
+    <!-- 6a — Två staplar -->
+    <div class="dv-opt" id="6a">
+      <div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a>Två staplar · i + l, minimal</div>
+      <div class="dv-card" style="width:230px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="80" height="80" viewBox="0 0 48 48"><rect x="18" y="10" width="6" height="28" rx="3" fill="#231d16"></rect><rect x="27" y="23" width="6" height="15" rx="3" fill="#e69a2e"></rect><circle cx="30" cy="17" r="3" fill="#e69a2e"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="18" y="10" width="6" height="28" rx="3" fill="#231d16"></rect><rect x="27" y="23" width="6" height="15" rx="3" fill="#e69a2e"></rect><circle cx="30" cy="17" r="3" fill="#e69a2e"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="26" height="26" viewBox="0 0 48 48"><rect x="18" y="10" width="6" height="28" rx="3" fill="#fbf1dc"></rect><rect x="27" y="23" width="6" height="15" rx="3" fill="#e69a2e"></rect><circle cx="30" cy="17" r="3" fill="#e69a2e"></circle></svg></div>
+      </div>
+    </div>
+
+    <!-- 6b — t-i-l explicit -->
+    <div class="dv-opt" id="6b">
+      <div class="dv-olabel"><a class="dv-oid" href="#6b">6b</a>t‑i‑l · dolt ordmärke</div>
+      <div class="dv-card" style="width:230px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="88" height="80" viewBox="0 0 52 48"><rect x="9" y="12" width="5.5" height="26" rx="2.75" fill="#231d16"></rect><rect x="5" y="18" width="14" height="4.5" rx="2.25" fill="#231d16"></rect><rect x="23" y="23" width="5.5" height="15" rx="2.75" fill="#231d16"></rect><circle cx="25.75" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="37" y="12" width="5.5" height="26" rx="2.75" fill="#231d16"></rect></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="29" height="26" viewBox="0 0 52 48"><rect x="9" y="12" width="5.5" height="26" rx="2.75" fill="#231d16"></rect><rect x="5" y="18" width="14" height="4.5" rx="2.25" fill="#231d16"></rect><rect x="23" y="23" width="5.5" height="15" rx="2.75" fill="#231d16"></rect><circle cx="25.75" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="37" y="12" width="5.5" height="26" rx="2.75" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="29" height="26" viewBox="0 0 52 48"><rect x="9" y="12" width="5.5" height="26" rx="2.75" fill="#fbf1dc"></rect><rect x="5" y="18" width="14" height="4.5" rx="2.25" fill="#fbf1dc"></rect><rect x="23" y="23" width="5.5" height="15" rx="2.75" fill="#fbf1dc"></rect><circle cx="25.75" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="37" y="12" width="5.5" height="26" rx="2.75" fill="#fbf1dc"></rect></svg></div>
+      </div>
+    </div>
+
+    <!-- 6c — Stegrande fyra -->
+    <div class="dv-opt" id="6c">
+      <div class="dv-olabel"><a class="dv-oid" href="#6c">6c</a>Stegrande · fyra staplar, rytm</div>
+      <div class="dv-card" style="width:230px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="88" height="80" viewBox="0 0 48 48"><rect x="9" y="26" width="5" height="12" rx="2.5" fill="#231d16"></rect><rect x="17" y="20" width="5" height="18" rx="2.5" fill="#231d16"></rect><rect x="25" y="14" width="5" height="24" rx="2.5" fill="#e69a2e"></rect><circle cx="27.5" cy="8.5" r="2.7" fill="#e69a2e"></circle><rect x="33" y="10" width="5" height="28" rx="2.5" fill="#231d16"></rect></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="28" height="26" viewBox="0 0 48 48"><rect x="9" y="26" width="5" height="12" rx="2.5" fill="#231d16"></rect><rect x="17" y="20" width="5" height="18" rx="2.5" fill="#231d16"></rect><rect x="25" y="14" width="5" height="24" rx="2.5" fill="#e69a2e"></rect><circle cx="27.5" cy="8.5" r="2.7" fill="#e69a2e"></circle><rect x="33" y="10" width="5" height="28" rx="2.5" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="28" height="26" viewBox="0 0 48 48"><rect x="9" y="26" width="5" height="12" rx="2.5" fill="#fbf1dc"></rect><rect x="17" y="20" width="5" height="18" rx="2.5" fill="#fbf1dc"></rect><rect x="25" y="14" width="5" height="24" rx="2.5" fill="#e69a2e"></rect><circle cx="27.5" cy="8.5" r="2.7" fill="#e69a2e"></circle><rect x="33" y="10" width="5" height="28" rx="2.5" fill="#fbf1dc"></rect></svg></div>
+      </div>
+    </div>
+
+    <!-- 6d — Kursiv rytm -->
+    <div class="dv-opt" id="6d">
+      <div class="dv-olabel"><a class="dv-oid" href="#6d">6d</a>Kursiv · lutad, framåt</div>
+      <div class="dv-card" style="width:230px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="88" height="80" viewBox="0 0 48 48"><g transform="translate(5 0) skewX(-11)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></g></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="28" height="26" viewBox="0 0 48 48"><g transform="translate(5 0) skewX(-11)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></g></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="28" height="26" viewBox="0 0 48 48"><g transform="translate(5 0) skewX(-11)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></g></svg></div>
+      </div>
+    </div>
+
+    <!-- 6e — Tät & fet -->
+    <div class="dv-opt" id="6e">
+      <div class="dv-olabel"><a class="dv-oid" href="#6e">6e</a>Tät &amp; fet · kraftigare närvaro</div>
+      <div class="dv-card" style="width:230px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="84" height="80" viewBox="0 0 48 48"><rect x="11" y="13" width="7" height="25" rx="3.5" fill="#231d16"></rect><rect x="20.5" y="22" width="7" height="16" rx="3.5" fill="#e69a2e"></rect><circle cx="24" cy="15.5" r="3.4" fill="#e69a2e"></circle><rect x="30" y="18" width="7" height="20" rx="3.5" fill="#231d16"></rect></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="27" height="26" viewBox="0 0 48 48"><rect x="11" y="13" width="7" height="25" rx="3.5" fill="#231d16"></rect><rect x="20.5" y="22" width="7" height="16" rx="3.5" fill="#e69a2e"></rect><circle cx="24" cy="15.5" r="3.4" fill="#e69a2e"></circle><rect x="30" y="18" width="7" height="20" rx="3.5" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="27" height="26" viewBox="0 0 48 48"><rect x="11" y="13" width="7" height="25" rx="3.5" fill="#fbf1dc"></rect><rect x="20.5" y="22" width="7" height="16" rx="3.5" fill="#e69a2e"></rect><circle cx="24" cy="15.5" r="3.4" fill="#e69a2e"></circle><rect x="30" y="18" width="7" height="20" rx="3.5" fill="#231d16"></rect></svg></div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#6a">6a</a>" · "<a class="dv-oid" href="#6c">6c</a> men tre staplar" · "<a class="dv-oid" href="#6d">6d</a> med mindre lutning" · "blanda <a class="dv-oid" href="#6a">6a</a> och <a class="dv-oid" href="#6e">6e</a>"</p>
+</section>
+
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Fler — vassare, mer ägbara</span></div>
+  <p class="dv-tsub">Vidare i samma anda som <a class="dv-oid" href="#4c">4c</a> men mer intentionellt: en bokstavsligatur, ett composable-lager, ett monogram och ett bokat kort. Fortfarande noll klocka.</p>
+  <div class="dv-opts">
+
+    <!-- 5a — ti-ligatur -->
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>ti-ligatur · sammanfogad bokstav</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48"><rect x="15" y="9" width="6" height="29" rx="3" fill="#231d16"></rect><rect x="9" y="19" width="28" height="5" rx="2.5" fill="#231d16"></rect><rect x="31" y="24" width="6" height="14" rx="3" fill="#231d16"></rect><circle cx="34" cy="15.5" r="3.2" fill="#e69a2e"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="15" y="9" width="6" height="29" rx="3" fill="#231d16"></rect><rect x="9" y="19" width="28" height="5" rx="2.5" fill="#231d16"></rect><rect x="31" y="24" width="6" height="14" rx="3" fill="#231d16"></rect><circle cx="34" cy="15.5" r="3.2" fill="#e69a2e"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="15" y="9" width="6" height="29" rx="3" fill="#fbf1dc"></rect><rect x="9" y="19" width="28" height="5" rx="2.5" fill="#fbf1dc"></rect><rect x="31" y="24" width="6" height="14" rx="3" fill="#fbf1dc"></rect><circle cx="34" cy="15.5" r="3.2" fill="#e69a2e"></circle></svg></div>
+      </div>
+    </div>
+
+    <!-- 5b — Lager/stack -->
+    <div class="dv-opt" id="5b">
+      <div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Lager · det composable stacket</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48"><rect x="12" y="14" width="24" height="6" rx="3" fill="#231d16"></rect><rect x="16" y="23" width="24" height="6" rx="3" fill="#e69a2e"></rect><rect x="8" y="32" width="24" height="6" rx="3" fill="#231d16"></rect></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="12" y="14" width="24" height="6" rx="3" fill="#231d16"></rect><rect x="16" y="23" width="24" height="6" rx="3" fill="#e69a2e"></rect><rect x="8" y="32" width="24" height="6" rx="3" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="12" y="14" width="24" height="6" rx="3" fill="#fbf1dc"></rect><rect x="16" y="23" width="24" height="6" rx="3" fill="#e69a2e"></rect><rect x="8" y="32" width="24" height="6" rx="3" fill="#fbf1dc"></rect></svg></div>
+      </div>
+    </div>
+
+    <!-- 5c — Custom t-monogram -->
+    <div class="dv-opt" id="5c">
+      <div class="dv-olabel"><a class="dv-oid" href="#5c">5c</a>Monogram · custom "t"-bricka</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="88" height="88" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="11" fill="#231d16"></rect><rect x="21.5" y="14" width="5" height="21" rx="2.5" fill="#fbf1dc"></rect><rect x="15" y="20" width="18" height="5" rx="2.5" fill="#fbf1dc"></rect><circle cx="32.5" cy="15.5" r="2.8" fill="#e69a2e"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="11" fill="#231d16"></rect><rect x="21.5" y="14" width="5" height="21" rx="2.5" fill="#fbf1dc"></rect><rect x="15" y="20" width="18" height="5" rx="2.5" fill="#fbf1dc"></rect><circle cx="32.5" cy="15.5" r="2.8" fill="#e69a2e"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="11" fill="#e69a2e"></rect><rect x="21.5" y="14" width="5" height="21" rx="2.5" fill="#231d16"></rect><rect x="15" y="20" width="18" height="5" rx="2.5" fill="#231d16"></rect><circle cx="32.5" cy="15.5" r="2.8" fill="#231d16"></circle></svg></div>
+      </div>
+    </div>
+
+    <!-- 5d — Bokat kort (vikt hörn) -->
+    <div class="dv-opt" id="5d">
+      <div class="dv-olabel"><a class="dv-oid" href="#5d">5d</a>Bokat kort · vikt hörn</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="88" height="88" viewBox="0 0 48 48"><path d="M11 12 H30 L37 19 V36 H11 Z" fill="#231d16"></path><path d="M30 12 V19 H37 Z" fill="#e69a2e"></path><rect x="16" y="25" width="16" height="3" rx="1.5" fill="#fbf1dc"></rect><rect x="16" y="31" width="10" height="3" rx="1.5" fill="#fbf1dc"></rect></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><path d="M11 12 H30 L37 19 V36 H11 Z" fill="#231d16"></path><path d="M30 12 V19 H37 Z" fill="#e69a2e"></path><rect x="16" y="25" width="16" height="3" rx="1.5" fill="#fbf1dc"></rect><rect x="16" y="31" width="10" height="3" rx="1.5" fill="#fbf1dc"></rect></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><path d="M11 12 H30 L37 19 V36 H11 Z" fill="#fbf1dc"></path><path d="M30 12 V19 H37 Z" fill="#e69a2e"></path><rect x="16" y="25" width="16" height="3" rx="1.5" fill="#231d16"></rect><rect x="16" y="31" width="10" height="3" rx="1.5" fill="#231d16"></rect></svg></div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#5a">5a</a>" · "<a class="dv-oid" href="#5b">5b</a> med tightare lager" · "<a class="dv-oid" href="#5c">5c</a> utan pricken" · "helt andra idéer"</p>
+</section>
+
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Slopa klockan — märket ur ordet</span></div>
+  <p class="dv-tsub">Inga piktogram, ingen tid-klyscha. Varje märke växer ur wordmarket "timla" eller ur produktens idé (composable, öppet). Fyra olika lanes — pekmärke, distillerad bokstav, abstrakt rytm och koncept.</p>
+  <div class="dv-opts">
+
+    <!-- 4a — Wordmark-first, punkt -->
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Ren logotyp · punkten är märket</div>
+      <div class="dv-card" style="width:290px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:52px 40px;display:flex;align-items:flex-end;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd;font-family:'Hanken Grotesk',sans-serif"><span style="font-weight:800;font-size:52px;letter-spacing:-.04em;color:#231d16;line-height:1">timla</span><span style="width:11px;height:11px;border-radius:3px;background:#e69a2e;margin-bottom:9px;margin-left:3px"></span></div>
+        <div style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px">
+          <span style="width:22px;height:22px;border-radius:6px;background:#e69a2e"></span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#b39a6f">Mark i kvadrat = punkten</span>
+        </div>
+        <div style="padding:18px;display:flex;align-items:flex-end;justify-content:center;background:#231d16;font-family:'Hanken Grotesk',sans-serif"><span style="font-weight:800;font-size:26px;letter-spacing:-.04em;color:#fbf1dc;line-height:1">timla</span><span style="width:7px;height:7px;border-radius:2px;background:#e69a2e;margin-bottom:4px;margin-left:2px"></span></div>
+      </div>
+    </div>
+
+    <!-- 4b — Distillerad i -->
+    <div class="dv-opt" id="4b">
+      <div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Distillerad "i" · titteln som device</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="70" height="92" viewBox="0 0 48 62"><rect x="20" y="24" width="8" height="30" rx="4" fill="#231d16"></rect><circle cx="24" cy="12" r="5.4" fill="#e69a2e"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="16" height="30" viewBox="0 0 48 62"><rect x="20" y="24" width="8" height="30" rx="4" fill="#231d16"></rect><circle cx="24" cy="12" r="5.4" fill="#e69a2e"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="16" height="30" viewBox="0 0 48 62"><rect x="20" y="24" width="8" height="30" rx="4" fill="#fbf1dc"></rect><circle cx="24" cy="12" r="5.4" fill="#e69a2e"></circle></svg></div>
+      </div>
+    </div>
+
+    <!-- 4c — Ascender-rytm -->
+    <div class="dv-opt" id="4c">
+      <div class="dv-olabel"><a class="dv-oid" href="#4c">4c</a>Ascender-rytm · abstrakt, ur t-i-l</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></svg></div>
+      </div>
+    </div>
+
+    <!-- 4d — Composable-parentes -->
+    <div class="dv-opt" id="4d">
+      <div class="dv-olabel"><a class="dv-oid" href="#4d">4d</a>Composable · primitiv i parentes</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:36px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48" fill="none"><path d="M18 12 H12 V36 H18" stroke="#231d16" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M30 12 H36 V36 H30" stroke="#231d16" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="24" r="4.6" fill="#e69a2e"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:10px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48" fill="none"><path d="M18 12 H12 V36 H18" stroke="#231d16" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M30 12 H36 V36 H30" stroke="#231d16" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="24" r="4.6" fill="#e69a2e"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48" fill="none"><path d="M18 12 H12 V36 H18" stroke="#fbf1dc" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M30 12 H36 V36 H30" stroke="#fbf1dc" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="24" r="4.6" fill="#e69a2e"></circle></svg></div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "kör <a class="dv-oid" href="#4a">4a</a>" · "<a class="dv-oid" href="#4c">4c</a> men bara två staplar" · "<a class="dv-oid" href="#4d">4d</a> med hakparentes istället" · "helt andra idéer"</p>
+</section>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Logo-ikon för <a class="dv-oid" href="#2b">2b</a> — 5 varianter</span></div>
+  <p class="dv-tsub">Från enklast till mest sammansatt. Varje kort visar ikonen stor, i lockup med ordmärket, och på ink (mono-test). Peka ut en så byter jag in den i designsystemet.</p>
+  <div class="dv-opts">
+
+    <!-- 3a — Minimal klocka -->
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Klocka · enklast</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:40px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="#e69a2e"></circle><line x1="24" y1="24" x2="24" y2="12" stroke="#231d16" stroke-width="3" stroke-linecap="round"></line><line x1="24" y1="24" x2="31" y2="27" stroke="#231d16" stroke-width="3" stroke-linecap="round"></line><circle cx="24" cy="24" r="2.4" fill="#231d16"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:11px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="#e69a2e"></circle><line x1="24" y1="24" x2="24" y2="12" stroke="#231d16" stroke-width="3" stroke-linecap="round"></line><line x1="24" y1="24" x2="31" y2="27" stroke="#231d16" stroke-width="3" stroke-linecap="round"></line><circle cx="24" cy="24" r="2.4" fill="#231d16"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="#e69a2e"></circle><line x1="24" y1="24" x2="24" y2="12" stroke="#231d16" stroke-width="3" stroke-linecap="round"></line><line x1="24" y1="24" x2="31" y2="27" stroke="#231d16" stroke-width="3" stroke-linecap="round"></line><circle cx="24" cy="24" r="2.4" fill="#231d16"></circle></svg></div>
+      </div>
+    </div>
+
+    <!-- 3b — Slot-bricka -->
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Slot-bricka · enkel</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:40px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="11" fill="#231d16"></rect><rect x="13" y="15" width="22" height="4.4" rx="2.2" fill="#e69a2e"></rect><rect x="13" y="21.8" width="14" height="4.4" rx="2.2" fill="#f2c14e"></rect><rect x="13" y="28.6" width="22" height="4.4" rx="2.2" fill="#4a3f30"></rect></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:11px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="11" fill="#231d16"></rect><rect x="13" y="15" width="22" height="4.4" rx="2.2" fill="#e69a2e"></rect><rect x="13" y="21.8" width="14" height="4.4" rx="2.2" fill="#f2c14e"></rect><rect x="13" y="28.6" width="22" height="4.4" rx="2.2" fill="#4a3f30"></rect></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="11" fill="#e69a2e"></rect><rect x="13" y="15" width="22" height="4.4" rx="2.2" fill="#231d16"></rect><rect x="13" y="21.8" width="14" height="4.4" rx="2.2" fill="#231d16"></rect><rect x="13" y="28.6" width="22" height="4.4" rx="2.2" fill="#231d16" opacity=".45"></rect></svg></div>
+      </div>
+    </div>
+
+    <!-- 3c — Bokad timme (kil) -->
+    <div class="dv-opt" id="3c">
+      <div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Bokad timme · medel</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:40px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="#e69a2e"></circle><path d="M24 24 L24 8 A16 16 0 0 1 40 24 Z" fill="#231d16"></path></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:11px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="#e69a2e"></circle><path d="M24 24 L24 8 A16 16 0 0 1 40 24 Z" fill="#231d16"></path></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="#e69a2e"></circle><path d="M24 24 L24 8 A16 16 0 0 1 40 24 Z" fill="#231d16"></path></svg></div>
+      </div>
+    </div>
+
+    <!-- 3d — Dygnsring (nuvarande) -->
+    <div class="dv-opt" id="3d">
+      <div class="dv-olabel"><a class="dv-oid" href="#3d">3d</a>Dygnsring · medel–hög <span style="color:#b8a68d">(nuvarande)</span></div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:40px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="#e69a2e" stroke-width="3" stroke-dasharray="4.5 2.55" stroke-linecap="round"></circle><circle cx="24" cy="24" r="16" stroke="#231d16" stroke-width="5" stroke-dasharray="28 72.5" transform="rotate(-90 24 24)"></circle><circle cx="24" cy="24" r="3" fill="#231d16"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:11px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="#e69a2e" stroke-width="3" stroke-dasharray="4.5 2.55" stroke-linecap="round"></circle><circle cx="24" cy="24" r="16" stroke="#231d16" stroke-width="5" stroke-dasharray="28 72.5" transform="rotate(-90 24 24)"></circle><circle cx="24" cy="24" r="3" fill="#231d16"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="#e69a2e" stroke-width="3" stroke-dasharray="4.5 2.55" stroke-linecap="round"></circle><circle cx="24" cy="24" r="16" stroke="#fbf1dc" stroke-width="5" stroke-dasharray="28 72.5" transform="rotate(-90 24 24)"></circle><circle cx="24" cy="24" r="3" fill="#fbf1dc"></circle></svg></div>
+      </div>
+    </div>
+
+    <!-- 3e — Tidslager (koncentriska bågar) -->
+    <div class="dv-opt" id="3e">
+      <div class="dv-olabel"><a class="dv-oid" href="#3e">3e</a>Tidslager · mest sammansatt</div>
+      <div class="dv-card" style="width:250px;background:#fff;border:1px solid #efe3cd">
+        <div style="padding:40px;display:flex;align-items:center;justify-content:center;background:#fbf1dc;border-bottom:1px solid #efe3cd">
+          <svg width="92" height="92" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="17" stroke="#231d16" stroke-width="3" stroke-dasharray="58.7 106.8" stroke-linecap="round" transform="rotate(-120 24 24)"></circle><circle cx="24" cy="24" r="12" stroke="#e69a2e" stroke-width="3" stroke-dasharray="45.2 75.4" stroke-linecap="round" transform="rotate(60 24 24)"></circle><circle cx="24" cy="24" r="7" stroke="#f2c14e" stroke-width="3" stroke-dasharray="26.4 44" stroke-linecap="round" transform="rotate(-40 24 24)"></circle><circle cx="24" cy="24" r="2.2" fill="#231d16"></circle></svg>
+        </div>
+        <div style="padding:20px;display:flex;align-items:center;gap:11px;justify-content:center;font-family:'Hanken Grotesk',sans-serif"><svg width="30" height="30" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="17" stroke="#231d16" stroke-width="3.2" stroke-dasharray="58.7 106.8" stroke-linecap="round" transform="rotate(-120 24 24)"></circle><circle cx="24" cy="24" r="12" stroke="#e69a2e" stroke-width="3.2" stroke-dasharray="45.2 75.4" stroke-linecap="round" transform="rotate(60 24 24)"></circle><circle cx="24" cy="24" r="7" stroke="#f2c14e" stroke-width="3.2" stroke-dasharray="26.4 44" stroke-linecap="round" transform="rotate(-40 24 24)"></circle><circle cx="24" cy="24" r="2.2" fill="#231d16"></circle></svg><span style="font-weight:800;font-size:26px;letter-spacing:-.03em;color:#231d16">timla</span></div>
+        <div style="padding:16px;display:flex;justify-content:center;background:#231d16"><svg width="30" height="30" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="17" stroke="#fbf1dc" stroke-width="3" stroke-dasharray="58.7 106.8" stroke-linecap="round" transform="rotate(-120 24 24)"></circle><circle cx="24" cy="24" r="12" stroke="#e69a2e" stroke-width="3" stroke-dasharray="45.2 75.4" stroke-linecap="round" transform="rotate(60 24 24)"></circle><circle cx="24" cy="24" r="7" stroke="#f2c14e" stroke-width="3" stroke-dasharray="26.4 44" stroke-linecap="round" transform="rotate(-40 24 24)"></circle><circle cx="24" cy="24" r="2.2" fill="#fbf1dc"></circle></svg></div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "byt till <a class="dv-oid" href="#3c">3c</a>" · "<a class="dv-oid" href="#3a">3a</a> men med tjockare visare" · "blanda <a class="dv-oid" href="#3b">3b</a> och <a class="dv-oid" href="#3d">3d</a>" · "fler ikon-idéer"</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Två riffs på <a class="dv-oid" href="#1b">1b</a></span></div>
+  <p class="dv-tsub">Samma varma, mänskliga grund. <a class="dv-oid" href="#2a">2a</a> lyfter salvian till medspelare och stramar upp formen; <a class="dv-oid" href="#2b">2b</a> går solig och ockrafärgad med grotesk istället för serif i rubriker.</p>
+  <div class="dv-opts">
+
+    <!-- ============ 2a — Salvia & lera, uppstramat ============ -->
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Salvia &amp; lera · lugnare, mer strukturerat</div>
+      <div class="dv-card" style="width:410px;background:#f7f4ee;border:1px solid #e4ddd0;font-family:'Hanken Grotesk',sans-serif">
+
+        <div style="padding:38px 34px 30px;display:flex;align-items:center;gap:15px;border-bottom:1px solid #ece5d7">
+          <svg width="42" height="42" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <circle cx="24" cy="24" r="17" stroke="#4f7358" stroke-width="3.5"></circle>
+            <path d="M24 24 L24 9 A15 15 0 0 1 37.5 18" stroke="#bd5a38" stroke-width="3.5" stroke-linecap="round"></path>
+          </svg>
+          <span style="font-weight:800;font-size:34px;letter-spacing:-.02em;color:#2e3a30">timla</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr)">
+          <div style="height:52px;background:#2e3a30"></div>
+          <div style="height:52px;background:#4f7358"></div>
+          <div style="height:52px;background:#bd5a38"></div>
+          <div style="height:52px;background:#efe9dc"></div>
+          <div style="height:52px;background:#d9a05b"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);font-size:8.5px;color:#8f9484;padding:6px 0 2px;text-align:center;font-weight:500">
+          <span>Skog</span><span>Salvia</span><span>Lera</span><span>Sand</span><span>Ockra</span>
+        </div>
+
+        <div style="padding:22px 34px 6px">
+          <div style="font-family:'Instrument Serif',serif;font-size:46px;color:#2e3a30;line-height:.95">Boka <span style="font-style:italic">tid.</span></div>
+          <div style="font-size:10px;color:#9aa08f;margin-top:8px;font-weight:500">Instrument Serif · Hanken Grotesk</div>
+          <p style="font-size:13px;line-height:1.6;color:#4a5348;margin:12px 0 0">Tid, bokning och schema för svenska verksamheter. Lugnt, ordnat, öppet.</p>
+        </div>
+
+        <div style="margin:18px 34px 34px;border:1px solid #e4ddd0;border-radius:12px;overflow:hidden;background:#fff">
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #efe9dc">
+            <span style="font-weight:700;font-size:14px;color:#2e3a30">Klippning</span>
+            <span style="font-size:11px;color:#4f7358;font-weight:600">45 min</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px;background:#4f7358;color:#fff">14:00</span>
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px;background:#eef1ea;color:#3e5545;border:1px solid #dde4dc">14:45</span>
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px;background:#eef1ea;color:#3e5545;border:1px solid #dde4dc">15:30</span>
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px;background:#f6ede2;color:#b98a4a;border:1px solid #ecdcc4;text-decoration:line-through">16:15</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 2b — Ockra & bläck, solig grotesk ============ -->
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Ockra &amp; bläck · solig, grotesk-rubriker</div>
+      <div class="dv-card" style="width:410px;background:#fdf8ee;border:1px solid #efe3cd;font-family:'Hanken Grotesk',sans-serif">
+
+        <div style="padding:38px 34px 30px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #f2e7cf">
+          <svg width="44" height="44" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <circle cx="24" cy="24" r="16" stroke="#e69a2e" stroke-width="3" stroke-dasharray="4.5 2.55" stroke-linecap="round"></circle>
+            <circle cx="24" cy="24" r="16" stroke="#231d16" stroke-width="5" stroke-dasharray="28 72.5" transform="rotate(-90 24 24)"></circle>
+            <circle cx="24" cy="24" r="3" fill="#231d16"></circle>
+          </svg>
+          <span style="font-weight:800;font-size:34px;letter-spacing:-.03em;color:#231d16">timla</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr)">
+          <div style="height:52px;background:#231d16"></div>
+          <div style="height:52px;background:#e69a2e"></div>
+          <div style="height:52px;background:#f2c14e"></div>
+          <div style="height:52px;background:#fbf1dc"></div>
+          <div style="height:52px;background:#c05a3a"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);font-size:8.5px;color:#a7936c;padding:6px 0 2px;text-align:center;font-weight:500">
+          <span>Bläck</span><span>Ockra</span><span>Honung</span><span>Grädde</span><span>Tegel</span>
+        </div>
+
+        <div style="padding:22px 34px 6px">
+          <div style="font-weight:800;font-size:44px;letter-spacing:-.035em;color:#231d16;line-height:.92">Boka tid.</div>
+          <div style="font-size:10px;color:#b39a6f;margin-top:8px;font-weight:500">Hanken Grotesk · IBM Plex Mono</div>
+          <p style="font-size:13px;line-height:1.55;color:#5a4d38;margin:12px 0 0">Tid, bokning och schema för svenska verksamheter. Soligt, enkelt, öppet.</p>
+        </div>
+
+        <div style="margin:18px 34px 34px;border:1px solid #efe3cd;border-radius:12px;overflow:hidden;background:#fff">
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f4ead2">
+            <span style="font-weight:700;font-size:14px;color:#231d16">Klippning</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#c07f1e">45 min</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:8px;background:#231d16;color:#f2c14e">14:00</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:8px;background:#fbf1dc;color:#8a6a2a;border:1px solid #eeddb8">14:45</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:8px;background:#fbf1dc;color:#8a6a2a;border:1px solid #eeddb8">15:30</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:8px;background:#f6eee0;color:#bfae8a;border:1px solid #eee2c8;text-decoration:line-through">16:15</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "bygg ut <a class="dv-oid" href="#2a">2a</a>" · "<a class="dv-oid" href="#2b">2b</a> men med serif-rubriker" · "blanda <a class="dv-oid" href="#1b">1b</a> och <a class="dv-oid" href="#2a">2a</a>" · "nya riffs"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Tre riktningar för Timla</span></div>
+  <p class="dv-tsub">Var och en är ett komplett litet system: logotyp (ordmärke + symbol), palett med roller, typografiskala och ett bokningskort. Peka ut den du vill att jag bygger ut till hela designsystemet — eller be om en blandning.</p>
+  <div class="dv-opts">
+
+    <!-- ============ 1a — Petrol & precision ============ -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Petrol &amp; precision · kyligt, developer-first</div>
+      <div class="dv-card" style="width:410px;background:#ffffff;border:1px solid #e3e1dc;font-family:'Space Grotesk',sans-serif">
+
+        <!-- logo -->
+        <div style="padding:38px 34px 30px;background:#0f2e33;display:flex;align-items:center;gap:14px">
+          <svg width="42" height="42" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <circle cx="24" cy="24" r="17" stroke="#5fd0c5" stroke-width="2.5"></circle>
+            <path d="M24 24 L24 7 A17 17 0 0 1 41 24 Z" fill="#5fd0c5"></path>
+          </svg>
+          <span style="font-weight:700;font-size:34px;letter-spacing:-.03em;color:#fff">timla</span>
+        </div>
+
+        <!-- palette -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr)">
+          <div style="height:52px;background:#0f2e33"></div>
+          <div style="height:52px;background:#17565c"></div>
+          <div style="height:52px;background:#5fd0c5"></div>
+          <div style="height:52px;background:#f0efec"></div>
+          <div style="height:52px;background:#e8964e"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#5b6a6a;padding:6px 0 2px;text-align:center">
+          <span>Djup</span><span>Petrol</span><span>Signal</span><span>Yta</span><span>Varning</span>
+        </div>
+
+        <!-- type -->
+        <div style="padding:22px 34px 6px">
+          <div style="font-weight:500;font-size:42px;letter-spacing:-.03em;color:#0f2e33;line-height:.95">Boka tid.</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a9797;margin-top:8px;letter-spacing:.02em">Space Grotesk · IBM Plex Mono</div>
+          <p style="font-size:13px;line-height:1.55;color:#3a4a4a;margin:12px 0 0">Composable tid-motor för svenska verksamheter. Precist, tekniskt, öppet.</p>
+        </div>
+
+        <!-- booking card -->
+        <div style="margin:18px 34px 34px;border:1px solid #dfe4e2;border-radius:12px;overflow:hidden">
+          <div style="padding:14px 16px;background:#f5f7f6;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5eae8">
+            <span style="font-weight:600;font-size:14px;color:#0f2e33">Klippning</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#17565c">45 min</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#0f2e33;color:#fff">14:00</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#eef2f1;color:#17565c;border:1px solid #dbe3e0">14:45</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#eef2f1;color:#17565c;border:1px solid #dbe3e0">15:30</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#f5efe8;color:#b56a1f;border:1px solid #f0dcc4;text-decoration:line-through">16:15</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1b — Sand & terrakotta ============ -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Sand &amp; terrakotta · varmt, mänskligt</div>
+      <div class="dv-card" style="width:410px;background:#fbf7f0;border:1px solid #ece2d3;font-family:'Hanken Grotesk',sans-serif">
+
+        <div style="padding:38px 34px 30px;background:#fbf7f0;display:flex;align-items:center;gap:15px;border-bottom:1px solid #efe6d8">
+          <svg width="42" height="42" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M24 41 A17 17 0 1 1 41 24" stroke="#c8603f" stroke-width="4" stroke-linecap="round"></path>
+            <circle cx="24" cy="24" r="4.5" fill="#c8603f"></circle>
+          </svg>
+          <span style="font-weight:800;font-size:34px;letter-spacing:-.02em;color:#3a2c22">timla</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr)">
+          <div style="height:52px;background:#3a2c22"></div>
+          <div style="height:52px;background:#c8603f"></div>
+          <div style="height:52px;background:#e6a15c"></div>
+          <div style="height:52px;background:#f4ecdd"></div>
+          <div style="height:52px;background:#5b7a63"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);font-size:8.5px;color:#9a8974;padding:6px 0 2px;text-align:center;font-weight:500">
+          <span>Bläck</span><span>Terrakotta</span><span>Ockra</span><span>Sand</span><span>Salvia</span>
+        </div>
+
+        <div style="padding:22px 34px 6px">
+          <div style="font-family:'Instrument Serif',serif;font-size:46px;color:#3a2c22;line-height:.95">Boka <span style="font-style:italic">tid.</span></div>
+          <div style="font-size:10px;color:#a8977f;margin-top:8px;font-weight:500">Instrument Serif · Hanken Grotesk</div>
+          <p style="font-size:13px;line-height:1.6;color:#5a4a3c;margin:12px 0 0">Tid, bokning och schema för svenska småföretag. Nära, varmt, enkelt.</p>
+        </div>
+
+        <div style="margin:18px 34px 34px;border:1px solid #ece2d3;border-radius:14px;overflow:hidden;background:#fff">
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2ebdd">
+            <span style="font-weight:700;font-size:14px;color:#3a2c22">Klippning</span>
+            <span style="font-size:11px;color:#c8603f;font-weight:600">45 min</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;background:#c8603f;color:#fff">14:00</span>
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;background:#f4ecdd;color:#8a5a3a">14:45</span>
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;background:#f4ecdd;color:#8a5a3a">15:30</span>
+            <span style="font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;background:#f7efe4;color:#b8a68d;text-decoration:line-through">16:15</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1c — Ink & signal ============ -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Bläck &amp; signal · distinkt, självsäker</div>
+      <div class="dv-card" style="width:410px;background:#141414;border:1px solid #262626;font-family:'Bricolage Grotesque',sans-serif">
+
+        <div style="padding:38px 34px 30px;display:flex;align-items:center;gap:14px">
+          <svg width="42" height="42" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <rect x="6" y="6" width="36" height="36" rx="11" fill="#d6ff3f"></rect>
+            <line x1="24" y1="24" x2="24" y2="12" stroke="#141414" stroke-width="3.5" stroke-linecap="round"></line>
+            <line x1="24" y1="24" x2="33" y2="24" stroke="#141414" stroke-width="3.5" stroke-linecap="round"></line>
+          </svg>
+          <span style="font-weight:800;font-size:34px;letter-spacing:-.04em;color:#fff">timla</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr)">
+          <div style="height:52px;background:#141414"></div>
+          <div style="height:52px;background:#2a2a2a"></div>
+          <div style="height:52px;background:#d6ff3f"></div>
+          <div style="height:52px;background:#f2f2f0"></div>
+          <div style="height:52px;background:#8b7cff"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#7a7a7a;padding:6px 0 2px;text-align:center">
+          <span>Bläck</span><span>Kol</span><span>Signal</span><span>Papper</span><span>Violett</span>
+        </div>
+
+        <div style="padding:22px 34px 6px">
+          <div style="font-weight:800;font-size:44px;letter-spacing:-.04em;color:#fff;line-height:.92">Boka tid.</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7a7a7a;margin-top:8px">Bricolage Grotesque · IBM Plex Mono</div>
+          <p style="font-size:13px;line-height:1.55;color:#b5b5b5;margin:12px 0 0;font-weight:400">Tid-lagret som ligger under Calendly och Planday. Öppet. Kompromisslöst.</p>
+        </div>
+
+        <div style="margin:18px 34px 34px;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;background:#1c1c1c">
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2a2a">
+            <span style="font-weight:700;font-size:14px;color:#fff">Klippning</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#d6ff3f">45 min</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#d6ff3f;color:#141414;font-weight:500">14:00</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#2a2a2a;color:#e5e5e5">14:45</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#2a2a2a;color:#e5e5e5">15:30</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:7px;background:#232323;color:#5a5a5a;text-decoration:line-through">16:15</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Skriv t.ex.: "bygg ut <a class="dv-oid" href="#1a">1a</a>" · "<a class="dv-oid" href="#1b">1b</a> men med symbolen från <a class="dv-oid" href="#1a">1a</a>" · "gör <a class="dv-oid" href="#1c">1c</a> ljusare" · "nya riktningar"</p>
+</section>
+
+</x-dc>
+</body>
+</html>

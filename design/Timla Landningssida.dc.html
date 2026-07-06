@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="apple-touch-icon" href="assets/app-icon.svg">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#fdf8ee;color:#231d16;font-family:'Hanken Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#231d16;text-decoration:none}
+  .navlink{font-size:14.5px;font-weight:600;color:#5a4d38}
+  .navlink:hover{color:#231d16}
+  .mono{font-family:'IBM Plex Mono',monospace}
+</style>
+</helmet>
+
+<div style="max-width:1180px;margin:0 auto;padding:0 40px">
+
+  <!-- NAV -->
+  <nav style="display:flex;align-items:center;justify-content:space-between;padding:26px 0">
+    <svg viewBox="0 0 166 48" height="30" fill="none" style="display:block"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></g><text x="47" y="36" font-family="'Hanken Grotesk',sans-serif" font-weight="800" font-size="40" letter-spacing="-1.2" fill="#231d16">timla</text></svg>
+    <div style="display:flex;align-items:center;gap:30px">
+      <a class="navlink" href="#">Produkt</a>
+      <a class="navlink" href="#moduler">Moduler</a>
+      <a class="navlink" href="#priser">Priser</a>
+      <a class="navlink" href="#" style="display:flex;align-items:center;gap:6px">Docs <span class="mono" style="font-size:10px;padding:2px 6px;border-radius:5px;background:#efe3cd;color:#8a7a5c">open source</span></a>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <a class="navlink" href="#">Logga in</a>
+      <a href="#" style="font-weight:700;font-size:14.5px;padding:10px 18px;border-radius:9px;background:#231d16;color:#fbf1dc">Kom igång</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header style="display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:56px 0 72px">
+    <div>
+      <div class="mono" style="font-size:12px;letter-spacing:.12em;color:#c07f1e;margin-bottom:20px">TID · BOKNING · SCHEMA</div>
+      <h1 style="font-size:60px;line-height:1.02;letter-spacing:-.035em;font-weight:800;margin:0 0 22px">Tidsmotorn för svenska verksamheter.</h1>
+      <p style="font-size:18px;line-height:1.6;color:#5a4d38;margin:0 0 32px;max-width:46ch">Calendly, Planday och Doodle löser ett problem var. Timla är det öppna, composable lagret under dem — bokning, schema och rapportering i samma system.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+        <a href="#" style="font-weight:700;font-size:16px;padding:15px 26px;border-radius:11px;background:#231d16;color:#fbf1dc">Kom igång gratis</a>
+        <a href="#" style="font-weight:700;font-size:16px;padding:15px 26px;border-radius:11px;background:#fff;border:1px solid #d8c19a;color:#231d16">Se en demo</a>
+      </div>
+      <div class="mono" style="font-size:12.5px;color:#8a7a5c">Inget kort krävs · Svensk datahantering · MIT-licens</div>
+    </div>
+    <!-- product visual: booking widget -->
+    <div style="background:#231d16;border-radius:20px;padding:14px;box-shadow:0 24px 60px rgba(90,60,20,.2)">
+      <div style="background:#fdf8ee;border-radius:13px;overflow:hidden">
+        <div style="display:flex;gap:5px;padding:9px 16px;border-bottom:1px solid #f2e7cf">
+          <div style="flex:1;height:8px;border-radius:2px;background:#efe3cd"></div><div style="flex:1;height:8px;border-radius:2px;background:#e69a2e"></div><div style="flex:1;height:8px;border-radius:2px;background:#efe3cd"></div><div style="flex:1;height:8px;border-radius:2px;background:#efe3cd"></div><div style="flex:1;height:8px;border-radius:2px;background:#f2c14e"></div><div style="flex:1;height:8px;border-radius:2px;background:#efe3cd"></div><div style="flex:1;height:8px;border-radius:2px;background:#4f7358"></div><div style="flex:1;height:8px;border-radius:2px;background:#efe3cd"></div>
+        </div>
+        <div style="padding:22px 24px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px"><span style="font-weight:800;font-size:18px;letter-spacing:-.02em">Torsdag 8 maj</span><span class="mono" style="font-size:12px;color:#8a7a5c">‹ maj ›</span></div>
+          <div style="display:flex;gap:7px;margin-bottom:20px">
+            <div style="flex:1;text-align:center;padding:9px 0;border-radius:9px;background:#fff;border:1px solid #e4d9c2"><div style="font-size:10px;color:#8a7a5c">Tis</div><div class="mono" style="font-size:14px;font-weight:500">6</div></div>
+            <div style="flex:1;text-align:center;padding:9px 0;border-radius:9px;background:#fff;border:1px solid #e4d9c2"><div style="font-size:10px;color:#8a7a5c">Ons</div><div class="mono" style="font-size:14px;font-weight:500">7</div></div>
+            <div style="flex:1;text-align:center;padding:9px 0;border-radius:9px;background:#231d16"><div style="font-size:10px;color:#c9bdaa">Tors</div><div class="mono" style="font-size:14px;font-weight:500;color:#f2c14e">8</div></div>
+            <div style="flex:1;text-align:center;padding:9px 0;border-radius:9px;background:#fff;border:1px solid #e4d9c2"><div style="font-size:10px;color:#8a7a5c">Fre</div><div class="mono" style="font-size:14px;font-weight:500">9</div></div>
+          </div>
+          <div class="mono" style="font-size:11px;color:#8a7a5c;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px">Lediga tider</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <span class="mono" style="font-size:14px;text-align:center;padding:11px 0;border-radius:9px;background:#231d16;color:#f2c14e">14:00</span>
+            <span class="mono" style="font-size:14px;text-align:center;padding:11px 0;border-radius:9px;background:#fff;color:#8a6a2a;border:1px solid #eeddb8">14:45</span>
+            <span class="mono" style="font-size:14px;text-align:center;padding:11px 0;border-radius:9px;background:#fff;color:#8a6a2a;border:1px solid #eeddb8">15:30</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TRUST -->
+  <section style="padding:14px 0 64px;border-top:1px solid #efe3cd">
+    <p style="text-align:center;font-size:13px;color:#8a7a5c;margin:26px 0 20px;font-weight:600;letter-spacing:.02em">Byggt för hur svenska verksamheter faktiskt jobbar med tid</p>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
+      <span style="font-size:14px;font-weight:600;color:#5a4d38;padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e4d9c2">Frisörer &amp; salonger</span>
+      <span style="font-size:14px;font-weight:600;color:#5a4d38;padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e4d9c2">Vårdmottagningar</span>
+      <span style="font-size:14px;font-weight:600;color:#5a4d38;padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e4d9c2">Restauranger</span>
+      <span style="font-size:14px;font-weight:600;color:#5a4d38;padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e4d9c2">Föreningar</span>
+      <span style="font-size:14px;font-weight:600;color:#5a4d38;padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e4d9c2">Konsulter &amp; frilans</span>
+      <span style="font-size:14px;font-weight:600;color:#5a4d38;padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e4d9c2">Gym &amp; studios</span>
+    </div>
+  </section>
+
+  <!-- MODULER -->
+  <section id="moduler" style="padding:72px 0;border-top:1px solid #efe3cd">
+    <div style="max-width:60ch;margin-bottom:44px">
+      <div class="mono" style="font-size:12px;letter-spacing:.12em;color:#c07f1e;margin-bottom:12px">MODULER</div>
+      <h2 style="font-size:40px;letter-spacing:-.03em;font-weight:800;margin:0 0 14px">Composable moduler — ta bara det du behöver</h2>
+      <p style="font-size:17px;line-height:1.6;color:#5a4d38;margin:0">Varje modul står för sig och bygger på samma kärna: kalender, resurser och regler. Kombinera fritt.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
+      <div style="background:#fff;border:1px solid #e4d9c2;border-radius:16px;padding:28px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin-bottom:16px"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="#231d16" stroke-width="1.75"></rect><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="#231d16" stroke-width="1.75" stroke-linecap="round"></path><rect x="6.5" y="12.5" width="4.5" height="3.5" rx="1" fill="#e69a2e"></rect></svg>
+        <h3 style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin:0 0 8px">Bokning</h3>
+        <p style="font-size:14px;line-height:1.55;color:#5a4d38;margin:0">Tidsbokning, resursbokning, gruppbokning och mötesplanering — kunder bokar själva.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4d9c2;border-radius:16px;padding:28px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin-bottom:16px"><circle cx="9" cy="9" r="3" stroke="#231d16" stroke-width="1.75"></circle><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#231d16" stroke-width="1.75" stroke-linecap="round"></path><path d="M16 6.4a3 3 0 0 1 0 5.2M17.5 19c0-2.2-.9-3.9-2.2-5" stroke="#e69a2e" stroke-width="1.75" stroke-linecap="round"></path></svg>
+        <h3 style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin:0 0 8px">Schema</h3>
+        <p style="font-size:14px;line-height:1.55;color:#5a4d38;margin:0">Arbetsschema, tillgänglighet och vikarier. Agenten föreslår optimalt schema.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4d9c2;border-radius:16px;padding:28px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin-bottom:16px"><path d="M4 20V4M4 20h16" stroke="#231d16" stroke-width="1.75" stroke-linecap="round"></path><rect x="7.5" y="12" width="2.8" height="5" fill="#e69a2e"></rect><rect x="12.5" y="8" width="2.8" height="9" fill="#e69a2e"></rect><rect x="17.5" y="14" width="2.8" height="3" fill="#e69a2e"></rect></svg>
+        <h3 style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin:0 0 8px">Rapportering</h3>
+        <p style="font-size:14px;line-height:1.55;color:#5a4d38;margin:0">Tidsrapport, närvaro (LOK-stöd) och statistik — beläggning, populära tider, no-shows.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4d9c2;border-radius:16px;padding:28px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin-bottom:16px"><path d="M9.5 14.5l5-5M8 12l-2 2a3.5 3.5 0 0 0 5 5l2-2M16 12l2-2a3.5 3.5 0 0 0-5-5l-2 2" stroke="#231d16" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <h3 style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin:0 0 8px">Integrationer</h3>
+        <p style="font-size:14px;line-height:1.55;color:#5a4d38;margin:0">Google &amp; Outlook, Swish, BankID, SMS-påminnelser och inbäddningsbar bokningswidget.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPOSABLE / DEV -->
+  <section style="padding:64px 0;border-top:1px solid #efe3cd">
+    <div style="background:#231d16;border-radius:24px;padding:56px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center">
+      <div>
+        <div class="mono" style="font-size:12px;letter-spacing:.12em;color:#f2c14e;margin-bottom:14px">/COMPOSABLE</div>
+        <h2 style="font-size:34px;letter-spacing:-.03em;font-weight:800;color:#fff;margin:0 0 16px;line-height:1.1">Primitiver som driver både webb-UI och agent</h2>
+        <p style="font-size:16px;line-height:1.6;color:#c9bdaa;margin:0 0 22px">Samma API bär bokningssidan, kalendern och den valfria agenten. Data, beräkning och handling — kombinera fritt.</p>
+        <a href="#" style="font-weight:700;font-size:15px;color:#231d16;background:#f2c14e;padding:12px 20px;border-radius:10px;display:inline-block">Läs API-docs →</a>
+      </div>
+      <div class="mono" style="background:#1a150f;border:1px solid #3a3126;border-radius:14px;padding:24px;font-size:13px;line-height:1.9;color:#c9bdaa">
+        <div><span style="color:#4f9a6a">POST</span> <span style="color:#fff">/compute/find-slots</span></div>
+        <div style="color:#7a6f5c">&nbsp;&nbsp;{ resource, duration, period }</div>
+        <div style="color:#e69a2e">&nbsp;&nbsp;→ lediga tider som matchar</div>
+        <div style="height:12px"></div>
+        <div><span style="color:#4f9a6a">POST</span> <span style="color:#fff">/action/book</span></div>
+        <div style="color:#7a6f5c">&nbsp;&nbsp;{ resource, time, customer }</div>
+        <div style="color:#e69a2e">&nbsp;&nbsp;→ bokar + bekräftar</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENT -->
+  <section style="padding:64px 0;border-top:1px solid #efe3cd;display:grid;grid-template-columns:.95fr 1.05fr;gap:48px;align-items:center">
+    <div style="background:#fff;border:1px solid #e4d9c2;border-radius:18px;padding:26px;box-shadow:0 12px 34px rgba(90,60,20,.08)">
+      <div style="display:flex;gap:11px;margin-bottom:16px"><div style="width:30px;height:30px;border-radius:8px;background:#231d16;flex:none;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 48 48" fill="none"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></g></svg></div><div style="background:#fbf1dc;border-radius:12px;border-top-left-radius:3px;padding:12px 15px;font-size:14px;line-height:1.5;color:#3a2f22">Lisa har sjukanmält sig imorgon. Ni behöver en person 11–15. Erik och Karin är lediga — ska jag fråga Erik först?</div></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><div style="background:#231d16;color:#fbf1dc;border-radius:12px;border-top-right-radius:3px;padding:11px 15px;font-size:14px;max-width:70%">Ja, fråga Erik 👍</div></div>
+      <div style="display:flex;gap:11px"><div style="width:30px;height:30px;border-radius:8px;background:#231d16;flex:none;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 48 48" fill="none"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></g></svg></div><div style="background:#e7efe8;border-radius:12px;border-top-left-radius:3px;padding:12px 15px;font-size:14px;line-height:1.5;color:#2e3a30">Klart — Erik är tillfrågad och schemat är uppdaterat. ✅</div></div>
+    </div>
+    <div>
+      <div class="mono" style="font-size:12px;letter-spacing:.12em;color:#c07f1e;margin-bottom:14px">AGENTEN</div>
+      <h2 style="font-size:34px;letter-spacing:-.03em;font-weight:800;margin:0 0 16px;line-height:1.1">Ett valfritt gränssnitt — för den som hellre pratar</h2>
+      <p style="font-size:16px;line-height:1.6;color:#5a4d38;margin:0 0 18px">Webb-UI:t är alltid huvudgränssnittet. Agenten är ett parallellt sätt att formulera samma sak i naturligt språk — och den kan vara proaktiv.</p>
+      <ul style="margin:0;padding-left:18px;font-size:15px;line-height:1.9;color:#3a2f22">
+        <li>"Jag jobbar tis–fre 9–17, klippning tar 45 min."</li>
+        <li>"Boka styrelserummet andra tisdagen varje månad."</li>
+        <li>"Hur ser beläggningen ut jämfört med förra veckan?"</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- INTEGRATIONER -->
+  <section style="padding:64px 0;border-top:1px solid #efe3cd;text-align:center">
+    <h2 style="font-size:28px;letter-spacing:-.025em;font-weight:800;margin:0 0 28px">Kopplar ihop med det du redan använder</h2>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px">
+      <span class="mono" style="font-size:13.5px;color:#5a4d38;padding:11px 18px;border-radius:10px;background:#fff;border:1px solid #e4d9c2">Google Calendar</span>
+      <span class="mono" style="font-size:13.5px;color:#5a4d38;padding:11px 18px;border-radius:10px;background:#fff;border:1px solid #e4d9c2">Outlook 365</span>
+      <span class="mono" style="font-size:13.5px;color:#5a4d38;padding:11px 18px;border-radius:10px;background:#fff;border:1px solid #e4d9c2">Swish</span>
+      <span class="mono" style="font-size:13.5px;color:#5a4d38;padding:11px 18px;border-radius:10px;background:#fff;border:1px solid #e4d9c2">BankID</span>
+      <span class="mono" style="font-size:13.5px;color:#5a4d38;padding:11px 18px;border-radius:10px;background:#fff;border:1px solid #e4d9c2">SMS (46elks)</span>
+      <span class="mono" style="font-size:13.5px;color:#5a4d38;padding:11px 18px;border-radius:10px;background:#fff;border:1px solid #e4d9c2">iframe-widget</span>
+    </div>
+  </section>
+
+  <!-- PRISER -->
+  <section id="priser" style="padding:72px 0;border-top:1px solid #efe3cd">
+    <div style="text-align:center;max-width:56ch;margin:0 auto 44px">
+      <div class="mono" style="font-size:12px;letter-spacing:.12em;color:#c07f1e;margin-bottom:12px">PRISER</div>
+      <h2 style="font-size:40px;letter-spacing:-.03em;font-weight:800;margin:0 0 14px">Enkelt, transparent — väx när du vill</h2>
+      <p style="font-size:17px;line-height:1.6;color:#5a4d38;margin:0">Själv-hosta gratis, eller låt oss sköta driften. Alla priser exkl. moms.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start">
+
+      <!-- Öppen källkod -->
+      <div style="background:#fff;border:1px solid #e4d9c2;border-radius:18px;padding:32px 30px">
+        <div style="font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:6px">Öppen källkod</div>
+        <p style="font-size:13.5px;color:#8a7a5c;margin:0 0 20px;line-height:1.5">För dig som vill self-hosta.</p>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:22px"><span style="font-size:40px;font-weight:800;letter-spacing:-.03em">0</span><span class="mono" style="font-size:13px;color:#8a7a5c">kr / MIT-licens</span></div>
+        <a href="#" style="display:block;text-align:center;font-weight:700;font-size:15px;padding:13px;border-radius:11px;border:1px solid #d8c19a;background:#fff;color:#231d16;margin-bottom:24px">Läs på GitHub</a>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a2f22"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#4f7358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Alla moduler inkluderade</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a2f22"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#4f7358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Egen server &amp; data</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a2f22"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#4f7358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Community-support</div>
+        </div>
+      </div>
+
+      <!-- Verksamhet (featured) -->
+      <div style="background:#231d16;border-radius:18px;padding:32px 30px;position:relative;box-shadow:0 20px 50px rgba(90,60,20,.2)">
+        <span class="mono" style="position:absolute;top:-11px;left:30px;font-size:10.5px;font-weight:600;letter-spacing:.08em;padding:5px 11px;border-radius:20px;background:#e69a2e;color:#231d16">POPULÄRAST</span>
+        <div style="font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:6px;color:#fff">Verksamhet</div>
+        <p style="font-size:13.5px;color:#c9bdaa;margin:0 0 20px;line-height:1.5">För team med schema och bemanning.</p>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:22px"><span style="font-size:40px;font-weight:800;letter-spacing:-.03em;color:#fff">499</span><span class="mono" style="font-size:13px;color:#c9bdaa">kr / mån</span></div>
+        <a href="#" style="display:block;text-align:center;font-weight:700;font-size:15px;padding:13px;border-radius:11px;border:none;background:#e69a2e;color:#231d16;margin-bottom:24px">Kom igång</a>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#e9e0d0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#f2c14e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Allt i Start, plus:</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#e9e0d0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#f2c14e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Obegränsade resurser &amp; platser</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#e9e0d0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#f2c14e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Arbetsschema + schemaläggande agent</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#e9e0d0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#f2c14e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Swish &amp; BankID</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#e9e0d0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#f2c14e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Statistik &amp; prioriterad support</div>
+        </div>
+      </div>
+
+      <!-- Start -->
+      <div style="background:#fff;border:1px solid #e4d9c2;border-radius:18px;padding:32px 30px">
+        <div style="font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:6px">Start</div>
+        <p style="font-size:13.5px;color:#8a7a5c;margin:0 0 20px;line-height:1.5">För enmansföretag och små team.</p>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:22px"><span style="font-size:40px;font-weight:800;letter-spacing:-.03em">199</span><span class="mono" style="font-size:13px;color:#8a7a5c">kr / mån</span></div>
+        <a href="#" style="display:block;text-align:center;font-weight:700;font-size:15px;padding:13px;border-radius:11px;border:1px solid #d8c19a;background:#fff;color:#231d16;margin-bottom:24px">Börja gratis</a>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a2f22"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#4f7358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Hostat &amp; automatiska uppdateringar</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a2f22"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#4f7358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Bokningssida + kalender</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a2f22"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#4f7358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>100 SMS-påminnelser / mån</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a2f22"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M5 12.5l4 4 10-10.5" stroke="#4f7358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Google- &amp; Outlook-sync</div>
+        </div>
+      </div>
+
+    </div>
+    <p style="text-align:center;font-size:14px;color:#8a7a5c;margin:28px 0 0">Större organisation eller spärrbehov? <a href="#" style="font-weight:700;color:#c07f1e">Prata med oss om Enterprise →</a></p>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding:40px 0 80px">
+    <div style="background:#e69a2e;border-radius:24px;padding:64px 56px;text-align:center;position:relative;overflow:hidden">
+      <h2 style="font-size:44px;letter-spacing:-.03em;font-weight:800;margin:0 0 14px;color:#231d16">Kom igång på några minuter</h2>
+      <p style="font-size:17px;color:#5a3f16;margin:0 0 28px;max-width:44ch;margin-left:auto;margin-right:auto">Skapa ditt konto, lägg upp dina tider och dela din bokningslänk. Gratis att börja.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="#" style="font-weight:700;font-size:16px;padding:15px 28px;border-radius:11px;background:#231d16;color:#fbf1dc">Skapa konto</a>
+        <a href="#" style="font-weight:700;font-size:16px;padding:15px 28px;border-radius:11px;background:rgba(35,29,22,.08);color:#231d16;border:1px solid rgba(35,29,22,.25)">Boka demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="border-top:1px solid #efe3cd;padding:48px 0 64px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px">
+    <div>
+      <svg viewBox="0 0 166 48" height="28" fill="none" style="display:block;margin-bottom:14px"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></g><text x="47" y="36" font-family="'Hanken Grotesk',sans-serif" font-weight="800" font-size="40" letter-spacing="-1.2" fill="#231d16">timla</text></svg>
+      <p style="font-size:13.5px;color:#8a7a5c;line-height:1.6;margin:0;max-width:34ch">Open source-plattform för tid, bokning och schemaläggning. Byggt i Sverige.</p>
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px">Produkt</div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:#5a4d38"><a href="#">Moduler</a><a href="#">Priser</a><a href="#">Integrationer</a><a href="#">Bokningswidget</a></div>
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px">Utvecklare</div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:#5a4d38"><a href="#">Docs</a><a href="#">API</a><a href="#">GitHub</a><a href="#">Status</a></div>
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px">Företag</div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:#5a4d38"><a href="#">Om oss</a><a href="#">Villkor</a><a href="#">Integritet</a><a href="#">Kontakt</a></div>
+    </div>
+  </footer>
+  <div style="border-top:1px solid #efe3cd;padding:22px 0 56px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px" class="mono">
+    <span style="font-size:12px;color:#8a7a5c">© 2025 Timla · timla.se</span>
+    <span style="font-size:12px;color:#8a7a5c">MIT-licens · svensk datahantering</span>
+  </div>
+
+</div>
+
+</x-dc>
+</body>
+</html>
