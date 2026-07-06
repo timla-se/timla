@@ -63,7 +63,11 @@ conflicts reject the write with **409** `conflict` (body includes
 `conflicts` and `warnings`); `?force=true` overrides — the manager has
 the final word. Successful writes return
 `{shift, conflicts, warnings}` so overrides and soft warnings are always
-visible.
+visible. A PATCH that changes neither staff nor times (e.g. note-only)
+skips enforcement — it introduces no new conflict, and a force-created
+shift must stay editable. Check+write is serialized per staff member
+(advisory lock), so concurrent saves can't slip a double booking past
+the check.
 
 ## /compute/conflicts
 
@@ -77,7 +81,8 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
   rest violation can span a week boundary.
 - Hard conflicts: `double_booking`, `blocked` (hard block overlap),
   `max_hours` (against the effective cap — stricter of org rule and
-  per-staff), `insufficient_rest`.
+  per-staff), `insufficient_rest`, `archived_staff` (new shifts — no
+  `id` — for archived staff, mirroring the write path's rejection).
 - Soft warnings: `outside_wishes` — only for staff who have wishes
   registered; with none, all time is neutral.
 - Each item carries `shift_index` (payload position), `shift_id`,

@@ -49,6 +49,13 @@ def _staff_for_assignment(conn, org_id, value):
 def _enforce_conflicts(conn, org, shift_id, staff_id, starts_at, ends_at):
     """Hard conflicts reject the write unless ?force=true; the result is
     reported in the response either way (issue #5)."""
+    if staff_id:
+        # Serialize check+write per staff member: without this, two
+        # concurrent saves both pass the check before either commits and a
+        # double booking lands without force. The advisory lock is held
+        # until this connection commits or rolls back.
+        with conn.cursor() as cur:
+            cur.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))', (staff_id,))
     result = check_conflicts(conn, org, [{
         'index': 0,
         'id': str(shift_id) if shift_id else None,
@@ -135,7 +142,13 @@ def update_shift(shift_id):
         else:
             staff_id = str(existing['staff_id']) if existing['staff_id'] else None
         note = body.get('note', existing['note'])
-        result = _enforce_conflicts(conn, org, shift_id, staff_id, starts_at, ends_at)
+        existing_staff = str(existing['staff_id']) if existing['staff_id'] else None
+        if staff_id == existing_staff and starts_at == existing['starts_at'] and ends_at == existing['ends_at']:
+            # Note-only edits introduce no new conflict; re-running
+            # enforcement would 409 forever on force-created shifts.
+            result = {'conflicts': [], 'warnings': []}
+        else:
+            result = _enforce_conflicts(conn, org, shift_id, staff_id, starts_at, ends_at)
 
         try:
             with conn.cursor() as cur:

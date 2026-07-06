@@ -29,7 +29,11 @@ def check_conflicts(conn, org, proposed):
 
     tz = org['timezone']
     staff_ids = sorted({p['staff_id'] for p in staffed})
-    replaced_ids = {p['id'] for p in staffed if p['id']}
+    # From ALL proposals, not just staffed ones: a proposal that unassigns a
+    # shift (id set, staff_id null) must still replace its saved counterpart,
+    # otherwise the engine reports conflicts against the very shift the
+    # payload is removing.
+    replaced_ids = {p['id'] for p in proposed if p['id']}
     window_start = min(p['starts_at'] for p in staffed) - timedelta(days=8)
     window_end = max(p['ends_at'] for p in staffed) + timedelta(days=8)
 
@@ -53,6 +57,7 @@ def check_conflicts(conn, org, proposed):
         blocks = [a for a in availability if str(a['staff_id']) == sid and a['kind'] == 'block']
         wishes = [a for a in availability if str(a['staff_id']) == sid and a['kind'] == 'wish']
 
+        _check_archived(timeline, staff, conflicts)
         _check_double_booking(timeline, conflicts)
         _check_availability(timeline, blocks, wishes, tz, conflicts, warnings)
         _check_max_hours(timeline, staff, org_rules, tz, conflicts)
@@ -83,6 +88,19 @@ def _load_context(conn, org_id, staff_ids, window_start, window_end):
 def _item(type_, p, message, **details):
     return {'type': type_, 'shift_index': p['index'], 'shift_id': p['id'],
             'staff_id': p['staff_id'], 'message': message, **details}
+
+
+def _check_archived(timeline, staff, conflicts):
+    """New shifts (no id) for archived staff mirror the write path's
+    rejection, so the editor's live preview matches what save will do.
+    Editing a shift an archived member already holds stays allowed."""
+    if staff['archived_at'] is None:
+        return
+    for entry in timeline:
+        p = entry['proposed']
+        if p is not None and p['id'] is None:
+            conflicts.append(_item(
+                'archived_staff', p, 'Staff member is archived and cannot take new shifts'))
 
 
 def _check_double_booking(timeline, conflicts):
@@ -174,12 +192,19 @@ def _check_rest(timeline, org_rules, conflicts):
     min_rest = float(org_rules['min_rest_hours']) if org_rules and org_rules['min_rest_hours'] is not None else None
     if min_rest is None:
         return
-    for a, b in zip(timeline, timeline[1:]):
-        gap = (b['starts_at'] - a['ends_at']).total_seconds() / 3600
-        if 0 <= gap < min_rest:  # negative gap = overlap = double_booking already
-            for entry in (a, b):
-                if entry['proposed'] is not None:
-                    conflicts.append(_item(
-                        'insufficient_rest', entry['proposed'],
-                        f'Only {round(gap, 1)} h rest around an adjacent shift (minimum {min_rest:g} h)',
-                        rest_hours=round(gap, 1), min_rest_hours=min_rest))
+    # Compare each start against the running max of all previous ends, not
+    # just the immediate predecessor: a shift contained inside a longer one
+    # would otherwise mask the true latest end and hide the violation.
+    latest = None
+    for entry in timeline:
+        if latest is not None:
+            gap = (entry['starts_at'] - latest['ends_at']).total_seconds() / 3600
+            if 0 <= gap < min_rest:  # negative gap = overlap = double_booking already
+                for e in (latest, entry):
+                    if e['proposed'] is not None:
+                        conflicts.append(_item(
+                            'insufficient_rest', e['proposed'],
+                            f'Only {round(gap, 1)} h rest around an adjacent shift (minimum {min_rest:g} h)',
+                            rest_hours=round(gap, 1), min_rest_hours=min_rest))
+        if latest is None or entry['ends_at'] > latest['ends_at']:
+            latest = entry

@@ -162,6 +162,76 @@ def test_compute_rejects_unknown_staff(client):
     assert resp.get_json()['error'] == 'unknown_staff'
 
 
+# --- regressions from PR #19 review ---
+
+def test_rest_checks_running_max_not_just_adjacent_shift(client, make_staff):
+    client.put('/data/rules', json={'min_rest_hours': 11})
+    staff = make_staff()
+    # Mon 08:00-22:00, plus a contained Mon 09:00-10:00 forced on top.
+    create_shift(client, staff['id'], '2026-07-13T06:00:00+00:00', '2026-07-13T20:00:00+00:00')
+    forced = client.post('/data/shifts?force=true', json={
+        'staff_id': staff['id'],
+        'starts_at': '2026-07-13T07:00:00+00:00',
+        'ends_at': '2026-07-13T08:00:00+00:00',
+    })
+    assert forced.status_code == 201
+    # Tue 08:30 start: 10.5 h after the 22:00 end — the contained shift's
+    # earlier end must not mask the violation.
+    result = check(client, [{
+        'staff_id': staff['id'],
+        'starts_at': '2026-07-14T06:30:00+00:00',
+        'ends_at': '2026-07-14T10:00:00+00:00',
+    }])
+    assert 'insufficient_rest' in conflict_types(result)
+
+
+def test_unassigning_proposal_replaces_its_saved_counterpart(client, make_staff):
+    staff = make_staff()
+    saved = create_shift(client, staff['id'], '2026-07-13T10:00:00+00:00', '2026-07-13T14:00:00+00:00')
+    # One proposal unassigns the saved shift, another gives the same person
+    # the same slot — no double booking, the saved version is being replaced.
+    result = check(client, [
+        {'id': saved['id'], 'staff_id': None,
+         'starts_at': '2026-07-13T10:00:00+00:00', 'ends_at': '2026-07-13T14:00:00+00:00'},
+        {'staff_id': staff['id'],
+         'starts_at': '2026-07-13T10:00:00+00:00', 'ends_at': '2026-07-13T14:00:00+00:00'},
+    ])
+    assert result['conflicts'] == []
+
+
+def test_compute_flags_new_shifts_for_archived_staff(client, make_staff):
+    staff = make_staff()
+    client.delete(f"/data/staff/{staff['id']}")
+    result = check(client, [{
+        'staff_id': staff['id'],
+        'starts_at': '2026-07-13T10:00:00+00:00',
+        'ends_at': '2026-07-13T14:00:00+00:00',
+    }])
+    assert conflict_types(result) == ['archived_staff']
+
+
+def test_note_only_patch_does_not_retrigger_enforcement(client, make_staff):
+    staff = make_staff()
+    client.put(f"/data/availability/{staff['id']}", json={
+        'blocks': [{'weekday': 7, 'start_minute': 0, 'end_minute': 1440}],
+    })
+    forced = client.post('/data/shifts?force=true', json={
+        'staff_id': staff['id'],
+        'starts_at': '2026-07-12T08:00:00+00:00',
+        'ends_at': '2026-07-12T12:00:00+00:00',
+    })
+    shift = forced.get_json()['shift']
+    resp = client.patch(f"/data/shifts/{shift['id']}", json={'note': 'godkänt undantag'})
+    assert resp.status_code == 200
+    assert resp.get_json()['shift']['note'] == 'godkänt undantag'
+    # Changing the times still re-triggers enforcement.
+    resp = client.patch(f"/data/shifts/{shift['id']}", json={
+        'starts_at': '2026-07-12T09:00:00+00:00',
+        'ends_at': '2026-07-12T13:00:00+00:00',
+    })
+    assert resp.status_code == 409
+
+
 # --- enforcement on /data/shifts ---
 
 def test_write_rejects_hard_conflicts_unless_forced(client, make_staff):
