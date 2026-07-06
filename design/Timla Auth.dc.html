@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="apple-touch-icon" href="assets/app-icon.svg">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#efe7d7;color:#231d16;font-family:'Hanken Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#c07f1e;text-decoration:none}
+  a:hover{color:#231d16}
+  input{font-family:inherit}
+  input::placeholder{color:#b39a6f}
+  input:focus{outline:none;border-color:#e69a2e;box-shadow:0 0 0 3px rgba(230,154,46,.16)}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:44px;padding:56px 32px">
+
+  <!-- ============ LOGGA IN ============ -->
+  <section data-screen-label="Logga in" style="width:980px;max-width:100%;height:600px;display:flex;border-radius:22px;overflow:hidden;box-shadow:0 24px 70px rgba(90,60,20,.18);border:1px solid #e4d9c2">
+    <!-- brand panel -->
+    <div style="width:42%;background:#231d16;padding:46px 42px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden">
+      <svg viewBox="0 0 166 48" height="30" fill="none" style="display:block"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></g><text x="47" y="36" font-family="'Hanken Grotesk',sans-serif" font-weight="800" font-size="40" letter-spacing="-1.2" fill="#fbf1dc">timla</text></svg>
+      <div>
+        <h1 style="font-size:34px;line-height:1.1;letter-spacing:-.03em;font-weight:800;color:#fff;margin:0 0 14px;max-width:14ch">Tid, bokning &amp; schema — samlat.</h1>
+        <p style="font-size:15px;line-height:1.6;color:#c9bdaa;margin:0;max-width:34ch">Logga in för att hantera dina bokningar, scheman och resurser.</p>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#e69a2e"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#f2c14e"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#4f7358"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div>
+      </div>
+    </div>
+    <!-- form panel -->
+    <div style="flex:1;background:#fdf8ee;padding:56px 60px;display:flex;flex-direction:column;justify-content:center">
+      <h2 style="font-size:30px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px">Logga in</h2>
+      <p style="font-size:15px;color:#5a4d38;margin:0 0 30px">Välkommen tillbaka.</p>
+
+      <label style="display:block;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#8a7a5c;margin-bottom:7px">E-post</label>
+      <input type="email" placeholder="du@exempel.se" style="width:100%;padding:13px 15px;border-radius:10px;border:1px solid #d8c19a;background:#fff;color:#231d16;font-size:15px;margin-bottom:18px">
+
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px"><label style="font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#8a7a5c">Lösenord</label><a href="#" style="font-size:12.5px">Glömt?</a></div>
+      <input type="password" placeholder="••••••••" style="width:100%;padding:13px 15px;border-radius:10px;border:1px solid #d8c19a;background:#fff;color:#231d16;font-size:15px;margin-bottom:24px">
+
+      <button style="font-family:inherit;font-weight:700;font-size:16px;width:100%;padding:15px;border-radius:11px;border:none;background:#231d16;color:#fbf1dc;cursor:pointer">Logga in</button>
+
+      <div style="display:flex;align-items:center;gap:14px;margin:22px 0"><div style="flex:1;height:1px;background:#e4d9c2"></div><span style="font-size:12px;color:#b39a6f;font-family:'IBM Plex Mono',monospace">eller</span><div style="flex:1;height:1px;background:#e4d9c2"></div></div>
+
+      <button style="font-family:inherit;font-weight:700;font-size:15px;width:100%;padding:13px;border-radius:11px;border:1px solid #d8c19a;background:#fff;color:#231d16;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px"><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;color:#4f7358">BankID</span> Logga in med BankID</button>
+
+      <p style="text-align:center;font-size:14px;color:#5a4d38;margin:28px 0 0">Har du inget konto? <a href="#2" style="font-weight:700">Skapa konto</a></p>
+    </div>
+  </section>
+
+  <!-- ============ SKAPA KONTO ============ -->
+  <section id="2" data-screen-label="Skapa konto" style="width:980px;max-width:100%;height:640px;display:flex;border-radius:22px;overflow:hidden;box-shadow:0 24px 70px rgba(90,60,20,.18);border:1px solid #e4d9c2">
+    <!-- brand panel -->
+    <div style="width:42%;background:#231d16;padding:46px 42px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden">
+      <svg viewBox="0 0 166 48" height="30" fill="none" style="display:block"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc"></rect></g><text x="47" y="36" font-family="'Hanken Grotesk',sans-serif" font-weight="800" font-size="40" letter-spacing="-1.2" fill="#fbf1dc">timla</text></svg>
+      <div>
+        <h1 style="font-size:34px;line-height:1.1;letter-spacing:-.03em;font-weight:800;color:#fff;margin:0 0 20px;max-width:15ch">Kom igång på några minuter.</h1>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div style="display:flex;align-items:center;gap:11px;font-size:14.5px;color:#e9e0d0"><span style="width:22px;height:22px;border-radius:6px;background:#e69a2e;display:flex;align-items:center;justify-content:center;color:#231d16;font-weight:800;font-size:12px;flex:none">1</span>Skapa ditt konto</div>
+          <div style="display:flex;align-items:center;gap:11px;font-size:14.5px;color:#e9e0d0"><span style="width:22px;height:22px;border-radius:6px;background:#3a3126;display:flex;align-items:center;justify-content:center;color:#c9bdaa;font-weight:800;font-size:12px;flex:none">2</span>Lägg upp tjänster &amp; tider</div>
+          <div style="display:flex;align-items:center;gap:11px;font-size:14.5px;color:#e9e0d0"><span style="width:22px;height:22px;border-radius:6px;background:#3a3126;display:flex;align-items:center;justify-content:center;color:#c9bdaa;font-weight:800;font-size:12px;flex:none">3</span>Dela din bokningslänk</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#f2c14e"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#4f7358"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#e69a2e"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div><div style="flex:1;height:14px;border-radius:3px;background:#3a3126"></div>
+      </div>
+    </div>
+    <!-- form panel -->
+    <div style="flex:1;background:#fdf8ee;padding:44px 60px;display:flex;flex-direction:column;justify-content:center">
+      <h2 style="font-size:30px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px">Skapa konto</h2>
+      <p style="font-size:15px;color:#5a4d38;margin:0 0 26px">Gratis att komma igång. Inget kort krävs.</p>
+
+      <label style="display:block;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#8a7a5c;margin-bottom:7px">Namn</label>
+      <input placeholder="För- och efternamn" style="width:100%;padding:12px 15px;border-radius:10px;border:1px solid #d8c19a;background:#fff;color:#231d16;font-size:15px;margin-bottom:16px">
+
+      <label style="display:block;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#8a7a5c;margin-bottom:7px">E-post</label>
+      <input type="email" placeholder="du@exempel.se" style="width:100%;padding:12px 15px;border-radius:10px;border:1px solid #d8c19a;background:#fff;color:#231d16;font-size:15px;margin-bottom:16px">
+
+      <div style="display:flex;gap:14px;margin-bottom:20px">
+        <div style="flex:1"><label style="display:block;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#8a7a5c;margin-bottom:7px">Lösenord</label><input type="password" placeholder="Minst 8 tecken" style="width:100%;padding:12px 15px;border-radius:10px;border:1px solid #d8c19a;background:#fff;color:#231d16;font-size:15px"></div>
+        <div style="flex:1"><label style="display:block;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#8a7a5c;margin-bottom:7px">Verksamhet</label>
+          <div style="width:100%;padding:12px 15px;border-radius:10px;border:1px solid #d8c19a;background:#fff;color:#231d16;font-size:15px;display:flex;justify-content:space-between;align-items:center">Frisör &amp; salong<span style="color:#b39a6f">▾</span></div>
+        </div>
+      </div>
+
+      <button style="font-family:inherit;font-weight:700;font-size:16px;width:100%;padding:15px;border-radius:11px;border:none;background:#e69a2e;color:#231d16;cursor:pointer">Skapa konto</button>
+
+      <p style="font-size:12.5px;color:#8a7a5c;line-height:1.5;margin:14px 0 0;text-align:center">Genom att skapa konto godkänner du våra <a href="#">villkor</a> och <a href="#">integritetspolicy</a>.</p>
+
+      <div style="height:1px;background:#e4d9c2;margin:22px 0"></div>
+
+      <p style="text-align:center;font-size:14px;color:#5a4d38;margin:0">Redan medlem? <a href="#" style="font-weight:700">Logga in</a></p>
+    </div>
+  </section>
+
+</div>
+
+</x-dc>
+</body>
+</html>
