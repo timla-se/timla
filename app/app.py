@@ -29,10 +29,13 @@ app.secret_key = _secret_key
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
 
 
+API_PREFIXES = ('api', 'link', 'data', 'compute', 'action')
+
+
 def _is_api_path(path):
-    """True for JSON API paths (/api/... or /link/...), with or without
-    anything after the prefix — exact '/api' must not fall through to the SPA."""
-    return path in ('api', 'link') or path.startswith(('api/', 'link/'))
+    """True for JSON API paths, with or without anything after the prefix —
+    exact '/api' etc. must not fall through to the SPA."""
+    return path in API_PREFIXES or path.startswith(tuple(p + '/' for p in API_PREFIXES))
 
 
 @app.after_request
@@ -45,6 +48,11 @@ def no_cache_api(response):
 @app.get('/api/health')
 def health():
     return jsonify({'status': 'ok', 'env': TIMLA_ENV, 'dev': IS_DEV})
+
+
+import routes  # noqa: E402  (flat-module layout; needs app defined above)
+
+routes.register(app)
 
 
 # --- SPA fallback: serve the built frontend for all non-API paths ---

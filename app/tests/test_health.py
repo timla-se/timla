@@ -17,7 +17,7 @@ def test_api_responses_are_uncached():
 
 def test_unknown_api_path_is_json_404_not_spa():
     client = app.test_client()
-    for path in ('/api/nonexistent', '/api', '/link'):
+    for path in ('/api/nonexistent', '/api', '/link', '/data', '/data/nonexistent', '/compute/x', '/action/x'):
         resp = client.get(path)
         assert resp.status_code == 404, path
         assert resp.get_json()['error'] == 'not_found'
