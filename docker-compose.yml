@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: timla-postgres
+    environment:
+      POSTGRES_USER: timla
+      POSTGRES_PASSWORD: timla
+      POSTGRES_DB: timla
+    ports:
+      # Loopback only — dev access from host (psql, scripts). Host port 5433
+      # so Timla can run alongside other local postgres instances on 5432.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      # PG18+ expects the mount at /var/lib/postgresql, with data under a
+      # version-specific subdir (e.g. /var/lib/postgresql/18/docker).
+      - ./data/pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U timla -d timla"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  timla:
+    build: .
+    container_name: timla
+    ports:
+      # Loopback only — this is a dev compose; don't expose the app on LAN.
+      - "127.0.0.1:8899:8899"
+    # --reload makes the app/ mounts below meaningful: code changes restart
+    # the workers instead of silently requiring a container restart.
+    command: gunicorn --bind 0.0.0.0:8899 --workers 2 --reload app:app
+    volumes:
+      - ./app:/timla/app
+      - ./scripts:/timla/scripts
+      - ./migrations:/timla/migrations
+      - ./alembic.ini:/timla/alembic.ini
+    environment:
+      - TIMLA_ENV=dev
+      - DATABASE_URL=postgresql://timla:timla@postgres:5432/timla
+      - SECRET_KEY=${SECRET_KEY:-dev-only-secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
