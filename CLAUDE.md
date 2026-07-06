@@ -1,0 +1,33 @@
+# Timla
+
+Composable time/booking/scheduling platform. MVP scope = the staff
+scheduling (arbetsschema) module only; plan lives in milestone
+[MVP](https://github.com/timla-se/timla/milestone/1).
+
+## Workflow
+
+- Branch + PR flow — never commit directly to main.
+- **All PRs are squash-merged** (enforced in repo settings).
+- CI must be green before merge: eslint, tsc, vite build, alembic + pytest.
+
+## Architecture
+
+- Backend: flat Flask modules in `app/` (OpenVera pattern), **raw psycopg3,
+  no ORM**. Migrations are hand-written SQL via Alembic (`op.execute`,
+  autogenerate disabled).
+- API convention: `docs/primitives.md` — `/data` (reads/writes), `/compute`
+  (pure, no side effects, may read), `/action` (does things). Staff-facing
+  share-link routes live under `/link/:token` and are the only
+  unauthenticated surface.
+- Week semantics: ISO 8601 weeks, Monday start, evaluated in the org
+  timezone; an overnight shift belongs to the week where it **starts**.
+  Helpers in `app/weeks.py` — use them, don't reimplement.
+- Availability is stored as wall-clock minutes in the org timezone
+  (DST-safe); expansion to UTC goes through `app/weeks.py`.
+
+## Dev
+
+- `docker compose up -d postgres` — Postgres on host port **5433** (not 5432).
+- `DATABASE_URL=postgresql://timla:timla@localhost:5433/timla alembic upgrade head`
+- Seed demo data: same env, `python scripts/seed.py` (idempotent).
+- Verify recipe: `.claude/skills/verify/SKILL.md`.
