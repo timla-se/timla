@@ -1,7 +1,7 @@
 """Shared helpers for the JSON API: errors, org resolution, period parsing."""
 
 import uuid as uuid_lib
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from flask import jsonify, request
 
@@ -19,17 +19,29 @@ def is_strict_int(value):
 
 
 class ApiError(Exception):
-    """Raised by route code; rendered as the canonical error shape."""
+    """Raised by route code; rendered as the canonical error shape.
+    ``extra`` keys are merged into the response body (e.g. conflict lists)."""
 
-    def __init__(self, status, code, message):
+    def __init__(self, status, code, message, extra=None):
         super().__init__(message)
         self.status = status
         self.code = code
         self.message = message
-
+        self.extra = extra or {}
 
 def api_error_response(err):
-    return jsonify({'error': err.code, 'message': err.message}), err.status
+    return jsonify({'error': err.code, 'message': err.message, **err.extra}), err.status
+
+
+def parse_instant(value, field):
+    """Parse a required ISO 8601 timestamp; must be timezone-aware."""
+    try:
+        instant = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        raise ApiError(400, 'invalid', f'{field} must be an ISO 8601 timestamp')
+    if instant.tzinfo is None:
+        raise ApiError(400, 'invalid', f'{field} must include a timezone offset (e.g. Z)')
+    return instant
 
 
 def get_json_body():

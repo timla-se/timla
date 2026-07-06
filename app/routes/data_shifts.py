@@ -2,12 +2,12 @@
 it starts (same rule as weeks); period filtering is on starts_at."""
 
 import uuid as uuid_lib
-from datetime import datetime
 
 import psycopg
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
-from api_utils import ApiError, current_org, get_json_body, resolve_period
+from api_utils import ApiError, current_org, get_json_body, parse_instant, resolve_period
+from conflicts import check_conflicts
 from db import get_db
 from weeks import local_instant
 
@@ -46,14 +46,28 @@ def _staff_for_assignment(conn, org_id, value):
     return str(staff_id)
 
 
-def _parse_instant(value, field):
-    try:
-        instant = datetime.fromisoformat(value)
-    except (TypeError, ValueError):
-        raise ApiError(400, 'invalid', f'{field} must be an ISO 8601 timestamp')
-    if instant.tzinfo is None:
-        raise ApiError(400, 'invalid', f'{field} must include a timezone offset (e.g. Z)')
-    return instant
+def _enforce_conflicts(conn, org, shift_id, staff_id, starts_at, ends_at):
+    """Hard conflicts reject the write unless ?force=true; the result is
+    reported in the response either way (issue #5)."""
+    if staff_id:
+        # Serialize check+write per staff member: without this, two
+        # concurrent saves both pass the check before either commits and a
+        # double booking lands without force. The advisory lock is held
+        # until this connection commits or rolls back.
+        with conn.cursor() as cur:
+            cur.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))', (staff_id,))
+    result = check_conflicts(conn, org, [{
+        'index': 0,
+        'id': str(shift_id) if shift_id else None,
+        'staff_id': staff_id,
+        'starts_at': starts_at,
+        'ends_at': ends_at,
+    }])
+    if result['conflicts'] and request.args.get('force') != 'true':
+        raise ApiError(409, 'conflict',
+                       'Shift has hard conflicts; retry with ?force=true to override',
+                       extra=result)
+    return result
 
 
 @bp.get('/data/shifts')
@@ -81,11 +95,12 @@ def create_shift():
         unknown = set(body) - {'staff_id', 'starts_at', 'ends_at', 'note'}
         if unknown:
             raise ApiError(400, 'unknown_field', f'Unknown fields: {", ".join(sorted(unknown))}')
-        starts_at = _parse_instant(body.get('starts_at'), 'starts_at')
-        ends_at = _parse_instant(body.get('ends_at'), 'ends_at')
+        starts_at = parse_instant(body.get('starts_at'), 'starts_at')
+        ends_at = parse_instant(body.get('ends_at'), 'ends_at')
         if ends_at <= starts_at:
             raise ApiError(400, 'invalid', 'ends_at must be after starts_at')
         staff_id = _staff_for_assignment(conn, org['id'], body.get('staff_id'))
+        result = _enforce_conflicts(conn, org, None, staff_id, starts_at, ends_at)
 
         try:
             with conn.cursor() as cur:
@@ -98,7 +113,7 @@ def create_shift():
             conn.commit()
         except psycopg.errors.ForeignKeyViolation:
             raise ApiError(400, 'unknown_staff', 'staff_id is not a staff member of this organization')
-    return jsonify(shift_json(row)), 201
+    return jsonify({'shift': shift_json(row), **result}), 201
 
 
 @bp.patch('/data/shifts/<uuid:shift_id>')
@@ -118,8 +133,8 @@ def update_shift(shift_id):
         if existing is None:
             raise ApiError(404, 'not_found', 'No such shift')
 
-        starts_at = _parse_instant(body['starts_at'], 'starts_at') if 'starts_at' in body else existing['starts_at']
-        ends_at = _parse_instant(body['ends_at'], 'ends_at') if 'ends_at' in body else existing['ends_at']
+        starts_at = parse_instant(body['starts_at'], 'starts_at') if 'starts_at' in body else existing['starts_at']
+        ends_at = parse_instant(body['ends_at'], 'ends_at') if 'ends_at' in body else existing['ends_at']
         if ends_at <= starts_at:
             raise ApiError(400, 'invalid', 'ends_at must be after starts_at')
         if 'staff_id' in body:
@@ -127,6 +142,13 @@ def update_shift(shift_id):
         else:
             staff_id = str(existing['staff_id']) if existing['staff_id'] else None
         note = body.get('note', existing['note'])
+        existing_staff = str(existing['staff_id']) if existing['staff_id'] else None
+        if staff_id == existing_staff and starts_at == existing['starts_at'] and ends_at == existing['ends_at']:
+            # Note-only edits introduce no new conflict; re-running
+            # enforcement would 409 forever on force-created shifts.
+            result = {'conflicts': [], 'warnings': []}
+        else:
+            result = _enforce_conflicts(conn, org, shift_id, staff_id, starts_at, ends_at)
 
         try:
             with conn.cursor() as cur:
@@ -140,7 +162,7 @@ def update_shift(shift_id):
             conn.commit()
         except psycopg.errors.ForeignKeyViolation:
             raise ApiError(400, 'unknown_staff', 'staff_id is not a staff member of this organization')
-    return jsonify(shift_json(row))
+    return jsonify({'shift': shift_json(row), **result})
 
 
 @bp.delete('/data/shifts/<uuid:shift_id>')

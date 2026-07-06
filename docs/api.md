@@ -56,8 +56,37 @@ end_minute}` — wall-clock minutes in the org timezone, `0 <= start < end
 | PATCH | `/data/shifts/:id` | Any subset; `staff_id: null` unassigns |
 | DELETE | `/data/shifts/:id` | |
 
-Conflict enforcement (`?force=true` override) arrives with
-`/compute/conflicts` in issue #5 — until then writes are unchecked.
+Archived staff cannot be assigned shifts (400 `archived_staff`).
+
+**Conflict enforcement:** POST and PATCH run the conflict engine. Hard
+conflicts reject the write with **409** `conflict` (body includes
+`conflicts` and `warnings`); `?force=true` overrides — the manager has
+the final word. Successful writes return
+`{shift, conflicts, warnings}` so overrides and soft warnings are always
+visible. A PATCH that changes neither staff nor times (e.g. note-only)
+skips enforcement — it introduces no new conflict, and a force-created
+shift must stay editable. Check+write is serialized per staff member
+(advisory lock), so concurrent saves can't slip a double booking past
+the check.
+
+## /compute/conflicts
+
+`POST /compute/conflicts` with `{shifts: [{id?, staff_id?, starts_at,
+ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
+
+- Proposed shifts **replace their saved counterparts** (matched by `id`),
+  so checking an edit doesn't conflict with the shift's own saved state.
+- Saved shifts in the same and adjacent weeks are read for context:
+  max-hours totals and rest gaps count shifts outside the payload, and a
+  rest violation can span a week boundary.
+- Hard conflicts: `double_booking`, `blocked` (hard block overlap),
+  `max_hours` (against the effective cap — stricter of org rule and
+  per-staff), `insufficient_rest`, `archived_staff` (new shifts — no
+  `id` — for archived staff, mirroring the write path's rejection).
+- Soft warnings: `outside_wishes` — only for staff who have wishes
+  registered; with none, all time is neutral.
+- Each item carries `shift_index` (payload position), `shift_id`,
+  `staff_id`, `type`, `message` and type-specific details.
 
 ## Rules
 

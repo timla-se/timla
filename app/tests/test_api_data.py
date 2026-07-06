@@ -1,50 +1,15 @@
 """API tests for the /data primitives. Need a migrated database (same skip
-pattern as test_schema.py); each test runs against its own throwaway org
-that the fixture deletes afterwards (cascade wipes everything)."""
+pattern as test_schema.py); org/client/make_staff fixtures live in
+tests/conftest.py."""
 
 import psycopg
 import pytest
 
 from app import app
 from config import DATABASE_URL
+from dbfixtures import db_available
 
-
-def _db_available():
-    try:
-        with psycopg.connect(DATABASE_URL, connect_timeout=2):
-            return True
-    except psycopg.OperationalError:
-        return False
-
-
-pytestmark = pytest.mark.skipif(not _db_available(), reason='no database reachable at DATABASE_URL')
-
-
-@pytest.fixture
-def org_id():
-    with psycopg.connect(DATABASE_URL) as conn:
-        with conn.cursor() as cur:
-            cur.execute("INSERT INTO organization (name) VALUES ('API-testorg') RETURNING id")
-            org_id = str(cur.fetchone()[0])
-        conn.commit()
-    yield org_id
-    with psycopg.connect(DATABASE_URL) as conn:
-        with conn.cursor() as cur:
-            cur.execute('DELETE FROM organization WHERE id = %s', (org_id,))
-        conn.commit()
-
-
-@pytest.fixture
-def client(org_id):
-    c = app.test_client()
-    c.environ_base['HTTP_X_TIMLA_ORG'] = org_id
-    return c
-
-
-def make_staff(client, name='Lisa Andersson', **extra):
-    resp = client.post('/data/staff', json={'name': name, **extra})
-    assert resp.status_code == 201, resp.get_json()
-    return resp.get_json()
+pytestmark = pytest.mark.skipif(not db_available(), reason='no database reachable at DATABASE_URL')
 
 
 # --- staff ---
@@ -55,8 +20,8 @@ def test_staff_requires_org_header(org_id):
     assert resp.get_json()['error'] == 'missing_org'
 
 
-def test_staff_crud_roundtrip(client):
-    staff = make_staff(client, role='kock', max_hours_per_week=32)
+def test_staff_crud_roundtrip(client, make_staff):
+    staff = make_staff(role='kock', max_hours_per_week=32)
     assert staff['max_hours_per_week'] == 32
 
     listed = client.get('/data/staff').get_json()
@@ -77,8 +42,8 @@ def test_staff_rejects_unknown_fields(client):
     assert resp.get_json()['error'] == 'unknown_field'
 
 
-def test_org_isolation(client, org_id):
-    staff = make_staff(client)
+def test_org_isolation(client, make_staff):
+    staff = make_staff()
     with psycopg.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
             cur.execute("INSERT INTO organization (name) VALUES ('Other API org') RETURNING id")
@@ -98,8 +63,8 @@ def test_org_isolation(client, org_id):
 
 # --- availability ---
 
-def test_availability_document_and_exceptions(client):
-    staff = make_staff(client)
+def test_availability_document_and_exceptions(client, make_staff):
+    staff = make_staff()
     resp = client.put(f"/data/availability/{staff['id']}", json={
         'wishes': [{'weekday': 1, 'start_minute': 540, 'end_minute': 1020}],
         'blocks': [{'weekday': 7, 'start_minute': 0, 'end_minute': 1440}],
@@ -123,8 +88,8 @@ def test_availability_document_and_exceptions(client):
     assert resp.status_code == 204
 
 
-def test_availability_expansion_over_period(client):
-    staff = make_staff(client)
+def test_availability_expansion_over_period(client, make_staff):
+    staff = make_staff()
     client.put(f"/data/availability/{staff['id']}", json={
         'wishes': [{'weekday': 1, 'start_minute': 480, 'end_minute': 960}],  # Mondays 08-16
     })
@@ -140,8 +105,8 @@ def test_availability_expansion_over_period(client):
     assert monday_wish['starts_at'].startswith('2026-07-13T06:00')
 
 
-def test_availability_rejects_wish_without_weekday(client):
-    staff = make_staff(client)
+def test_availability_rejects_wish_without_weekday(client, make_staff):
+    staff = make_staff()
     resp = client.put(f"/data/availability/{staff['id']}", json={
         'wishes': [{'start_minute': 0, 'end_minute': 60}],
     })
@@ -150,8 +115,8 @@ def test_availability_rejects_wish_without_weekday(client):
 
 # --- shifts ---
 
-def test_shift_crud_and_week_filter(client):
-    staff = make_staff(client)
+def test_shift_crud_and_week_filter(client, make_staff):
+    staff = make_staff()
     # Saturday 18:00 → Sunday 02:00 Stockholm time, W28.
     resp = client.post('/data/shifts', json={
         'staff_id': staff['id'],
@@ -159,15 +124,17 @@ def test_shift_crud_and_week_filter(client):
         'ends_at': '2026-07-12T00:00:00+00:00',
     })
     assert resp.status_code == 201, resp.get_json()
-    shift = resp.get_json()
+    body = resp.get_json()
+    assert body['conflicts'] == [] and body['warnings'] == []
+    shift = body['shift']
 
     in_week = client.get('/data/shifts?period=2026-W28').get_json()
     assert [s['id'] for s in in_week] == [shift['id']]
     assert client.get('/data/shifts?period=2026-W29').get_json() == []
 
     resp = client.patch(f"/data/shifts/{shift['id']}", json={'staff_id': None, 'note': 'öppet pass'})
-    body = resp.get_json()
-    assert body['staff_id'] is None and body['note'] == 'öppet pass'
+    patched = resp.get_json()['shift']
+    assert patched['staff_id'] is None and patched['note'] == 'öppet pass'
 
     assert client.delete(f"/data/shifts/{shift['id']}").status_code == 204
     assert client.delete(f"/data/shifts/{shift['id']}").status_code == 404
@@ -179,8 +146,8 @@ def test_shift_requires_period_on_list(client):
     assert resp.get_json()['error'] == 'missing_period'
 
 
-def test_shift_rejects_bad_input(client):
-    staff = make_staff(client)
+def test_shift_rejects_bad_input(client, make_staff):
+    staff = make_staff()
     base = {'staff_id': staff['id'], 'starts_at': '2026-07-11T16:00:00+00:00'}
     # end before start
     resp = client.post('/data/shifts', json={**base, 'ends_at': '2026-07-11T15:00:00+00:00'})
@@ -206,8 +173,8 @@ def test_staff_rejects_non_string_name_and_bool_hours(client):
     assert client.post('/data/staff', json={'name': 'X', 'max_hours_per_week': True}).status_code == 400
 
 
-def test_staff_archived_must_be_boolean(client):
-    staff = make_staff(client)
+def test_staff_archived_must_be_boolean(client, make_staff):
+    staff = make_staff()
     for bad in ('no', 'false', 0, None):
         resp = client.patch(f"/data/staff/{staff['id']}", json={'archived': bad})
         assert resp.status_code == 400, f'archived={bad!r} accepted'
@@ -230,8 +197,8 @@ def test_shift_rejects_non_string_staff_id(client):
     assert resp.status_code == 400
 
 
-def test_shift_rejects_archived_staff(client):
-    staff = make_staff(client)
+def test_shift_rejects_archived_staff(client, make_staff):
+    staff = make_staff()
     client.delete(f"/data/staff/{staff['id']}")
     resp = client.post('/data/shifts', json={
         'staff_id': staff['id'],
@@ -242,8 +209,8 @@ def test_shift_rejects_archived_staff(client):
     assert resp.get_json()['error'] == 'archived_staff'
 
 
-def test_availability_rejects_bool_weekday_and_unknown_exception_fields(client):
-    staff = make_staff(client)
+def test_availability_rejects_bool_weekday_and_unknown_exception_fields(client, make_staff):
+    staff = make_staff()
     resp = client.put(f"/data/availability/{staff['id']}", json={
         'wishes': [{'weekday': True, 'start_minute': 0, 'end_minute': 60}],
     })
