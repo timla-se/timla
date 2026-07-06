@@ -198,6 +198,74 @@ def test_shift_rejects_bad_input(client):
     assert resp.get_json()['error'] == 'unknown_staff'
 
 
+# --- input validation regressions (PR #18 review) ---
+
+def test_staff_rejects_non_string_name_and_bool_hours(client):
+    assert client.post('/data/staff', json={'name': 123}).status_code == 400
+    assert client.post('/data/staff', json={'name': True}).status_code == 400
+    assert client.post('/data/staff', json={'name': 'X', 'max_hours_per_week': True}).status_code == 400
+
+
+def test_staff_archived_must_be_boolean(client):
+    staff = make_staff(client)
+    for bad in ('no', 'false', 0, None):
+        resp = client.patch(f"/data/staff/{staff['id']}", json={'archived': bad})
+        assert resp.status_code == 400, f'archived={bad!r} accepted'
+    # and the staff member is still active
+    assert client.get('/data/staff').get_json()[0]['archived'] is False
+
+
+def test_staff_create_rejects_archived_field(client):
+    resp = client.post('/data/staff', json={'name': 'X', 'archived': True})
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'unknown_field'
+
+
+def test_shift_rejects_non_string_staff_id(client):
+    resp = client.post('/data/shifts', json={
+        'staff_id': 123,
+        'starts_at': '2026-07-11T16:00:00+00:00',
+        'ends_at': '2026-07-11T20:00:00+00:00',
+    })
+    assert resp.status_code == 400
+
+
+def test_shift_rejects_archived_staff(client):
+    staff = make_staff(client)
+    client.delete(f"/data/staff/{staff['id']}")
+    resp = client.post('/data/shifts', json={
+        'staff_id': staff['id'],
+        'starts_at': '2026-07-11T16:00:00+00:00',
+        'ends_at': '2026-07-11T20:00:00+00:00',
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'archived_staff'
+
+
+def test_availability_rejects_bool_weekday_and_unknown_exception_fields(client):
+    staff = make_staff(client)
+    resp = client.put(f"/data/availability/{staff['id']}", json={
+        'wishes': [{'weekday': True, 'start_minute': 0, 'end_minute': 60}],
+    })
+    assert resp.status_code == 400
+    # typo'd field must not silently create a full-day block
+    resp = client.post(f"/data/availability/{staff['id']}/exceptions",
+                       json={'on_date': '2026-07-15', 'end_minutes': 600})
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'unknown_field'
+
+
+def test_rules_rejects_boolean(client):
+    resp = client.put('/data/rules', json={'max_hours_per_week': True})
+    assert resp.status_code == 400
+
+
+def test_period_range_is_capped(client):
+    resp = client.get('/data/shifts?from=0001-01-01&to=9999-12-31')
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'invalid_period'
+
+
 # --- rules ---
 
 def test_rules_roundtrip(client):

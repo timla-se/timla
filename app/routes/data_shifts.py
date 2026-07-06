@@ -1,6 +1,7 @@
 """/data/shifts — CRUD for shifts. A shift belongs to the period in which
 it starts (same rule as weeks); period filtering is on starts_at."""
 
+import uuid as uuid_lib
 from datetime import datetime
 
 import psycopg
@@ -21,6 +22,28 @@ def shift_json(s):
         'ends_at': s['ends_at'].isoformat(),
         'note': s['note'],
     }
+
+
+def _staff_for_assignment(conn, org_id, value):
+    """Validate a staff_id payload value: None (open shift) or the UUID of an
+    active staff member in the calling org. Archived staff can't take new
+    shifts. The composite FK remains as a race backstop."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ApiError(400, 'invalid', 'staff_id must be a UUID string or null')
+    try:
+        staff_id = uuid_lib.UUID(value)
+    except ValueError:
+        raise ApiError(400, 'invalid', 'staff_id must be a UUID')
+    with conn.cursor() as cur:
+        cur.execute('SELECT archived_at FROM staff WHERE id = %s AND org_id = %s', (staff_id, org_id))
+        row = cur.fetchone()
+    if row is None:
+        raise ApiError(400, 'unknown_staff', 'staff_id is not a staff member of this organization')
+    if row['archived_at'] is not None:
+        raise ApiError(400, 'archived_staff', 'Cannot assign shifts to archived staff')
+    return str(staff_id)
 
 
 def _parse_instant(value, field):
@@ -62,20 +85,19 @@ def create_shift():
         ends_at = _parse_instant(body.get('ends_at'), 'ends_at')
         if ends_at <= starts_at:
             raise ApiError(400, 'invalid', 'ends_at must be after starts_at')
+        staff_id = _staff_for_assignment(conn, org['id'], body.get('staff_id'))
 
         try:
             with conn.cursor() as cur:
                 cur.execute(
                     """INSERT INTO shift (org_id, staff_id, starts_at, ends_at, note)
                        VALUES (%s, %s, %s, %s, %s) RETURNING *""",
-                    (org['id'], body.get('staff_id'), starts_at, ends_at, body.get('note')),
+                    (org['id'], staff_id, starts_at, ends_at, body.get('note')),
                 )
                 row = cur.fetchone()
             conn.commit()
         except psycopg.errors.ForeignKeyViolation:
             raise ApiError(400, 'unknown_staff', 'staff_id is not a staff member of this organization')
-        except psycopg.errors.InvalidTextRepresentation:
-            raise ApiError(400, 'invalid', 'staff_id must be a UUID')
     return jsonify(shift_json(row)), 201
 
 
@@ -100,7 +122,10 @@ def update_shift(shift_id):
         ends_at = _parse_instant(body['ends_at'], 'ends_at') if 'ends_at' in body else existing['ends_at']
         if ends_at <= starts_at:
             raise ApiError(400, 'invalid', 'ends_at must be after starts_at')
-        staff_id = body.get('staff_id', str(existing['staff_id']) if existing['staff_id'] else None)
+        if 'staff_id' in body:
+            staff_id = _staff_for_assignment(conn, org['id'], body['staff_id'])
+        else:
+            staff_id = str(existing['staff_id']) if existing['staff_id'] else None
         note = body.get('note', existing['note'])
 
         try:
@@ -115,8 +140,6 @@ def update_shift(shift_id):
             conn.commit()
         except psycopg.errors.ForeignKeyViolation:
             raise ApiError(400, 'unknown_staff', 'staff_id is not a staff member of this organization')
-        except psycopg.errors.InvalidTextRepresentation:
-            raise ApiError(400, 'invalid', 'staff_id must be a UUID')
     return jsonify(shift_json(row))
 
 

@@ -8,6 +8,16 @@ from flask import jsonify, request
 from weeks import week_monday
 
 
+def is_number(value):
+    """True for int/float but not bool (bool subclasses int)."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def is_strict_int(value):
+    """True for int but not bool."""
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 class ApiError(Exception):
     """Raised by route code; rendered as the canonical error shape."""
 
@@ -74,6 +84,8 @@ def resolve_period(required=True):
             raise ApiError(400, 'invalid_period', 'from/to must be ISO dates (YYYY-MM-DD)')
         if to < start:
             raise ApiError(400, 'invalid_period', 'to must not be before from')
+        if (to - start).days >= 366:
+            raise ApiError(400, 'invalid_period', 'range must be at most one year')
         return start, to + timedelta(days=1)
 
     if required:

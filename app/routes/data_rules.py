@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify
 
-from api_utils import ApiError, current_org, get_json_body
+from api_utils import ApiError, current_org, get_json_body, is_number
 from db import get_db
 
 bp = Blueprint('data_rules', __name__)
@@ -36,7 +36,7 @@ def put_rules():
             raise ApiError(400, 'unknown_field', f'Unknown fields: {", ".join(sorted(unknown))}')
         for field in FIELDS:
             value = body.get(field)
-            if value is not None and (not isinstance(value, (int, float)) or not 0 < value <= 168):
+            if value is not None and (not is_number(value) or not 0 < value <= 168):
                 raise ApiError(400, 'invalid', f'{field} must be a number between 0 and 168, or null')
 
         with conn.cursor() as cur:

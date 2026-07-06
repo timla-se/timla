@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from flask import Blueprint, jsonify, request
 
-from api_utils import ApiError, current_org, get_json_body, require_staff, resolve_period
+from api_utils import ApiError, current_org, get_json_body, is_strict_int, require_staff, resolve_period
 from db import get_db
 from weeks import expand_interval
 
@@ -79,9 +79,9 @@ def _validate_pattern(items, *, kind):
             raise ApiError(400, 'invalid', f'each {kind} entry must be an object')
         weekday = item.get('weekday')
         start, end = item.get('start_minute'), item.get('end_minute')
-        if not (isinstance(weekday, int) and 1 <= weekday <= 7):
+        if not (is_strict_int(weekday) and 1 <= weekday <= 7):
             raise ApiError(400, 'invalid', 'weekday must be 1-7 (ISO, 1=Monday)')
-        if not (isinstance(start, int) and isinstance(end, int) and 0 <= start < end <= 1440):
+        if not (is_strict_int(start) and is_strict_int(end) and 0 <= start < end <= 1440):
             raise ApiError(400, 'invalid', 'start_minute/end_minute must satisfy 0 <= start < end <= 1440')
 
 
@@ -144,13 +144,16 @@ def create_exception(staff_id):
         org = current_org(conn)
         require_staff(conn, org['id'], staff_id)
         body = get_json_body()
+        unknown = set(body) - {'on_date', 'start_minute', 'end_minute'}
+        if unknown:
+            raise ApiError(400, 'unknown_field', f'Unknown fields: {", ".join(sorted(unknown))}')
         try:
             on_date = date_cls.fromisoformat(body.get('on_date', ''))
         except (TypeError, ValueError):
             raise ApiError(400, 'invalid', 'on_date must be an ISO date (YYYY-MM-DD)')
         start = body.get('start_minute', 0)
         end = body.get('end_minute', 1440)
-        if not (isinstance(start, int) and isinstance(end, int) and 0 <= start < end <= 1440):
+        if not (is_strict_int(start) and is_strict_int(end) and 0 <= start < end <= 1440):
             raise ApiError(400, 'invalid', 'start_minute/end_minute must satisfy 0 <= start < end <= 1440')
 
         with conn.cursor() as cur:

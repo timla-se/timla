@@ -3,7 +3,7 @@ hard-deletes, so shift history always survives."""
 
 from flask import Blueprint, jsonify, request
 
-from api_utils import ApiError, current_org, get_json_body, require_staff
+from api_utils import ApiError, current_org, get_json_body, is_number, require_staff
 from db import get_db
 
 bp = Blueprint('data_staff', __name__)
@@ -24,16 +24,20 @@ def staff_json(s):
     }
 
 
-def _validate(body, *, require_name):
-    unknown = set(body) - set(EDITABLE_FIELDS) - {'archived'}
+def _validate(body, *, require_name, allow_archived):
+    allowed = set(EDITABLE_FIELDS) | ({'archived'} if allow_archived else set())
+    unknown = set(body) - allowed
     if unknown:
         raise ApiError(400, 'unknown_field', f'Unknown fields: {", ".join(sorted(unknown))}')
-    if require_name and not (body.get('name') or '').strip():
-        raise ApiError(400, 'invalid', 'name is required')
-    if 'name' in body and not (body['name'] or '').strip():
-        raise ApiError(400, 'invalid', 'name must not be empty')
+    name = body.get('name')
+    if require_name and (not isinstance(name, str) or not name.strip()):
+        raise ApiError(400, 'invalid', 'name is required and must be a non-empty string')
+    if 'name' in body and (not isinstance(body['name'], str) or not body['name'].strip()):
+        raise ApiError(400, 'invalid', 'name must be a non-empty string')
+    if 'archived' in body and not isinstance(body['archived'], bool):
+        raise ApiError(400, 'invalid', 'archived must be true or false')
     max_hours = body.get('max_hours_per_week')
-    if max_hours is not None and (not isinstance(max_hours, (int, float)) or not 0 < max_hours <= 168):
+    if max_hours is not None and (not is_number(max_hours) or not 0 < max_hours <= 168):
         raise ApiError(400, 'invalid', 'max_hours_per_week must be a number between 0 and 168')
 
 
@@ -53,7 +57,7 @@ def create_staff():
     with get_db() as conn:
         org = current_org(conn)
         body = get_json_body()
-        _validate(body, require_name=True)
+        _validate(body, require_name=True, allow_archived=False)
         with conn.cursor() as cur:
             cur.execute(
                 """INSERT INTO staff (org_id, name, phone, email, role, max_hours_per_week)
@@ -72,7 +76,7 @@ def update_staff(staff_id):
         org = current_org(conn)
         require_staff(conn, org['id'], staff_id)
         body = get_json_body()
-        _validate(body, require_name=False)
+        _validate(body, require_name=False, allow_archived=True)
 
         sets, values = [], []
         for field in EDITABLE_FIELDS:
