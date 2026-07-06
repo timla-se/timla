@@ -1,7 +1,9 @@
 # Timla
 
 > **Status: idea stage — nothing usable yet.** This repo is the starting
-> point for development; expect everything to change.
+> point for development; expect everything to change. The first milestone
+> ([MVP](https://github.com/timla-se/timla/milestone/1)) covers only the
+> staff-scheduling (work schedule) module — booking modules come later.
 
 Timla is an open-source, composable platform for time, booking and
 scheduling, aimed at Swedish organizations — hair salons, sports clubs,
