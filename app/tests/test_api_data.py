@@ -233,6 +233,32 @@ def test_period_range_is_capped(client):
     assert resp.get_json()['error'] == 'invalid_period'
 
 
+# --- actions: share-link tokens ---
+
+def test_regenerate_link_generates_and_replaces_token(client, make_staff):
+    staff = make_staff()
+    assert staff['share_token'] is None
+    first = client.post(f"/action/staff/{staff['id']}/regenerate-link")
+    assert first.status_code == 200
+    token1 = first.get_json()['share_token']
+    assert token1
+    token2 = client.post(f"/action/staff/{staff['id']}/regenerate-link").get_json()['share_token']
+    assert token2 and token2 != token1
+    # persisted on the staff row
+    listed = client.get('/data/staff').get_json()
+    assert listed[0]['share_token'] == token2
+
+
+def test_regenerate_link_rejects_archived_and_unknown_staff(client, make_staff):
+    staff = make_staff()
+    client.delete(f"/data/staff/{staff['id']}")
+    resp = client.post(f"/action/staff/{staff['id']}/regenerate-link")
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'archived_staff'
+    resp = client.post('/action/staff/00000000-0000-0000-0000-000000000000/regenerate-link')
+    assert resp.status_code == 404
+
+
 # --- rules ---
 
 def test_rules_roundtrip(client):

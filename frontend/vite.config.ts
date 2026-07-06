@@ -8,6 +8,9 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:8899',
       '/link': 'http://localhost:8899',
+      '/data': 'http://localhost:8899',
+      '/compute': 'http://localhost:8899',
+      '/action': 'http://localhost:8899',
     },
   },
   build: {

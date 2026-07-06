@@ -88,6 +88,12 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 - Each item carries `shift_index` (payload position), `shift_id`,
   `staff_id`, `type`, `message` and type-specific details.
 
+## Actions
+
+| Method | Path | Notes |
+|--------|------|-------|
+| POST | `/action/staff/:id/regenerate-link` | Generates (first time) or regenerates the staff member's share-link token; the old link stops working. Returns the full staff object. 400 `archived_staff` for archived staff. The public `/link/:token` surface consuming the token is issue #13. |
+
 ## Rules
 
 | Method | Path | Notes |
