@@ -37,7 +37,7 @@ npm install
 npm run dev
 
 # Backend on the host instead of Docker, if you prefer
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 DATABASE_URL=postgresql://timla:timla@localhost:5433/timla \
   TIMLA_ENV=dev .venv/bin/python app/run_server.py
 

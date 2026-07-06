@@ -25,7 +25,11 @@ services:
     build: .
     container_name: timla
     ports:
-      - "8899:8899"
+      # Loopback only — this is a dev compose; don't expose the app on LAN.
+      - "127.0.0.1:8899:8899"
+    # --reload makes the app/ mounts below meaningful: code changes restart
+    # the workers instead of silently requiring a container restart.
+    command: gunicorn --bind 0.0.0.0:8899 --workers 2 --reload app:app
     volumes:
       - ./app:/timla/app
       - ./scripts:/timla/scripts
