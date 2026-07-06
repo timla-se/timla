@@ -22,6 +22,30 @@ Timla is part of the same family as [OpenVera](https://github.com/openvera/openv
 web UI and agents, keep data self-hostable, integrate with the Swedish
 ecosystem (Swish, BankID, SMS reminders).
 
+## Development
+
+Backend is Flask + Postgres (raw psycopg3, Alembic for migrations);
+frontend is React 19 + Vite in an npm workspace. The API follows a
+composable primitives convention — see [docs/primitives.md](docs/primitives.md).
+
+```bash
+# Postgres (host port 5433) + app container
+docker compose up -d
+
+# Frontend dev server (proxies /api and /link to the backend)
+npm install
+npm run dev
+
+# Backend on the host instead of Docker, if you prefer
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+DATABASE_URL=postgresql://timla:timla@localhost:5433/timla \
+  TIMLA_ENV=dev .venv/bin/python app/run_server.py
+
+# Tests and checks
+.venv/bin/pytest app
+npm run lint && npm run typecheck:frontend && npm run build:frontend
+```
+
 ## License
 
 [MIT](LICENSE)
