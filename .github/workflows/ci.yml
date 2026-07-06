@@ -39,6 +39,22 @@ jobs:
     name: Backend tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: timla
+          POSTGRES_PASSWORD: timla
+          POSTGRES_DB: timla
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U timla -d timla"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://timla:timla@localhost:5432/timla
     steps:
       - uses: actions/checkout@v4
 
@@ -49,6 +65,12 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
+
+      - name: Apply migrations
+        run: alembic upgrade head
+
+      - name: Seed demo data (smoke test)
+        run: python scripts/seed.py
 
       - name: Run tests
         run: pytest --no-header -rN
