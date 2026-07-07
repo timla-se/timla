@@ -1,1 +1,296 @@
 @import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Timla Designsystem v1.0 — tokens & theme wiring (issue #21)
+ *
+ * Source of truth: design/Timla Designsystem.dc.html (+ design/README.md).
+ * Spec digest with exact values: agent-docs/issue/21-apply-design-system/
+ * research.md.
+ *
+ * Layers:
+ *   1. :root      — the design system's own named tokens
+ *   2. @theme     — Tailwind utilities (bg-paper, text-ink, font-mono, …)
+ *   3. .radix-themes — Radix scale overrides; @swedev/ui semantics resolve
+ *      through these (accent=amber→ockra, jade→skog, red→tegel, sand→warm)
+ * ------------------------------------------------------------------ */
+
+:root {
+  /* Brand */
+  --ink: #231d16;
+  --ochre: #e69a2e; /* primary accent — keep at ~10% of any surface */
+  --honey: #f2c14e;
+  --cream: #fbf1dc;
+  --paper: #fdf8ee;
+
+  /* Status roles (fixed meanings — never decorative) */
+  --ok: #4f7358; /* skog: bekräftad, ledig */
+  --wait: #e69a2e; /* ockra: väntar, obekräftad */
+  --stop: #c05a3a; /* tegel: avbokad, konflikt */
+  --muted: #b8a68d; /* lera-grå: fullbokad, inaktiv */
+
+  /* Warm neutral scale (dark → light) */
+  --ink-soft: #5a4d38; /* secondary body text */
+  --warm-gray: #8a7a5c; /* muted/tertiary text, labels */
+  --warm-sand: #b39a6f; /* mono captions, placeholders */
+  --warm-border: #efe3cd; /* standard 1px card border */
+  --warm-border-strong: #d8c19a; /* input/secondary-button border */
+
+  /* Data/link text (mono time lines, links) */
+  --ochre-deep: #c07f1e;
+}
+
+@theme {
+  --color-ink: #231d16;
+  --color-ochre: #e69a2e;
+  --color-honey: #f2c14e;
+  --color-cream: #fbf1dc;
+  --color-paper: #fdf8ee;
+  --color-ok: #4f7358;
+  --color-wait: #e69a2e;
+  --color-stop: #c05a3a;
+  --color-mutedwarm: #b8a68d;
+  --color-ink-soft: #5a4d38;
+  --color-warm-gray: #8a7a5c;
+  --color-warm-sand: #b39a6f;
+  --color-warm-border: #efe3cd;
+  --color-warm-border-strong: #d8c19a;
+  --color-ochre-deep: #c07f1e;
+
+  --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* ------------------------------------------------------------------ *
+ * Radix Themes scale overrides. @swedev/ui hardcodes semantic→scale
+ * (success→jade, warning→amber, error/destructive→red, neutral→gray);
+ * `action` follows the theme accent (amber) since @swedev/ui 0.3.0.
+ * Amber serves both accent and warning — intentional: Väntar IS ockra.
+ * Alpha steps via color-mix so tints compose like the design's pairs
+ * (e.g. amber-a3 over white ≈ cream #fbf1dc).
+ * ------------------------------------------------------------------ */
+.radix-themes {
+  /* Typography */
+  --default-font-family: var(--font-sans);
+  --heading-font-family: var(--font-sans);
+  --strong-font-family: var(--font-sans);
+  --em-font-family: var(--font-sans);
+  --quote-font-family: var(--font-sans);
+  --code-font-family: var(--font-mono);
+
+  /* Surfaces */
+  --color-background: var(--paper);
+  --color-panel-solid: #ffffff;
+  --color-overlay: rgb(35 29 22 / 0.4);
+
+  /* Amber → ockra (accent + wait) */
+  --amber-1: #fdf9f0;
+  --amber-2: #fcf4e3;
+  --amber-3: #fbf1dc;
+  --amber-4: #f8e8c4;
+  --amber-5: #f4dda8;
+  --amber-6: #eeddb8;
+  --amber-7: #d8c19a;
+  --amber-8: #c9a25f;
+  --amber-9: #e69a2e;
+  --amber-10: #d68d24;
+  --amber-11: #a5711a;
+  --amber-12: #5f430f;
+  --amber-a1: color-mix(in srgb, #e69a2e 4%, transparent);
+  --amber-a2: color-mix(in srgb, #e69a2e 9%, transparent);
+  --amber-a3: color-mix(in srgb, #e69a2e 16%, transparent);
+  --amber-a4: color-mix(in srgb, #e69a2e 26%, transparent);
+  --amber-a5: color-mix(in srgb, #e69a2e 38%, transparent);
+  --amber-a6: color-mix(in srgb, #c9a25f 45%, transparent);
+  --amber-a7: color-mix(in srgb, #b08035 55%, transparent);
+  --amber-a8: color-mix(in srgb, #b08035 70%, transparent);
+  --amber-a9: color-mix(in srgb, #dd8d15 95%, transparent);
+  --amber-a10: color-mix(in srgb, #cc820e 97%, transparent);
+  --amber-a11: color-mix(in srgb, #9a660d 95%, transparent);
+  --amber-a12: color-mix(in srgb, #55390a 97%, transparent);
+  --amber-contrast: #231d16;
+  --amber-surface: color-mix(in srgb, #fbf1dc 80%, transparent);
+  --amber-indicator: #e69a2e;
+  --amber-track: #e69a2e;
+
+  /* Jade → skog (success) */
+  --jade-1: #f8faf8;
+  --jade-2: #f1f5f2;
+  --jade-3: #e7efe8;
+  --jade-4: #d9e6db;
+  --jade-5: #cfe0d3;
+  --jade-6: #bdd3c2;
+  --jade-7: #a8c4ae;
+  --jade-8: #7fa287;
+  --jade-9: #4f7358;
+  --jade-10: #44654d;
+  --jade-11: #3c5a44;
+  --jade-12: #22331f;
+  --jade-a1: color-mix(in srgb, #4f7358 3%, transparent);
+  --jade-a2: color-mix(in srgb, #4f7358 6%, transparent);
+  --jade-a3: color-mix(in srgb, #4f7358 12%, transparent);
+  --jade-a4: color-mix(in srgb, #4f7358 19%, transparent);
+  --jade-a5: color-mix(in srgb, #4f7358 25%, transparent);
+  --jade-a6: color-mix(in srgb, #4f7358 33%, transparent);
+  --jade-a7: color-mix(in srgb, #4f7358 42%, transparent);
+  --jade-a8: color-mix(in srgb, #4f7358 58%, transparent);
+  --jade-a9: color-mix(in srgb, #40684a 98%, transparent);
+  --jade-a10: color-mix(in srgb, #375c41 98%, transparent);
+  --jade-a11: color-mix(in srgb, #2f5138 97%, transparent);
+  --jade-a12: color-mix(in srgb, #182a15 98%, transparent);
+  --jade-contrast: #ffffff;
+  --jade-surface: color-mix(in srgb, #e7efe8 80%, transparent);
+  --jade-indicator: #4f7358;
+  --jade-track: #4f7358;
+
+  /* Red → tegel (error/destructive/conflict) */
+  --red-1: #fdf8f6;
+  --red-2: #faf0ec;
+  --red-3: #f7e6df;
+  --red-4: #f1d6cb;
+  --red-5: #eac5b6;
+  --red-6: #e0ae9a;
+  --red-7: #d4937a;
+  --red-8: #c97455;
+  --red-9: #c05a3a;
+  --red-10: #ad4e30;
+  --red-11: #a44227;
+  --red-12: #552516;
+  --red-a1: color-mix(in srgb, #c05a3a 3%, transparent);
+  --red-a2: color-mix(in srgb, #c05a3a 7%, transparent);
+  --red-a3: color-mix(in srgb, #c05a3a 13%, transparent);
+  --red-a4: color-mix(in srgb, #c05a3a 21%, transparent);
+  --red-a5: color-mix(in srgb, #c05a3a 29%, transparent);
+  --red-a6: color-mix(in srgb, #c05a3a 40%, transparent);
+  --red-a7: color-mix(in srgb, #c05a3a 52%, transparent);
+  --red-a8: color-mix(in srgb, #c05a3a 67%, transparent);
+  --red-a9: color-mix(in srgb, #ba4f2d 98%, transparent);
+  --red-a10: color-mix(in srgb, #a74326 98%, transparent);
+  --red-a11: color-mix(in srgb, #9e371b 97%, transparent);
+  --red-a12: color-mix(in srgb, #4b1d0e 98%, transparent);
+  --red-contrast: #ffffff;
+  --red-surface: color-mix(in srgb, #f7e6df 80%, transparent);
+  --red-indicator: #c05a3a;
+  --red-track: #c05a3a;
+
+  /* Sand (gray) → warm neutrals; solid step 9 = lera-grå so
+   * semantic="neutral" badges land on Fullbokad/inaktiv colors */
+  --gray-1: #fcf9f3;
+  --gray-2: #f9f3e6;
+  --gray-3: #f4ead6;
+  --gray-4: #efe3cd;
+  --gray-5: #e9dcc3;
+  --gray-6: #e4d9c2;
+  --gray-7: #d8c19a;
+  --gray-8: #c1af92;
+  --gray-9: #b8a68d;
+  --gray-10: #9a8a6c;
+  --gray-11: #8a7a5c;
+  --gray-12: #231d16;
+  --gray-a1: color-mix(in srgb, #b8a68d 5%, transparent);
+  --gray-a2: color-mix(in srgb, #b8a68d 10%, transparent);
+  --gray-a3: color-mix(in srgb, #b8a68d 27%, transparent);
+  --gray-a4: color-mix(in srgb, #b8a68d 38%, transparent);
+  --gray-a5: color-mix(in srgb, #b8a68d 46%, transparent);
+  --gray-a6: color-mix(in srgb, #ab946f 50%, transparent);
+  --gray-a7: color-mix(in srgb, #a58652 60%, transparent);
+  --gray-a8: color-mix(in srgb, #a58652 75%, transparent);
+  --gray-a9: color-mix(in srgb, #a89372 95%, transparent);
+  --gray-a10: color-mix(in srgb, #83704c 95%, transparent);
+  --gray-a11: color-mix(in srgb, #6f5e40 95%, transparent);
+  --gray-a12: color-mix(in srgb, #1d1811 98%, transparent);
+  --gray-contrast: #231d16;
+  --gray-surface: color-mix(in srgb, #fdf8ee 80%, transparent);
+  --gray-indicator: #b8a68d;
+  --gray-track: #b8a68d;
+
+  /* Soft, warm-brown shadows per section 05 */
+  --shadow-2: 0 1px 4px rgb(90 60 20 / 0.06), 0 0 0 1px var(--warm-border);
+  --shadow-3: 0 4px 20px rgb(90 60 20 / 0.06);
+  --shadow-4: 0 8px 28px rgb(90 60 20 / 0.08);
+  --shadow-5: 0 12px 40px rgb(90 60 20 / 0.1);
+  --shadow-6: 0 12px 40px rgb(90 60 20 / 0.12);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Component geometry per design system section 05. Buttons: weight 700,
+ * radius 10 (small 8); the swedev box tokens size ghost and solid buttons
+ * identically. Badges: pills with 600 weight. */
+.rt-Button {
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 10px;
+  --swedev-button-padding-y: 10px;
+  --swedev-button-padding-x: 18px;
+}
+.rt-Button.rt-r-size-1 {
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 8px;
+  --swedev-button-padding-y: 6px;
+  --swedev-button-padding-x: 12px;
+}
+.rt-Badge {
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 4px 11px;
+}
+
+/* Ink primary button per the Personal design (the accent-solid variant
+ * stays for "Bekräfta"-style actions). */
+.rt-Button.btn-ink {
+  background: var(--ink);
+  color: var(--cream);
+}
+.rt-Button.btn-ink:hover:not(:disabled) {
+  background: #3a3126;
+}
+
+/* Etikett (design system type scale): small uppercase warm label — used
+ * for form labels and table column headers. */
+.etikett {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+}
+
+/* Content card per section 05: white panel, warm border, soft shadow. */
+.timla-card {
+  background: #fff;
+  border: 1px solid var(--warm-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgb(90 60 20 / 0.06);
+}
+
+/* Radix declares font-family directly on these classes in unlayered CSS,
+ * which beats Tailwind's layered .font-mono utility — so mono on
+ * TextField/Badge needs an unlayered, higher-specificity override. */
+.rt-TextFieldRoot.font-mono,
+.rt-Badge.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Warm focus ring for elements without component-specific focus styling
+ * (e.g. plain buttons) — the browser default ring is blue. :where() keeps
+ * specificity at zero so Radix's own focus styles always win. */
+:where(:focus-visible) {
+  outline: 2px solid var(--amber-8, var(--ochre));
+  outline-offset: 1px;
+}
+
+/* Composite fields (icon + input inside a bordered shell): focus belongs
+ * on the shell, not the inner input — otherwise the global ring draws a
+ * frame inside the frame. Focus style per design section 05 inputs. */
+.field-shell:focus-within {
+  border-color: var(--ochre);
+  box-shadow: 0 0 0 3px rgb(230 154 46 / 0.15);
+}
+.field-shell :focus-visible {
+  outline: none;
+}

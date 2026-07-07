@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { Flex, Heading, Text } from '@radix-ui/themes'
+import { Flex, Text } from '@radix-ui/themes'
 import { Button, Callout, TextField } from '@swedev/ui'
 
 import { ApiError, clearOrgId, getOrgId, getRules, setOrgId } from '../api'
+import { Lockup } from './Lockup'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -43,13 +44,17 @@ export function OrgGate({ children }: { children: ReactNode }) {
 
   return (
     <Flex direction="column" align="center" justify="center" gap="4" style={{ minHeight: '100vh' }}>
-      <Heading size="7">Timla</Heading>
-      <Flex direction="column" gap="3" style={{ width: 380 }}>
+      <Flex
+        direction="column" gap="3"
+        className="w-[420px] rounded-2xl border border-warm-border bg-white p-8 shadow-[0_4px_20px_rgb(90_60_20/0.06)]"
+      >
+        <Lockup className="mb-2 h-8 w-auto self-center" />
         <Text size="2" color="gray">
           Utvecklingsläge: inloggning kommer med issue #3. Klistra in ditt
           organisations-id så länge (seed-scriptet skriver ut det).
         </Text>
         <TextField.Root
+          className="font-mono"
           placeholder="00000000-0000-0000-0000-000000000000"
           value={value}
           onChange={(e) => setValue(e.target.value)}

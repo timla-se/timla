@@ -7,7 +7,8 @@ import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 
 import { addException, ApiError, deleteException, getAvailability, listStaff, putAvailability } from '../api'
 import { EmptyState } from '../components/EmptyState'
-import { intervalLabel, minutesToTime, timeToMinutes, WEEKDAYS, weekdayLabel } from '../time'
+import { Mono } from '../components/Mono'
+import { formatIsoDate, intervalLabel, minutesToTime, timeToMinutes, WEEKDAYS, weekdayLabel } from '../time'
 import type { RecurringInterval } from '../types'
 
 interface PatternRow {
@@ -44,12 +45,12 @@ function PatternSection({ title, hint, rows, onChange }: {
             </Select.Content>
           </Select.Root>
           <TextField.Root
-            type="time" value={minutesToTime(row.start_minute)}
+            type="time" className="font-mono" value={minutesToTime(row.start_minute)}
             onChange={(e) => setRow(i, { start_minute: timeToMinutes(e.target.value) })}
           />
           <Text size="2" color="gray">till</Text>
           <TextField.Root
-            type="time" value={minutesToTime(row.end_minute)}
+            type="time" className="font-mono" value={minutesToTime(row.end_minute)}
             onChange={(e) => setRow(i, { end_minute: timeToMinutes(e.target.value, true) })}
           />
           <Button semantic="neutral" variant="ghost" size="1" icon={Trash2}
@@ -147,7 +148,8 @@ export default function StaffDetail() {
         <Link to="/staff" className="flex items-center text-[var(--gray-11)]"><ArrowLeft size={18} /></Link>
         <Heading size="6">{staff.name}</Heading>
         {staff.role && <Badge semantic="neutral" text={staff.role} />}
-        {staff.archived && <Badge semantic="warning" text="arkiverad" />}
+        {/* Inactive = lera-grå per the fixed status roles (see status.ts) */}
+        {staff.archived && <Badge dot semantic="neutral" text="arkiverad" />}
       </Flex>
 
       <Text size="2" color="gray">
@@ -183,8 +185,8 @@ export default function StaffDetail() {
             {doc?.exceptions.length === 0 && <Text size="2" color="gray">Inga undantag.</Text>}
             {doc?.exceptions.map((exc) => (
               <Flex key={exc.id} gap="3" align="center">
-                <Text size="2">{exc.on_date}</Text>
-                <Badge semantic="neutral" text={intervalLabel(exc.start_minute, exc.end_minute)} />
+                <Mono className="text-sm">{formatIsoDate(exc.on_date)}</Mono>
+                <Badge semantic="neutral" className="font-mono" text={intervalLabel(exc.start_minute, exc.end_minute)} />
                 <Button semantic="neutral" variant="ghost" size="1" icon={Trash2}
                   disabled={removeException.isPending}
                   onClick={() => removeException.mutate(exc.id)} />
@@ -192,9 +194,9 @@ export default function StaffDetail() {
             ))}
             <Flex gap="2" align="center" wrap="wrap">
               <DatePicker value={newExceptionDate} onChange={setNewExceptionDate} placeholder="Datum" />
-              <TextField.Root type="time" value={newExceptionStart} onChange={(e) => setNewExceptionStart(e.target.value)} />
+              <TextField.Root type="time" className="font-mono" value={newExceptionStart} onChange={(e) => setNewExceptionStart(e.target.value)} />
               <Text size="2" color="gray">till</Text>
-              <TextField.Root type="time" value={newExceptionEnd} onChange={(e) => setNewExceptionEnd(e.target.value)} />
+              <TextField.Root type="time" className="font-mono" value={newExceptionEnd} onChange={(e) => setNewExceptionEnd(e.target.value)} />
               <Text size="1" color="gray">(00:00–00:00 = hela dagen)</Text>
               <Button
                 semantic="neutral" variant="soft" size="1" icon={Plus} text="Lägg till undantag"
@@ -212,10 +214,10 @@ export default function StaffDetail() {
             ) : (
               <>
                 {wishes.map((r, i) => (
-                  <Text key={`w${i}`} size="2">Önskar: {weekdayLabel(r.weekday)} {intervalLabel(r.start_minute, r.end_minute)}</Text>
+                  <Text key={`w${i}`} size="2">Önskar: {weekdayLabel(r.weekday)} <Mono>{intervalLabel(r.start_minute, r.end_minute)}</Mono></Text>
                 ))}
                 {blocks.map((r, i) => (
-                  <Text key={`b${i}`} size="2">Blockerat: {weekdayLabel(r.weekday)} {intervalLabel(r.start_minute, r.end_minute)}</Text>
+                  <Text key={`b${i}`} size="2">Blockerat: {weekdayLabel(r.weekday)} <Mono>{intervalLabel(r.start_minute, r.end_minute)}</Mono></Text>
                 ))}
               </>
             )}

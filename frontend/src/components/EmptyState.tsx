@@ -7,7 +7,7 @@ export function EmptyState({ title, description, action }: {
   action?: ReactNode
 }) {
   return (
-    <Flex direction="column" align="center" gap="2" className="rounded border border-dashed border-[var(--gray-6)] py-12">
+    <Flex direction="column" align="center" gap="2" className="rounded-xl border border-dashed border-warm-border-strong bg-cream/40 py-12">
       <Text weight="medium">{title}</Text>
       {description && <Text size="2" color="gray">{description}</Text>}
       {action}
