@@ -8,6 +8,7 @@ import { Archive, ArchiveRestore, Check, Copy, Link as LinkIcon, Pencil, Plus, R
 
 import { ApiError, archiveStaff, createStaff, listStaff, regenerateLink, type StaffPayload, updateStaff } from '../api'
 import { EmptyState } from '../components/EmptyState'
+import { Mono } from '../components/Mono'
 import type { Staff as StaffRow } from '../types'
 
 function shareUrl(token: string): string {
@@ -235,9 +236,9 @@ export default function Staff() {
                 </Table.RowHeaderCell>
                 <Table.Cell>{row.role ?? '–'}</Table.Cell>
                 <Table.Cell>
-                  <Text size="2">{row.phone ?? row.email ?? '–'}</Text>
+                  <Mono className="text-sm">{row.phone ?? row.email ?? '–'}</Mono>
                 </Table.Cell>
-                <Table.Cell>{row.max_hours_per_week ?? '–'}</Table.Cell>
+                <Table.Cell><Mono className="text-sm">{row.max_hours_per_week ?? '–'}</Mono></Table.Cell>
                 <Table.Cell>
                   {row.share_token ? (
                     <Flex gap="2" align="center">

@@ -1,9 +1,10 @@
 import { NavLink, Outlet } from 'react-router'
-import { Box, Flex, Text } from '@radix-ui/themes'
+import { Box, Flex } from '@radix-ui/themes'
 import { cn } from '@swedev/ui'
 import { CalendarDays, Settings, Users } from 'lucide-react'
 
 import { clearOrgId, getOrgId } from '../api'
+import { Mono } from './Mono'
 
 const NAV = [
   { to: '/staff', label: 'Personal', icon: Users, enabled: true },
@@ -16,9 +17,9 @@ export function Layout() {
 
   return (
     <Flex style={{ minHeight: '100vh' }}>
-      <Flex direction="column" justify="between" className="w-56 shrink-0 border-r border-[var(--gray-5)] p-4">
+      <Flex direction="column" justify="between" className="w-56 shrink-0 border-r border-warm-border bg-white p-4">
         <Box>
-          <Text size="5" weight="bold" as="div" className="mb-6">Timla</Text>
+          <img src="/timla-lockup.svg" alt="Timla" className="mb-8 mt-1 h-7" />
           <nav className="flex flex-col gap-1">
             {NAV.map(({ to, label, icon: Icon, enabled }) =>
               enabled ? (
@@ -26,17 +27,21 @@ export function Layout() {
                   key={to}
                   to={to}
                   className={({ isActive }) => cn(
-                    'flex items-center gap-2 rounded px-2 py-1.5 text-sm no-underline',
-                    isActive ? 'bg-[var(--accent-4)] text-[var(--gray-12)]' : 'text-[var(--gray-11)] hover:bg-[var(--gray-3)]',
+                    'flex items-center gap-2 rounded-[10px] px-2.5 py-1.5 text-sm font-medium no-underline',
+                    isActive ? 'bg-cream text-ink' : 'text-ink-soft hover:bg-paper',
                   )}
                 >
-                  <Icon size={16} /> {label}
+                  {({ isActive }) => (
+                    <>
+                      <Icon size={16} className={isActive ? 'text-ochre' : undefined} /> {label}
+                    </>
+                  )}
                 </NavLink>
               ) : (
                 <span
                   key={to}
                   title="Kommer senare"
-                  className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-sm text-[var(--gray-8)]"
+                  className="flex cursor-default items-center gap-2 rounded-[10px] px-2.5 py-1.5 text-sm text-mutedwarm"
                 >
                   <Icon size={16} /> {label}
                 </span>
@@ -45,11 +50,11 @@ export function Layout() {
           </nav>
         </Box>
         <Box>
-          <Text size="1" color="gray" as="div" title={orgId ?? undefined}>
+          <Mono className="block text-xs text-warm-sand" title={orgId ?? undefined}>
             org: {orgId ? `${orgId.slice(0, 8)}…` : '–'}
-          </Text>
+          </Mono>
           <button
-            className="mt-1 cursor-pointer border-0 bg-transparent p-0 text-xs text-[var(--gray-10)] underline"
+            className="mt-1 cursor-pointer border-0 bg-transparent p-0 text-xs text-warm-gray underline"
             onClick={() => { clearOrgId(); location.reload() }}
           >
             Byt organisation

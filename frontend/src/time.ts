@@ -34,3 +34,32 @@ export function intervalLabel(startMinute: number, endMinute: number): string {
   if (startMinute === 0 && endMinute === 1440) return 'hela dagen'
   return `${minutesToTime(startMinute)}–${endMinute === 1440 ? '24:00' : minutesToTime(endMinute)}`
 }
+
+/** Klartext dates per Ton & röst: always weekday + date ("tors 8 maj"),
+ * never "8/5" or "imorgon". Hand-rolled names because Intl's sv-SE short
+ * forms add periods ("okt.") the design doesn't use. Render date/time
+ * strings in mono (<Mono>). */
+
+const WEEKDAY_SHORT = ['mån', 'tis', 'ons', 'tors', 'fre', 'lör', 'sön']
+const MONTH_SHORT = ['jan', 'feb', 'mars', 'april', 'maj', 'juni', 'juli', 'aug', 'sep', 'okt', 'nov', 'dec']
+
+export function formatDayDate(date: Date): string {
+  // getDay(): 0 = Sunday; WEEKDAY_SHORT is Monday-first (ISO)
+  const weekday = WEEKDAY_SHORT[(date.getDay() + 6) % 7]
+  return `${weekday} ${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`
+}
+
+export function formatDayDateTime(date: Date): string {
+  const hm = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  return `${formatDayDate(date)} · ${hm}`
+}
+
+/** For the API's local date strings. new Date('YYYY-MM-DD') parses as UTC
+ * midnight and can render as the previous day — parse the parts instead.
+ * Invalid input is returned untouched so bad data stays visible. */
+export function formatIsoDate(isoDate: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate)
+  if (!match) return isoDate
+  const [, y, m, d] = match
+  return formatDayDate(new Date(Number(y), Number(m) - 1, Number(d)))
+}
