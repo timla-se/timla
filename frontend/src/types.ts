@@ -33,3 +33,17 @@ export interface Rules {
   max_hours_per_week: number | null
   min_rest_hours: number | null
 }
+
+export interface Org {
+  id: string
+  name: string
+  timezone: string
+}
+
+export interface Shift {
+  id: string
+  staff_id: string | null
+  starts_at: string
+  ends_at: string
+  note: string | null
+}

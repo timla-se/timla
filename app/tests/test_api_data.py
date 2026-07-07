@@ -259,6 +259,18 @@ def test_regenerate_link_rejects_archived_and_unknown_staff(client, make_staff):
     assert resp.status_code == 404
 
 
+# --- org ---
+
+def test_org_read(client, org_id):
+    assert app.test_client().get('/data/org').status_code == 401
+    resp = client.get('/data/org')
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['id'] == org_id
+    assert body['name'] == 'API-testorg'
+    assert body['timezone']
+
+
 # --- rules ---
 
 def test_rules_roundtrip(client):

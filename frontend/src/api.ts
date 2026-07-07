@@ -1,4 +1,4 @@
-import type { AvailabilityDocument, ExceptionInterval, Rules, Staff } from './types'
+import type { AvailabilityDocument, ExceptionInterval, Org, Rules, Shift, Staff } from './types'
 
 const ORG_KEY = 'timla.org'
 
@@ -89,3 +89,9 @@ export const deleteException = (staffId: string, exceptionId: string) =>
   request<void>('DELETE', `/data/availability/${staffId}/exceptions/${exceptionId}`)
 
 export const getRules = () => request<Rules>('GET', '/data/rules')
+
+export const getOrg = () => request<Org>('GET', '/data/org')
+
+/** period: ISO week like '2026-W28' */
+export const listShifts = (period: string) =>
+  request<Shift[]>('GET', `/data/shifts?period=${encodeURIComponent(period)}`)

@@ -149,7 +149,7 @@ export default function StaffDetail() {
         <Heading size="6">{staff.name}</Heading>
         {staff.role && <Badge semantic="neutral" text={staff.role} />}
         {/* Inactive = lera-grå per the fixed status roles (see status.ts) */}
-        {staff.archived && <Badge semantic="neutral" text="arkiverad" />}
+        {staff.archived && <Badge dot semantic="neutral" text="arkiverad" />}
       </Flex>
 
       <Text size="2" color="gray">

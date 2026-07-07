@@ -217,6 +217,57 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Component geometry per design system section 05. Buttons: weight 700,
+ * radius 10 (small 8); the swedev box tokens size ghost and solid buttons
+ * identically. Badges: pills with 600 weight. */
+.rt-Button {
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 10px;
+  --swedev-button-padding-y: 10px;
+  --swedev-button-padding-x: 18px;
+}
+.rt-Button.rt-r-size-1 {
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 8px;
+  --swedev-button-padding-y: 6px;
+  --swedev-button-padding-x: 12px;
+}
+.rt-Badge {
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 4px 11px;
+}
+
+/* Ink primary button per the Personal design (the accent-solid variant
+ * stays for "Bekräfta"-style actions). */
+.rt-Button.btn-ink {
+  background: var(--ink);
+  color: var(--cream);
+}
+.rt-Button.btn-ink:hover:not(:disabled) {
+  background: #3a3126;
+}
+
+/* Etikett (design system type scale): small uppercase warm label — used
+ * for form labels and table column headers. */
+.etikett {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+}
+
+/* Content card per section 05: white panel, warm border, soft shadow. */
+.timla-card {
+  background: #fff;
+  border: 1px solid var(--warm-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgb(90 60 20 / 0.06);
+}
+
 /* Radix declares font-family directly on these classes in unlayered CSS,
  * which beats Tailwind's layered .font-mono utility — so mono on
  * TextField/Badge needs an unlayered, higher-specificity override. */
@@ -231,4 +282,15 @@ body {
 :where(:focus-visible) {
   outline: 2px solid var(--amber-8, var(--ochre));
   outline-offset: 1px;
+}
+
+/* Composite fields (icon + input inside a bordered shell): focus belongs
+ * on the shell, not the inner input — otherwise the global ring draws a
+ * frame inside the frame. Focus style per design section 05 inputs. */
+.field-shell:focus-within {
+  border-color: var(--ochre);
+  box-shadow: 0 0 0 3px rgb(230 154 46 / 0.15);
+}
+.field-shell :focus-visible {
+  outline: none;
 }

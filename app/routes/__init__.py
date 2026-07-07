@@ -7,10 +7,12 @@ def register(app):
     from routes.action_staff import bp as action_staff_bp
     from routes.compute_conflicts import bp as conflicts_bp
     from routes.data_availability import bp as availability_bp
+    from routes.data_org import bp as org_bp
     from routes.data_rules import bp as rules_bp
     from routes.data_shifts import bp as shifts_bp
     from routes.data_staff import bp as staff_bp
 
+    app.register_blueprint(org_bp)
     app.register_blueprint(staff_bp)
     app.register_blueprint(availability_bp)
     app.register_blueprint(shifts_bp)
