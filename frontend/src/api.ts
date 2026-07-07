@@ -1,4 +1,4 @@
-import type { AvailabilityDocument, ExceptionInterval, Org, Rules, Shift, Staff } from './types'
+import type { AvailabilityDocument, ExceptionInterval, Org, Publication, Rules, Shift, Staff } from './types'
 
 const ORG_KEY = 'timla.org'
 
@@ -95,3 +95,7 @@ export const getOrg = () => request<Org>('GET', '/data/org')
 /** period: ISO week like '2026-W28' */
 export const listShifts = (period: string) =>
   request<Shift[]>('GET', `/data/shifts?period=${encodeURIComponent(period)}`)
+
+/** null when the week is unpublished. */
+export const getPublication = (period: string) =>
+  request<Publication | null>('GET', `/data/publications?period=${encodeURIComponent(period)}`)

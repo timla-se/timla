@@ -271,6 +271,30 @@ def test_org_read(client, org_id):
     assert body['timezone']
 
 
+# --- publications ---
+
+def test_publications_read(client, org_id):
+    assert app.test_client().get('/data/publications?period=2026-W28').status_code == 401
+    assert client.get('/data/publications').status_code == 400
+    assert client.get('/data/publications?period=vecka-28').status_code == 400
+    assert client.get('/data/publications?period=2026-W99').status_code == 400
+
+    assert client.get('/data/publications?period=2026-W28').get_json() is None
+
+    with psycopg.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO publication (org_id, week, shifts) VALUES (%s, '2026-W28', '[]')",
+                (org_id,),
+            )
+        conn.commit()
+    body = client.get('/data/publications?period=2026-W28').get_json()
+    assert body['week'] == '2026-W28'
+    assert body['published_at']
+    # Other weeks stay unpublished
+    assert client.get('/data/publications?period=2026-W29').get_json() is None
+
+
 # --- rules ---
 
 def test_rules_roundtrip(client):

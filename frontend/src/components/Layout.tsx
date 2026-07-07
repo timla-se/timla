@@ -1,10 +1,10 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@swedev/ui'
 import {
-  BarChart3, Bell, CalendarDays, ChevronDown, ClipboardList, LayoutGrid,
-  Package, Search, Settings, Users,
+  BarChart3, Bell, CalendarDays, CalendarRange, ChevronDown, ClipboardList,
+  LayoutGrid, Package, Search, Settings, Users,
 } from 'lucide-react'
 
 import { clearOrgId, getOrg, listStaff } from '../api'
@@ -18,6 +18,7 @@ import { Mono } from './Mono'
 const NAV: { to?: string; label: string; icon: typeof Users }[] = [
   { label: 'Översikt', icon: LayoutGrid },
   { label: 'Kalender', icon: CalendarDays },
+  { to: '/schema', label: 'Arbetsschema', icon: CalendarRange },
   { label: 'Bokningar', icon: ClipboardList },
   { to: '/staff', label: 'Personal', icon: Users },
   { label: 'Resurser', icon: Package },
@@ -102,12 +103,16 @@ function NavItem({ to, label, icon: Icon, badge }: {
 
 function pageLabel(pathname: string): string {
   if (pathname.startsWith('/staff')) return 'Personal'
+  if (pathname.startsWith('/schema')) return 'Arbetsschema'
   return ''
 }
 
 export function Layout() {
   const location = useLocation()
   const [query, setQuery] = useState('')
+  // The search state is shell-global; a query typed on one page must not
+  // silently keep filtering the next one.
+  useEffect(() => { setQuery('') }, [location.pathname])
   const { data: org } = useQuery({ queryKey: ['org'], queryFn: getOrg })
   const orgName = org?.name ?? '…'
   // Same query key as the Personal table, so the badge rides on its cache.
@@ -164,7 +169,7 @@ export function Layout() {
               <div className="field-shell flex w-60 items-center gap-2 rounded-[10px] border border-[#e4d9c2] bg-white px-3 py-2">
                 <Search size={16} strokeWidth={1.75} className="shrink-0 text-warm-sand" />
                 <input
-                  placeholder="Sök medarbetare…"
+                  placeholder={pageLabel(location.pathname) === 'Arbetsschema' ? 'Sök personal…' : 'Sök medarbetare…'}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="w-full border-0 bg-transparent text-sm text-ink outline-none placeholder:text-warm-sand"

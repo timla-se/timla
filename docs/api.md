@@ -100,3 +100,15 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 |--------|------|-------|
 | GET | `/data/rules` | `{max_hours_per_week, min_rest_hours}` — nulls until set |
 | PUT | `/data/rules` | Full replace (missing field → null) |
+
+## Org
+
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/data/org` | `{id, name, timezone}` for the calling org. Editing is #14. |
+
+## Publications
+
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/data/publications?period=…` | Period required (`YYYY-Www` only — not from/to). `{week, published_at}` or `null` when the week is unpublished. The publish action is #10. |

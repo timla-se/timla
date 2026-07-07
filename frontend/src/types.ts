@@ -47,3 +47,8 @@ export interface Shift {
   ends_at: string
   note: string | null
 }
+
+export interface Publication {
+  week: string
+  published_at: string
+}
