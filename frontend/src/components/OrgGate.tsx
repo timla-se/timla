@@ -4,6 +4,7 @@ import { Flex, Text } from '@radix-ui/themes'
 import { Button, Callout, TextField } from '@swedev/ui'
 
 import { ApiError, clearOrgId, getOrgId, getRules, setOrgId } from '../api'
+import { Lockup } from './Lockup'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -47,7 +48,7 @@ export function OrgGate({ children }: { children: ReactNode }) {
         direction="column" gap="3"
         className="w-[420px] rounded-2xl border border-warm-border bg-white p-8 shadow-[0_4px_20px_rgb(90_60_20/0.06)]"
       >
-        <img src="/timla-lockup.svg" alt="Timla" className="mb-2 h-8 self-center" />
+        <Lockup className="mb-2 h-8 w-auto self-center" />
         <Text size="2" color="gray">
           Utvecklingsläge: inloggning kommer med issue #3. Klistra in ditt
           organisations-id så länge (seed-scriptet skriver ut det).

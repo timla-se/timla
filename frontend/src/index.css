@@ -217,6 +217,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Radix declares font-family directly on these classes in unlayered CSS,
+ * which beats Tailwind's layered .font-mono utility — so mono on
+ * TextField/Badge needs an unlayered, higher-specificity override. */
+.rt-TextFieldRoot.font-mono,
+.rt-Badge.font-mono {
+  font-family: var(--font-mono);
+}
+
 /* Warm focus ring for elements without component-specific focus styling
  * (e.g. plain buttons) — the browser default ring is blue. :where() keeps
  * specificity at zero so Radix's own focus styles always win. */

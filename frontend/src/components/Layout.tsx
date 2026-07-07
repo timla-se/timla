@@ -4,6 +4,7 @@ import { cn } from '@swedev/ui'
 import { CalendarDays, Settings, Users } from 'lucide-react'
 
 import { clearOrgId, getOrgId } from '../api'
+import { Lockup } from './Lockup'
 import { Mono } from './Mono'
 
 const NAV = [
@@ -19,7 +20,7 @@ export function Layout() {
     <Flex style={{ minHeight: '100vh' }}>
       <Flex direction="column" justify="between" className="w-56 shrink-0 border-r border-warm-border bg-white p-4">
         <Box>
-          <img src="/timla-lockup.svg" alt="Timla" className="mb-8 mt-1 h-7" />
+          <Lockup className="mb-8 mt-1 h-7 w-auto" />
           <nav className="flex flex-col gap-1">
             {NAV.map(({ to, label, icon: Icon, enabled }) =>
               enabled ? (

@@ -6,5 +6,5 @@
     <circle cx="24" cy="17" r="2.9" fill="#231d16"></circle>
     <rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect>
   </g>
-  <text x="47" y="36" font-weight="800" font-size="40" letter-spacing="-1.8" fill="#231d16">timla</text>
+  <text font-family="'Hanken Grotesk Variable','Hanken Grotesk',sans-serif" x="47" y="36" font-weight="800" font-size="40" letter-spacing="-1.8" fill="#231d16">timla</text>
 </svg>

@@ -46,7 +46,10 @@ const MONTH_SHORT = ['jan', 'feb', 'mars', 'april', 'maj', 'juni', 'juli', 'aug'
 export function formatDayDate(date: Date): string {
   // getDay(): 0 = Sunday; WEEKDAY_SHORT is Monday-first (ISO)
   const weekday = WEEKDAY_SHORT[(date.getDay() + 6) % 7]
-  return `${weekday} ${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`
+  // Year only when it isn't the current one — "mån 6 juli" is ambiguous
+  // across a year boundary (availability exceptions can be any date).
+  const year = date.getFullYear() === new Date().getFullYear() ? '' : ` ${date.getFullYear()}`
+  return `${weekday} ${date.getDate()} ${MONTH_SHORT[date.getMonth()]}${year}`
 }
 
 export function formatDayDateTime(date: Date): string {
