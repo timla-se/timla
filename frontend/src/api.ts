@@ -1,17 +1,11 @@
 import type { AvailabilityDocument, ExceptionInterval, Org, Publication, Rules, Shift, Staff } from './types'
 
-const ORG_KEY = 'timla.org'
+// Registered once by main.tsx's ClerkBridge; every request awaits this for
+// the current session token (Clerk auto-refreshes the short-lived JWT).
+let getToken: () => Promise<string | null> = async () => null
 
-export function getOrgId(): string | null {
-  return localStorage.getItem(ORG_KEY)
-}
-
-export function setOrgId(id: string): void {
-  localStorage.setItem(ORG_KEY, id)
-}
-
-export function clearOrgId(): void {
-  localStorage.removeItem(ORG_KEY)
+export function setTokenGetter(fn: () => Promise<string | null>): void {
+  getToken = fn
 }
 
 export class ApiError extends Error {
@@ -27,10 +21,8 @@ export class ApiError extends Error {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {}
-  // Interim until auth (#3): the org id lives in localStorage and rides
-  // along as X-Timla-Org, mirroring the backend's interim in api_utils.
-  const org = getOrgId()
-  if (org) headers['X-Timla-Org'] = org
+  const token = await getToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
   if (body !== undefined) headers['Content-Type'] = 'application/json'
 
   const resp = await fetch(path, {
@@ -91,6 +83,9 @@ export const deleteException = (staffId: string, exceptionId: string) =>
 export const getRules = () => request<Rules>('GET', '/data/rules')
 
 export const getOrg = () => request<Org>('GET', '/data/org')
+
+export const createOrg = (payload: { name: string; timezone?: string }) =>
+  request<Org>('POST', '/data/org', payload)
 
 /** period: ISO week like '2026-W28' */
 export const listShifts = (period: string) =>

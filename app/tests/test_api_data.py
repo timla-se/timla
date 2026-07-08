@@ -14,10 +14,10 @@ pytestmark = pytest.mark.skipif(not db_available(), reason='no database reachabl
 
 # --- staff ---
 
-def test_staff_requires_org_header(org_id):
+def test_staff_requires_auth(org_id):
     resp = app.test_client().get('/data/staff')
     assert resp.status_code == 401
-    assert resp.get_json()['error'] == 'missing_org'
+    assert resp.get_json()['error'] == 'unauthenticated'
 
 
 def test_staff_crud_roundtrip(client, make_staff):
@@ -48,10 +48,16 @@ def test_org_isolation(client, make_staff):
         with conn.cursor() as cur:
             cur.execute("INSERT INTO organization (name) VALUES ('Other API org') RETURNING id")
             other_org = str(cur.fetchone()[0])
+            other_user = f'user_test_other_{other_org}'
+            cur.execute(
+                'INSERT INTO org_user (user_id, org_id) VALUES (%s, %s)',
+                (other_user, other_org),
+            )
         conn.commit()
     try:
+        app.config['TESTING'] = True
         other_client = app.test_client()
-        other_client.environ_base['HTTP_X_TIMLA_ORG'] = other_org
+        other_client.environ_base['HTTP_X_TEST_USER'] = other_user
         assert other_client.get('/data/staff').get_json() == []
         assert other_client.patch(f"/data/staff/{staff['id']}", json={'role': 'x'}).status_code == 404
     finally:

@@ -29,5 +29,11 @@ scheduling (arbetsschema) module only; plan lives in milestone
 
 - `docker compose up -d postgres` — Postgres on host port **5433** (not 5432).
 - `DATABASE_URL=postgresql://timla:timla@localhost:5433/timla alembic upgrade head`
-- Seed demo data: same env, `python scripts/seed.py` (idempotent).
+- Seed demo data: same env, `python scripts/seed.py` (idempotent). Set
+  `TIMLA_SEED_USER=<clerk-user-id>` to bind your own Clerk account to the
+  seeded org.
+- Auth (issue #3): both halves need the same Clerk app's publishable key —
+  `CLERK_PUBLISHABLE_KEY` for the backend, `VITE_CLERK_PUBLISHABLE_KEY` in
+  `frontend/.env.local` for the frontend. Neither is required to run the
+  backend test suite (`app.config['TESTING']` uses a synthetic principal).
 - Verify recipe: `.claude/skills/verify/SKILL.md`.

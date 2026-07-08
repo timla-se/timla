@@ -3,16 +3,19 @@
 Manager-scoped primitives (see [primitives.md](primitives.md) for the
 `/data` / `/compute` / `/action` convention). JSON in, JSON out.
 
-**Auth (interim):** until issue #3 lands, callers identify their
-organization with the `X-Timla-Org: <uuid>` header. #3 replaces this with
-the authenticated principal; paths and payloads stay the same. The
-share-link endpoints (`/link/:token/*`, issue #13) will be the only
+**Auth:** every `/data`, `/compute` and `/action` request needs
+`Authorization: Bearer <clerk-session-jwt>`. A signed-in user with no
+organization yet gets `403 no_org` from every endpoint except
+`POST /data/org` (onboarding, see the Org section) — that's the signal
+the frontend uses to show the onboarding screen instead of the app. The
+share-link endpoints (`/link/:token/*`, issue #13) are the only
 unauthenticated surface.
 
 **Errors:** `{ "error": "<machine-code>", "message": "<human text>" }`
-with a matching HTTP status. Common codes: `missing_org` (401),
-`unknown_org`/`unknown_staff`/`not_found` (404), `invalid`,
-`unknown_field`, `invalid_period`, `missing_period`, `invalid_json` (400).
+with a matching HTTP status. Common codes: `unauthenticated` (401),
+`no_org` (403), `already_onboarded` (409), `unknown_org`/`unknown_staff`/
+`not_found` (404), `invalid`, `unknown_field`, `invalid_period`,
+`missing_period`, `invalid_json` (400).
 
 **Periods:** `?period=2026-W28` (ISO week, Monday start, org timezone) or
 `?from=2026-07-06&to=2026-07-12` (dates, `to` inclusive). A shift belongs
@@ -106,6 +109,7 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 | Method | Path | Notes |
 |--------|------|-------|
 | GET | `/data/org` | `{id, name, timezone}` for the calling org. Editing is #14. |
+| POST | `/data/org` | Onboarding: `{name, timezone?}` → 201. Creates the org and links it to the calling user. `409 already_onboarded` if the user already has one. |
 
 ## Publications
 

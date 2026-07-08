@@ -3,9 +3,11 @@
 
 import os
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, g, jsonify, request, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+import auth
+from api_utils import ApiError
 from config import IS_DEV, IS_PROD, TIMLA_ENV
 
 FRONTEND_DIST = os.path.join(
@@ -27,6 +29,12 @@ if not _secret_key:
     _secret_key = os.urandom(32)
 app.secret_key = _secret_key
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
+# Same reasoning as the SECRET_KEY guard above: an unconfigured Clerk key
+# would silently make every manager endpoint unreachable in prod. The test
+# suite runs with TIMLA_ENV=dev (see app/conftest.py), so IS_PROD is always
+# False there regardless of whether a real Clerk key is configured.
+if IS_PROD and not auth.is_configured():
+    raise RuntimeError('CLERK_PUBLISHABLE_KEY must be set when TIMLA_ENV is not dev')
 
 
 API_PREFIXES = ('api', 'link', 'data', 'compute', 'action')
@@ -48,6 +56,46 @@ def no_cache_api(response):
 @app.get('/api/health')
 def health():
     return jsonify({'status': 'ok', 'env': TIMLA_ENV, 'dev': IS_DEV})
+
+
+# Prefixes requiring an authenticated manager (issue #3). Excludes 'api'
+# (health is public) and 'link' (issue #13's unauthenticated share-link
+# surface).
+_MANAGER_PREFIXES = ('data', 'compute', 'action')
+
+
+@app.before_request
+def attach_user():
+    """Verify the Clerk JWT (if present) and populate ``g.user``.
+
+    Always runs. Token absent/invalid → ``g.user`` stays ``None``;
+    per-request enforcement is require_manager_auth's job below.
+    """
+    g.user = None
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return
+    token = auth_header[len('Bearer '):].strip()
+    try:
+        g.user = auth.verify_clerk_token(token)
+    except auth.ClerkAuthError:
+        pass  # require_manager_auth turns a missing g.user into a 401.
+
+
+@app.before_request
+def require_manager_auth():
+    """Default-deny for /data, /compute, /action — checked by path prefix,
+    so unknown paths under these prefixes 401 rather than falling through
+    to a 404 (auth is enforced before routing decides a route exists)."""
+    path = request.path.lstrip('/')
+    if not (path in _MANAGER_PREFIXES or path.startswith(tuple(p + '/' for p in _MANAGER_PREFIXES))):
+        return
+    if app.config.get('TESTING') and g.user is None:
+        test_user = request.headers.get('X-Test-User')
+        if test_user:
+            g.user = auth.ClerkUser(sub=test_user, email=None, raw_claims={})
+    if g.user is None:
+        raise ApiError(401, 'unauthenticated', 'Authorization: Bearer <token> required')
 
 
 import routes  # noqa: E402  (flat-module layout; needs app defined above)

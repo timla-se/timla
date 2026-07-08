@@ -10,6 +10,9 @@ Creates (idempotently — a rerun wipes and recreates the demo org):
 
 Run:
     DATABASE_URL=postgresql://timla:timla@localhost:5433/timla python scripts/seed.py
+
+Optionally set TIMLA_SEED_USER=<clerk-user-id> to bind a real Clerk
+account to the seeded org, so a developer signed in locally can see it.
 """
 
 import json
@@ -56,6 +59,22 @@ def seed_org(cur):
         (org_id,),
     )
     return org_id
+
+
+def seed_user_binding(cur, org_id):
+    """Bind a real Clerk user id to the seeded org, so a developer signed
+    in via Clerk locally can see the demo data (issue #3). Optional — most
+    seed runs (CI's smoke test included) don't set this. Idempotent: any
+    prior binding for this user id is replaced (the old org row, if
+    different, was just deleted above and its org_user row cascaded away)."""
+    user_id = os.environ.get('TIMLA_SEED_USER')
+    if not user_id:
+        return
+    cur.execute(
+        'INSERT INTO org_user (user_id, org_id) VALUES (%s, %s) '
+        'ON CONFLICT (user_id) DO UPDATE SET org_id = EXCLUDED.org_id',
+        (user_id, org_id),
+    )
 
 
 def seed_staff(cur, org_id):
@@ -154,6 +173,7 @@ def main():
     with get_db() as conn:
         with conn.cursor() as cur:
             org_id = seed_org(cur)
+            seed_user_binding(cur, org_id)
             staff_ids, sunday_blocked = seed_staff(cur, org_id)
             sunday_ok = [s for s in staff_ids if s not in sunday_blocked]
             published_shifts = seed_week(cur, org_id, staff_ids, sunday_ok, monday)
