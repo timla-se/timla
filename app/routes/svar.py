@@ -140,11 +140,14 @@ def put_availability(token):
         staff = _staff_by_token(conn, token, for_update=True)
         with conn.cursor() as cur:
             # 1. Recurring layer: full whole-replace of both kinds, mirroring the
-            #    manager availability PUT. The worker's page is seeded from every
-            #    recurring row (GET returns them all), so re-submitting the shown
-            #    week round-trips it — the worker is the authority on their own
-            #    normalvecka. Dated exceptions (on_date NOT NULL) are untouched
-            #    here; they have their own delta below (review H1).
+            #    manager availability PUT. This is faithful because the client
+            #    submits the COMPLETE desired recurring state — weekdays the
+            #    worker edited as their chosen range, untouched weekdays as their
+            #    exact stored rows — so rows the mobile editor can't represent
+            #    (split intervals, times outside its 06:00–22:00 canvas) survive
+            #    a save that didn't touch that weekday. Dated exceptions
+            #    (on_date NOT NULL) are untouched here; they have their own
+            #    delta below (review H1).
             cur.execute(
                 'DELETE FROM availability_interval WHERE staff_id = %s AND on_date IS NULL',
                 (staff['id'],),
