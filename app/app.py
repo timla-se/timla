@@ -6,6 +6,7 @@ import os
 from flask import Flask, g, jsonify, request, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+import _env  # noqa: F401  side effect: load .env before the imports below read os.environ
 import auth
 from api_utils import ApiError
 from config import IS_DEV, IS_PROD, TIMLA_ENV
