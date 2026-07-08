@@ -39,7 +39,9 @@ def create_org():
         raise ApiError(400, 'invalid', 'timezone must be a string')
     try:
         ZoneInfo(tz)
-    except ZoneInfoNotFoundError:
+    except (ZoneInfoNotFoundError, ValueError):
+        # ZoneInfo raises ValueError (not ZoneInfoNotFoundError) for
+        # path-like keys such as '/Europe/Stockholm' or '../UTC'.
         raise ApiError(400, 'invalid', 'timezone must be a valid IANA zone')
 
     with get_db() as conn:

@@ -85,4 +85,7 @@ def verify_clerk_token(token: str) -> ClerkUser:
         )
     except jwt.PyJWTError as e:
         raise ClerkAuthError(f'Invalid token: {e}')
+    # email is best-effort: default Clerk session tokens carry no `email`
+    # claim (it needs a custom token template), so this is usually None and
+    # org_user.email ends up NULL. #29 must not assume it's populated.
     return ClerkUser(sub=claims['sub'], email=claims.get('email'), raw_claims=claims)

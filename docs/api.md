@@ -13,9 +13,9 @@ unauthenticated surface.
 
 **Errors:** `{ "error": "<machine-code>", "message": "<human text>" }`
 with a matching HTTP status. Common codes: `unauthenticated` (401),
-`no_org` (403), `already_onboarded` (409), `unknown_org`/`unknown_staff`/
-`not_found` (404), `invalid`, `unknown_field`, `invalid_period`,
-`missing_period`, `invalid_json` (400).
+`no_org` (403), `already_onboarded` (409), `unknown_staff`/`not_found`
+(404), `invalid`, `unknown_field`, `invalid_period`, `missing_period`,
+`invalid_json` (400).
 
 **Periods:** `?period=2026-W28` (ISO week, Monday start, org timezone) or
 `?from=2026-07-06&to=2026-07-12` (dates, `to` inclusive). A shift belongs

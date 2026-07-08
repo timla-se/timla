@@ -16,9 +16,13 @@ import '@radix-ui/themes/styles.css'
 import '@swedev/ui/styles.css'
 import './index.css'
 
+// Inlined by Vite at build time. Supply it via frontend/.env.local for
+// local dev, or the VITE_CLERK_PUBLISHABLE_KEY Docker build arg for
+// container/CI builds (see Dockerfile) — otherwise the bundle bakes in
+// undefined and fails here on every load.
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in frontend/.env.local')
+  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY (frontend/.env.local for dev, or the Docker build arg)')
 }
 
 const queryClient = new QueryClient({

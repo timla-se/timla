@@ -94,6 +94,17 @@ def test_onboarding_rejects_non_string_fields(payload):
     assert resp.get_json()['error'] == 'invalid'
 
 
+@pytest.mark.parametrize('tz', ['Nonexistent/Zone', '/Europe/Stockholm', '../UTC'])
+def test_onboarding_rejects_bad_timezone_with_400_not_500(tz):
+    # Path-like keys raise ValueError from ZoneInfo, not ZoneInfoNotFoundError.
+    app.config['TESTING'] = True
+    client = app.test_client()
+    client.environ_base['HTTP_X_TEST_USER'] = 'user_test_bad_tz'
+    resp = client.post('/data/org', json={'name': 'X', 'timezone': tz})
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'invalid'
+
+
 def test_cross_org_isolation_via_auth(client, make_staff):
     """Belt-and-suspenders alongside test_api_data.test_org_isolation:
     two distinct authenticated users, distinct orgs, no leakage."""
