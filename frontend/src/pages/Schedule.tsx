@@ -51,6 +51,10 @@ interface Day {
   isoDate: string
   shifts: DayShift[]
   lanes: number
+  /** Tail (00:00–endMinute) of shifts that started the previous day and
+   * wrap past midnight — coverage-only, already rendered as a bar on the
+   * day they start. */
+  carryIn: { staffId: string | null; endMinute: number }[]
 }
 
 /** Greedy lane stacking: first lane whose last bar ends at/before start. */
@@ -78,6 +82,7 @@ function buildDays(shifts: Shift[], tz: string, period: string): Day[] {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })
   const byDate = new Map<string, Omit<DayShift, 'lane'>[]>(isoDates.map((d) => [d, []]))
+  const carryByDate = new Map<string, { staffId: string | null; endMinute: number }[]>(isoDates.map((d) => [d, []]))
   for (const shift of shifts) {
     const start = wallClock(shift.starts_at, tz)
     const end = wallClock(shift.ends_at, tz)
@@ -88,6 +93,9 @@ function buildDays(shifts: Shift[], tz: string, period: string): Day[] {
       endMinute: overnight ? 1440 : end.minuteOfDay,
       overnight,
     })
+    if (overnight) {
+      carryByDate.get(end.isoDate)?.push({ staffId: shift.staff_id, endMinute: end.minuteOfDay })
+    }
   }
   return isoDates.map((isoDate, i) => {
     const stacked = assignLanes(byDate.get(isoDate) ?? [])
@@ -96,6 +104,7 @@ function buildDays(shifts: Shift[], tz: string, period: string): Day[] {
       isoDate,
       shifts: stacked,
       lanes: Math.max(1, ...stacked.map((s) => s.lane + 1)),
+      carryIn: carryByDate.get(isoDate) ?? [],
     }
   })
 }
@@ -135,7 +144,7 @@ export default function Schedule() {
     queryFn: () => listShifts(period),
     enabled: validPeriod,
   })
-  const { data: publication } = useQuery({
+  const { data: publication, isSuccess: publicationLoaded } = useQuery({
     queryKey: ['publication', period],
     queryFn: () => getPublication(period),
     enabled: validPeriod,
@@ -163,15 +172,26 @@ export default function Schedule() {
   const coverageFor = (day: Day, hour: number): { color: string; count: number } => {
     const hourStart = hour * 60, hourEnd = hourStart + 60
     const overlaps = (s: DayShift) => s.startMinute < hourEnd && s.endMinute > hourStart
-    const count = day.shifts.filter((s) => s.shift.staff_id && overlaps(s)).length
+    // carryIn covers [0, endMinute) of this day, wrapped from a shift that
+    // started the previous day — it overlaps whenever the hour starts
+    // before the tail ends.
+    const carryOverlaps = (c: { endMinute: number }) => hourStart < c.endMinute
+    const count =
+      day.shifts.filter((s) => s.shift.staff_id && overlaps(s)).length +
+      day.carryIn.filter((c) => c.staffId && carryOverlaps(c)).length
+    // Lucka = an open shift (staff_id null: an explicit, unstaffed need)
+    // covers the hour. It takes priority over count-based tiers so a
+    // manager-created gap is never masked by unrelated coverage. Hours
+    // with no shifts at all are neutral — without opening-hours data we
+    // can't know they're gaps rather than closed.
+    const openHere =
+      day.shifts.some((s) => !s.shift.staff_id && overlaps(s)) ||
+      day.carryIn.some((c) => !c.staffId && carryOverlaps(c))
+    if (openHere) return { color: COVERAGE.gap, count }
     if (count >= 3) return { color: COVERAGE.ok, count }
     if (count === 2) return { color: COVERAGE.two, count }
     if (count === 1) return { color: COVERAGE.one, count }
-    // Lucka = an open shift (staff_id null: an explicit, unstaffed need)
-    // covers the hour. Hours with no shifts at all are neutral — without
-    // opening-hours data we can't know they're gaps rather than closed.
-    const openHere = day.shifts.some((s) => !s.shift.staff_id && overlaps(s))
-    return { color: openHere ? COVERAGE.gap : COVERAGE.outside, count }
+    return { color: COVERAGE.outside, count }
   }
 
   if (isLoading) return <Flex justify="center" py="8"><Spinner /></Flex>
@@ -212,7 +232,7 @@ export default function Schedule() {
         </div>
         {/* "Publicera schema" (#10) and "Auto-schemalägg" (#11) land here */}
         <div className="mb-0.5">
-          {publication ? (
+          {publicationLoaded && (publication ? (
             <span className="inline-flex items-center gap-1.5 rounded-[20px] bg-[#e7efe8] px-[11px] py-[5px] text-[12.5px] font-semibold text-[#3c5a44]">
               <span className="h-[7px] w-[7px] rounded-full bg-ok" />
               Publicerad {formatDayDate(new Date(publication.published_at))}
@@ -222,7 +242,7 @@ export default function Schedule() {
               <span className="h-[7px] w-[7px] rounded-full bg-warm-sand" />
               Utkast
             </span>
-          )}
+          ))}
         </div>
       </div>
 

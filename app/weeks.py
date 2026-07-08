@@ -24,6 +24,13 @@ def week_monday(week):
     return date.fromisocalendar(int(year_s), int(week_s), 1)
 
 
+def normalize_week(week):
+    """Canonical zero-padded form of an ISO week string ('2026-W1' -> '2026-W01')."""
+    monday = week_monday(week)
+    year, iso_week, _ = monday.isocalendar()
+    return f'{year}-W{iso_week:02d}'
+
+
 def week_bounds_utc(week, tz):
     """[start, end) of an ISO week as UTC instants.
 

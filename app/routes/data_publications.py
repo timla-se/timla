@@ -9,7 +9,7 @@ from flask import Blueprint, jsonify, request
 
 from api_utils import ApiError, current_org
 from db import get_db
-from weeks import week_monday
+from weeks import normalize_week
 
 bp = Blueprint('data_publications', __name__)
 
@@ -20,7 +20,7 @@ def get_publication():
     if not period:
         raise ApiError(400, 'missing_period', "period is required, an ISO week like '2026-W28'")
     try:
-        week_monday(period)
+        period = normalize_week(period)
     except (ValueError, AttributeError):
         raise ApiError(400, 'invalid_period', "period must be an ISO week like '2026-W28'")
 
