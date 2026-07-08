@@ -7,12 +7,12 @@ import { ApiError } from '../api'
 import { getSvarContext, putSvarAvailability } from '../svarApi'
 import {
   countDays, DAY_MAX, DAY_MIN, durationLabel, GAP, intervalsToRanges, isWholeDay,
-  PRESETS, rangeLabel, rangesToIntervals, STEP, weekdayDates, WEEKDAYS, WHOLE_DAY,
+  PRESETS, rangeLabel, STEP, weekdayDates, WEEKDAYS, WHOLE_DAY,
   type DayRange, type WeekRanges,
 } from '../ranges'
 import { buildOverview, type CalCell, type CalMonth } from '../overview'
 import { Lockup } from '../components/Lockup'
-import type { SvarContext, SvarException } from '../types'
+import type { SvarContext, SvarException, SvarRecurring } from '../types'
 import { formatIsoDate, minutesToTime, weekdayLabel, wallClock } from '../time'
 
 /**
@@ -68,6 +68,25 @@ function Centered({ children }: { children: React.ReactNode }) {
 
 type LocalException = SvarException & { isNew?: boolean }
 
+/** The complete recurring payload for one kind: weekdays the worker edited use
+ * the editor's chosen range; untouched weekdays keep their exact stored rows
+ * (split intervals, times outside the 06–22 canvas) so a save never rewrites
+ * what the worker didn't touch. */
+function mergedRecurring(dirty: Set<number>, ranges: WeekRanges, original: SvarRecurring[]): SvarRecurring[] {
+  const out: SvarRecurring[] = []
+  for (const { weekday } of WEEKDAYS) {
+    if (dirty.has(weekday)) {
+      const r = ranges[weekday]
+      if (r) out.push({ weekday, start_minute: r.start, end_minute: r.end })
+    } else {
+      for (const o of original) {
+        if (o.weekday === weekday) out.push({ weekday, start_minute: o.start_minute, end_minute: o.end_minute })
+      }
+    }
+  }
+  return out
+}
+
 function Editor({ token, context }: { token: string; context: SvarContext }) {
   const { schedule } = context
   const dates = weekdayDates(schedule.from)
@@ -79,26 +98,53 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
   const [exceptions, setExceptions] = useState<LocalException[]>(() => context.availability.exceptions)
   const [removedIds, setRemovedIds] = useState<string[]>([])
   const [submitted, setSubmitted] = useState(false)
+  // The mobile editor's per-day range is a lossy projection of the stored rows
+  // (it clamps to 06:00–22:00 and collapses split days). To avoid rewriting
+  // manager-entered rows the worker never touched, keep the originals and only
+  // replace weekdays the worker actually edited — untouched weekdays round-trip
+  // verbatim (review: no-op save must be a no-op).
+  const [origWishes, setOrigWishes] = useState<SvarRecurring[]>(() => context.availability.wishes)
+  const [origBlocks, setOrigBlocks] = useState<SvarRecurring[]>(() => context.availability.blocks)
+  const [dirtyWant, setDirtyWant] = useState<Set<number>>(() => new Set())
+  const [dirtyCannot, setDirtyCannot] = useState<Set<number>>(() => new Set())
 
   const save = useMutation({
     mutationFn: () =>
       putSvarAvailability(token, {
-        wishes: rangesToIntervals(want),
-        blocks: rangesToIntervals(cannot),
+        wishes: mergedRecurring(dirtyWant, want, origWishes),
+        blocks: mergedRecurring(dirtyCannot, cannot, origBlocks),
         add_exceptions: exceptions
           .filter((e) => e.isNew)
           .map((e) => ({ on_date: e.on_date, start_minute: e.start_minute, end_minute: e.end_minute })),
         remove_exception_ids: removedIds,
       }),
-    onSuccess: () => setSubmitted(true),
+    // Reconcile local state with the persisted truth: exceptions get real ids
+    // and lose isNew, removedIds/dirty reset. Without this a second save in the
+    // same session ("Ändra mina svar") re-sends stale remove_exception_ids
+    // (→ 400) or re-inserts still-isNew exceptions as duplicates (review).
+    onSuccess: (data) => {
+      setWant(intervalsToRanges(data.availability.wishes))
+      setCannot(intervalsToRanges(data.availability.blocks))
+      setOrigWishes(data.availability.wishes)
+      setOrigBlocks(data.availability.blocks)
+      setExceptions(data.availability.exceptions)
+      setRemovedIds([])
+      setDirtyWant(new Set())
+      setDirtyCannot(new Set())
+      setSubmitted(true)
+    },
   })
 
-  const toggleDay = (ranges: WeekRanges, set: (r: WeekRanges) => void, weekday: number) => {
+  const toggleDay = (ranges: WeekRanges, set: (r: WeekRanges) => void, markDirty: (wd: number) => void, weekday: number) => {
     set({ ...ranges, [weekday]: ranges[weekday] ? null : { ...WHOLE_DAY } })
+    markDirty(weekday)
   }
-  const setRange = (ranges: WeekRanges, set: (r: WeekRanges) => void, weekday: number, range: DayRange) => {
+  const setRange = (ranges: WeekRanges, set: (r: WeekRanges) => void, markDirty: (wd: number) => void, weekday: number, range: DayRange) => {
     set({ ...ranges, [weekday]: range })
+    markDirty(weekday)
   }
+  const markWant = (wd: number) => setDirtyWant((s) => new Set(s).add(wd))
+  const markCannot = (wd: number) => setDirtyCannot((s) => new Set(s).add(wd))
   const toggleOpen = (open: Set<number>, set: (s: Set<number>) => void, weekday: number) => {
     const next = new Set(open)
     if (next.has(weekday)) next.delete(weekday)
@@ -182,8 +228,8 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
                 ranges={want}
                 dates={dates}
                 open={openWant}
-                onToggleDay={(wd) => toggleDay(want, setWant, wd)}
-                onSetRange={(wd, r) => setRange(want, setWant, wd, r)}
+                onToggleDay={(wd) => toggleDay(want, setWant, markWant, wd)}
+                onSetRange={(wd, r) => setRange(want, setWant, markWant, wd, r)}
                 onToggleOpen={(wd) => toggleOpen(openWant, setOpenWant, wd)}
               />
             </>
@@ -200,8 +246,8 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
                 ranges={cannot}
                 dates={dates}
                 open={openCannot}
-                onToggleDay={(wd) => toggleDay(cannot, setCannot, wd)}
-                onSetRange={(wd, r) => setRange(cannot, setCannot, wd, r)}
+                onToggleDay={(wd) => toggleDay(cannot, setCannot, markCannot, wd)}
+                onSetRange={(wd, r) => setRange(cannot, setCannot, markCannot, wd, r)}
                 onToggleOpen={(wd) => toggleOpen(openCannot, setOpenCannot, wd)}
               />
               <ExceptionList exceptions={exceptions} onRemove={removeException} onAdd={addException} />

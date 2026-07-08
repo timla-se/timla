@@ -26,9 +26,13 @@ def test_unknown_api_path_is_json_404_not_spa():
 
 def test_bare_link_falls_through_to_spa():
     # 'link' was retired as an API prefix (issue #13): /link/:token now 301s
-    # to /svar/:token, and bare /link (no token) is just an SPA route.
+    # to /svar/:token, and bare /link (no token) is just an SPA route. Backend
+    # CI runs without a built frontend/dist, so the SPA fallback returns its own
+    # 'frontend not built' 404 rather than HTML — assert the routing (it did NOT
+    # hit the API 'not_found' branch) instead of requiring built assets.
     resp = app.test_client().get('/link')
-    assert 'application/json' not in resp.content_type or resp.status_code == 200
+    body = resp.get_json(silent=True)
+    assert body is None or body.get('error') != 'not_found'
 
 
 def test_unauthenticated_manager_paths_401_before_routing():
