@@ -8,6 +8,7 @@ def register(app):
     from routes.compute_conflicts import bp as conflicts_bp
     from routes.data_availability import bp as availability_bp
     from routes.data_org import bp as org_bp
+    from routes.data_publications import bp as publications_bp
     from routes.data_rules import bp as rules_bp
     from routes.data_shifts import bp as shifts_bp
     from routes.data_staff import bp as staff_bp
@@ -17,6 +18,7 @@ def register(app):
     app.register_blueprint(availability_bp)
     app.register_blueprint(shifts_bp)
     app.register_blueprint(rules_bp)
+    app.register_blueprint(publications_bp)
     app.register_blueprint(conflicts_bp)
     app.register_blueprint(action_staff_bp)
     app.register_error_handler(ApiError, api_error_response)

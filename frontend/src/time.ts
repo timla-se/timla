@@ -92,6 +92,67 @@ function compactHour(minute: number): string {
   return time.endsWith(':00') ? time.slice(0, 2) : time
 }
 
+/** '2026-W28' → the Monday that starts it (local Date, midnight). ISO
+ * semantics mirror app/weeks.py. Throws on malformed input. */
+export function parseWeekPeriod(period: string): Date {
+  const match = /^(\d{4})-W(\d{2})$/.exec(period)
+  if (!match) throw new Error(`invalid week period: ${period}`)
+  const year = Number(match[1]), week = Number(match[2])
+  // Jan 4 is always in ISO week 1; walk back to its Monday, then forward.
+  const jan4 = new Date(year, 0, 4)
+  const week1Monday = new Date(year, 0, 4 - ((jan4.getDay() + 6) % 7))
+  const monday = new Date(week1Monday)
+  monday.setDate(week1Monday.getDate() + (week - 1) * 7)
+  if (week < 1 || isoWeek(monday).week !== week) throw new Error(`invalid week period: ${period}`)
+  return monday
+}
+
+export function addWeeks(period: string, delta: number): string {
+  const monday = parseWeekPeriod(period)
+  monday.setDate(monday.getDate() + delta * 7)
+  return isoWeekPeriod(monday)
+}
+
+/** "Vecka 28" + "7–13 juli" per the Arbetsschema design; ranges crossing a
+ * month render both ("28 juli–3 aug"), crossing a year also the year. */
+export function formatWeekLabel(period: string): { week: string; range: string } {
+  const monday = parseWeekPeriod(period)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  const { week } = isoWeek(monday)
+  const sameMonth = monday.getMonth() === sunday.getMonth() && monday.getFullYear() === sunday.getFullYear()
+  const year = sunday.getFullYear() === new Date().getFullYear() ? '' : ` ${sunday.getFullYear()}`
+  const range = sameMonth
+    ? `${monday.getDate()}–${sunday.getDate()} ${MONTH_SHORT[monday.getMonth()]}${year}`
+    : `${monday.getDate()} ${MONTH_SHORT[monday.getMonth()]}–${sunday.getDate()} ${MONTH_SHORT[sunday.getMonth()]}${year}`
+  return { week: `Vecka ${week}`, range }
+}
+
+/** Wall-clock parts of an instant in a named timezone. The API returns
+ * timestamptz instants; all day grouping and minute-of-day math for the
+ * schedule MUST go through this — browser-local Date getters would shift
+ * shifts across days for managers travelling outside the org timezone. */
+export function wallClock(isoInstant: string, timeZone: string): {
+  isoDate: string
+  weekday: number // 1 = Monday … 7 = Sunday
+  minuteOfDay: number
+} {
+  const date = new Date(isoInstant)
+  const parts = new Intl.DateTimeFormat('sv-SE', {
+    timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', weekday: 'short', hourCycle: 'h23',
+  }).formatToParts(date)
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
+  // Some ICU versions add a trailing period to short weekdays — strip it.
+  const weekdayIndex = ['mån', 'tis', 'ons', 'tors', 'fre', 'lör', 'sön']
+    .indexOf(get('weekday').replace('.', ''))
+  return {
+    isoDate: `${get('year')}-${get('month')}-${get('day')}`,
+    weekday: weekdayIndex + 1,
+    minuteOfDay: Number(get('hour')) * 60 + Number(get('minute')),
+  }
+}
+
 /** One-line summary of weekly wishes per the Personal design:
  * "Mån–Fre · 09–17" when all days share one window, a day list when
  * non-contiguous, "Varierar" when windows differ, null when empty. */
