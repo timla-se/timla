@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
+import { UserButton, useClerk } from '@clerk/react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@swedev/ui'
 import {
@@ -7,7 +8,7 @@ import {
   LayoutGrid, Package, Search, Settings, Users,
 } from 'lucide-react'
 
-import { clearOrgId, getOrg, listStaff } from '../api'
+import { getOrg, listStaff } from '../api'
 import { initials } from './Avatar'
 import { Mono } from './Mono'
 
@@ -109,6 +110,7 @@ function pageLabel(pathname: string): string {
 
 export function Layout() {
   const location = useLocation()
+  const { signOut } = useClerk()
   const [query, setQuery] = useState('')
   // The search state is shell-global; a query typed on one page must not
   // silently keep filtering the next one.
@@ -136,14 +138,10 @@ export function Layout() {
           <div className="mt-auto flex flex-col gap-[3px]">
             <NavItem label="Inställningar" icon={Settings} />
             <button
-              title="Byt organisation"
+              title="Logga ut"
               onClick={() => {
-                // Easy to hit by accident — and "logging out" of the dev-
-                // interim org gate mid-task is annoying enough to confirm.
-                if (window.confirm('Byt organisation? Du får klistra in ett organisations-id igen.')) {
-                  clearOrgId()
-                  window.location.assign('/')
-                }
+                // Signing out mid-task is annoying enough to confirm.
+                if (window.confirm('Logga ut?')) void signOut()
               }}
               className="mt-2.5 flex cursor-pointer items-center gap-[11px] rounded-xl border-0 bg-[#2f271c] p-2.5 text-left"
             >
@@ -181,11 +179,8 @@ export function Layout() {
               >
                 <Bell size={18} strokeWidth={1.75} className="text-ink-soft" />
               </button>
-              <div
-                title="Konto — inloggning kommer med issue #3"
-                className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-ink text-[13px] font-extrabold text-honey"
-              >
-                {org ? initials(orgName) : '–'}
+              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-ink">
+                <UserButton appearance={{ elements: { userButtonAvatarBox: 'h-7 w-7' } }} />
               </div>
             </div>
           </header>

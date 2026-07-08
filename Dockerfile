@@ -9,6 +9,13 @@
 FROM node:24-alpine AS frontend-build
 WORKDIR /build
 
+# Vite inlines VITE_* at build time, so the Clerk publishable key must be
+# present during `npm run build:frontend`, not just at runtime. Pass it with
+# `docker build --build-arg VITE_CLERK_PUBLISHABLE_KEY=pk_...`. It's a
+# publishable (non-secret) key, safe to bake into the bundle.
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+
 # Copy workspace manifests first so `npm ci` can be cached across source changes.
 COPY package.json package-lock.json ./
 COPY frontend/package.json ./frontend/

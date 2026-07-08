@@ -14,6 +14,10 @@ def org_id():
         with conn.cursor() as cur:
             cur.execute("INSERT INTO organization (name) VALUES ('API-testorg') RETURNING id")
             org_id = str(cur.fetchone()[0])
+            cur.execute(
+                'INSERT INTO org_user (user_id, org_id) VALUES (%s, %s)',
+                (f'user_test_{org_id}', org_id),
+            )
         conn.commit()
     yield org_id
     with psycopg.connect(DATABASE_URL) as conn:
@@ -24,8 +28,9 @@ def org_id():
 
 @pytest.fixture
 def client(org_id):
+    app.config['TESTING'] = True
     c = app.test_client()
-    c.environ_base['HTTP_X_TIMLA_ORG'] = org_id
+    c.environ_base['HTTP_X_TEST_USER'] = f'user_test_{org_id}'
     return c
 
 

@@ -1,9 +1,8 @@
 """Shared helpers for the JSON API: errors, org resolution, period parsing."""
 
-import uuid as uuid_lib
 from datetime import date, datetime, timedelta
 
-from flask import jsonify, request
+from flask import g, jsonify, request
 
 from weeks import week_monday
 
@@ -52,24 +51,20 @@ def get_json_body():
 
 
 def current_org(conn):
-    """Resolve the calling organization.
+    """Resolve the calling organization from the authenticated user.
 
-    Interim mechanism until auth lands (#3): the org id comes from the
-    X-Timla-Org header. #3 replaces this function's body with the
-    authenticated principal's org — route code stays unchanged.
+    require_manager_auth (app.py) guarantees g.user is set before any
+    route touching this can run.
     """
-    raw = request.headers.get('X-Timla-Org')
-    if not raw:
-        raise ApiError(401, 'missing_org', 'X-Timla-Org header required (interim until auth, see issue #3)')
-    try:
-        org_id = uuid_lib.UUID(raw)
-    except ValueError:
-        raise ApiError(400, 'invalid_org', 'X-Timla-Org must be a UUID')
     with conn.cursor() as cur:
-        cur.execute('SELECT id, name, timezone FROM organization WHERE id = %s', (org_id,))
+        cur.execute(
+            'SELECT o.id, o.name, o.timezone FROM org_user ou '
+            'JOIN organization o ON o.id = ou.org_id WHERE ou.user_id = %s',
+            (g.user.sub,),
+        )
         org = cur.fetchone()
     if org is None:
-        raise ApiError(404, 'unknown_org', 'No such organization')
+        raise ApiError(403, 'no_org', 'No organization linked to this account yet — onboard via POST /data/org')
     return org
 
 

@@ -22,7 +22,12 @@ services:
     restart: unless-stopped
 
   timla:
-    build: .
+    build:
+      context: .
+      args:
+        # Baked into the frontend bundle at build time (see Dockerfile).
+        # Comes from the shell or a local .env; not hardcoded here.
+        - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY:-}
     container_name: timla
     ports:
       # Loopback only — this is a dev compose; don't expose the app on LAN.
@@ -39,6 +44,9 @@ services:
       - TIMLA_ENV=dev
       - DATABASE_URL=postgresql://timla:timla@postgres:5432/timla
       - SECRET_KEY=${SECRET_KEY:-dev-only-secret}
+      # Backend JWT verification (issue #3); optional in dev. Same key as the
+      # frontend build arg above.
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
