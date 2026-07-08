@@ -52,3 +52,48 @@ export interface Publication {
   week: string
   published_at: string
 }
+
+// --- staff share-link (/svar) surface (issue #13) ---
+
+export interface SvarRecurring {
+  weekday: number
+  start_minute: number
+  end_minute: number
+}
+
+export interface SvarException {
+  id: string
+  on_date: string
+  start_minute: number
+  end_minute: number
+}
+
+export interface SvarShift {
+  date: string
+  starts_at: string
+  ends_at: string
+}
+
+export interface SvarContext {
+  staff: { first_name: string; name: string }
+  org: { name: string; initials: string; timezone: string }
+  availability: {
+    wishes: SvarRecurring[]
+    blocks: SvarRecurring[]
+    exceptions: SvarException[]
+  }
+  schedule: {
+    from: string
+    to: string
+    shifts: SvarShift[]
+    shift_count: number
+    hours: number
+  }
+}
+
+export interface SvarPutBody {
+  wishes: SvarRecurring[]
+  blocks: SvarRecurring[]
+  add_exceptions: { on_date: string; start_minute: number; end_minute: number }[]
+  remove_exception_ids: string[]
+}

@@ -189,7 +189,7 @@ def main():
     print(f'  staff: {len(staff_ids)}')
     print(f'  {this_week}: {len(published_shifts)} shifts, published')
     print(f'  next week: {len(draft_shifts)} shifts, draft')
-    print(f'  example share link: /link/{example_token}')
+    print(f'  example share link: /svar/{example_token}')
     return 0
 
 

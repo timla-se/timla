@@ -1,6 +1,6 @@
 """/action/staff — manager-scoped staff actions.
 
-Only the token minting lives here; the public /link/:token surface that
+Only the token minting lives here; the public /svar/:token surface that
 consumes the token is issue #13's scope.
 """
 

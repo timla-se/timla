@@ -8,6 +8,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 import _env  # noqa: F401  side effect: load .env before the imports below read os.environ
 import auth
+import ratelimit
 from api_utils import ApiError
 from config import IS_DEV, IS_PROD, TIMLA_ENV
 
@@ -38,7 +39,11 @@ if IS_PROD and not auth.is_configured():
     raise RuntimeError('CLERK_PUBLISHABLE_KEY must be set when TIMLA_ENV is not dev')
 
 
-API_PREFIXES = ('api', 'link', 'data', 'compute', 'action')
+# 'link' retired (issue #13): it's now an explicit GET route redirecting to
+# /svar, and the bare page /svar/:token must fall through to the SPA, so
+# 'svar' is deliberately NOT an API prefix — its JSON lives on explicit
+# /svar/:token/data + /availability routes that match before the SPA catch-all.
+API_PREFIXES = ('api', 'data', 'compute', 'action')
 
 
 def _is_api_path(path):
@@ -52,6 +57,35 @@ def no_cache_api(response):
     if _is_api_path(request.path.lstrip('/')):
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response
+
+
+# The unauthenticated share-link surface (issue #13). Covers /svar/:token
+# (the SPA page + JSON sub-paths) and the /link -> /svar redirect. Applied via
+# after_request so it also lands on ApiError 404s, the served page, and the
+# redirect (whose Location carries the token).
+def _is_svar_surface(path):
+    return path.startswith(('/svar/', '/link/')) or path in ('/svar', '/link')
+
+
+@app.after_request
+def svar_surface_headers(response):
+    if _is_svar_surface(request.path):
+        response.headers['Cache-Control'] = 'no-store'
+        response.headers['Referrer-Policy'] = 'no-referrer'  # keep the in-URL token out of Referer
+        response.headers['X-Robots-Tag'] = 'noindex'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'  # a one-tap "Spara" page is a clickjacking target
+    return response
+
+
+@app.before_request
+def svar_rate_limit():
+    """IP-keyed throttle over ALL /svar/* (page + JSON + unknown tokens), so
+    blind token-guessing can't get a fresh bucket per guess (codex #1)."""
+    if not request.path.startswith('/svar/'):
+        return
+    if not ratelimit.check(request.remote_addr or 'unknown'):
+        raise ApiError(429, 'rate_limited', 'Too many requests — slow down and try again shortly')
 
 
 @app.get('/api/health')

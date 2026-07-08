@@ -52,6 +52,13 @@ export function formatDayDate(date: Date): string {
   return `${weekday} ${date.getDate()} ${MONTH_SHORT[date.getMonth()]}${year}`
 }
 
+/** Date without weekday — "6 juli" — for places that already show the weekday
+ * (e.g. the /svar day rows, issue #13). Year only across a year boundary. */
+export function formatDayMonth(date: Date): string {
+  const year = date.getFullYear() === new Date().getFullYear() ? '' : ` ${date.getFullYear()}`
+  return `${date.getDate()} ${MONTH_SHORT[date.getMonth()]}${year}`
+}
+
 export function formatDayDateTime(date: Date): string {
   const hm = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
   return `${formatDayDate(date)} · ${hm}`

@@ -32,7 +32,7 @@ composable primitives convention — see [docs/primitives.md](docs/primitives.md
 # Postgres (host port 5433) + app container
 docker compose up -d
 
-# Frontend dev server (proxies /api and /link to the backend)
+# Frontend dev server (proxies /api and /svar JSON to the backend)
 npm install
 npm run dev
 
