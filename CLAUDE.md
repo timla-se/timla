@@ -32,8 +32,12 @@ scheduling (arbetsschema) module only; plan lives in milestone
 - Seed demo data: same env, `python scripts/seed.py` (idempotent). Set
   `TIMLA_SEED_USER=<clerk-user-id>` to bind your own Clerk account to the
   seeded org.
+- Backend config: copy `.env.example` to `.env` (gitignored, auto-loaded by
+  `app/_env.py`); real env vars still override it. `CLERK_PUBLISHABLE_KEY`,
+  `DATABASE_URL`, `TIMLA_ENV` live here.
 - Auth (issue #3): both halves need the same Clerk app's publishable key —
-  `CLERK_PUBLISHABLE_KEY` for the backend, `VITE_CLERK_PUBLISHABLE_KEY` in
-  `frontend/.env.local` for the frontend. Neither is required to run the
-  backend test suite (`app.config['TESTING']` uses a synthetic principal).
+  `CLERK_PUBLISHABLE_KEY` for the backend (root `.env`),
+  `VITE_CLERK_PUBLISHABLE_KEY` in `frontend/.env.local` for the frontend.
+  Neither is required to run the backend test suite (`app.config['TESTING']`
+  uses a synthetic principal).
 - Verify recipe: `.claude/skills/verify/SKILL.md`.

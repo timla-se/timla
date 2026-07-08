@@ -1,6 +1,8 @@
 """Central configuration for Timla."""
 import os
 
+import _env  # noqa: F401  side effect: load .env before the os.environ reads below
+
 PORT = int(os.environ.get('TIMLA_PORT', 8899))
 
 # Postgres connection. Format: postgresql://user:password@host:port/dbname
