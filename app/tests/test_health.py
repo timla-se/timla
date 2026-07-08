@@ -17,11 +17,18 @@ def test_api_responses_are_uncached():
 
 def test_unknown_api_path_is_json_404_not_spa():
     client = app.test_client()
-    for path in ('/api/nonexistent', '/api', '/link'):
+    for path in ('/api/nonexistent', '/api'):
         resp = client.get(path)
         assert resp.status_code == 404, path
         assert resp.get_json()['error'] == 'not_found'
         assert 'no-store' in resp.headers['Cache-Control']
+
+
+def test_bare_link_falls_through_to_spa():
+    # 'link' was retired as an API prefix (issue #13): /link/:token now 301s
+    # to /svar/:token, and bare /link (no token) is just an SPA route.
+    resp = app.test_client().get('/link')
+    assert 'application/json' not in resp.content_type or resp.status_code == 200
 
 
 def test_unauthenticated_manager_paths_401_before_routing():

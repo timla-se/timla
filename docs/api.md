@@ -8,8 +8,9 @@ Manager-scoped primitives (see [primitives.md](primitives.md) for the
 organization yet gets `403 no_org` from every endpoint except
 `POST /data/org` (onboarding, see the Org section) — that's the signal
 the frontend uses to show the onboarding screen instead of the app. The
-share-link endpoints (`/link/:token/*`, issue #13) are the only
-unauthenticated surface.
+staff share-link surface (`/svar/:token` + `GET /svar/:token/data` +
+`PUT /svar/:token/availability`, issue #13) is the only unauthenticated
+one; `/link/:token` 301-redirects to it.
 
 **Errors:** `{ "error": "<machine-code>", "message": "<human text>" }`
 with a matching HTTP status. Common codes: `unauthenticated` (401),
@@ -95,7 +96,7 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 
 | Method | Path | Notes |
 |--------|------|-------|
-| POST | `/action/staff/:id/regenerate-link` | Generates (first time) or regenerates the staff member's share-link token; the old link stops working. Returns the full staff object. 400 `archived_staff` for archived staff. The public `/link/:token` surface consuming the token is issue #13. |
+| POST | `/action/staff/:id/regenerate-link` | Generates (first time) or regenerates the staff member's share-link token; the old link stops working. Returns the full staff object. 400 `archived_staff` for archived staff. The public `/svar/:token` surface consuming the token is issue #13. |
 
 ## Rules
 
@@ -116,3 +117,18 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 | Method | Path | Notes |
 |--------|------|-------|
 | GET | `/data/publications?period=…` | Period required (`YYYY-Www` only — not from/to). `{week, published_at}` or `null` when the week is unpublished. The publish action is #10. |
+
+## Staff share-link (`/svar`) — the only unauthenticated surface
+
+The worker opens `/svar/:token` (the token is `staff.share_token`, minted by
+`POST /action/staff/:id/regenerate-link`). The bare path serves the SPA; the
+JSON below is token-scoped and needs no `Authorization` header. All `/svar/*`
+responses carry `Cache-Control: no-store`, `Referrer-Policy: no-referrer`,
+`X-Robots-Tag: noindex`, `nosniff`, `X-Frame-Options: DENY`, and the surface
+is IP rate-limited. A bad/rotated token → generic `404 not_found` (no
+enumeration). `/link/:token` 301-redirects here.
+
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/svar/:token/data` | View context: `{staff:{first_name,name}, org:{name,initials,timezone}, availability:{wishes,blocks,exceptions}, schedule:{from,to,shifts,shift_count,hours}}`. `schedule` is a flat, date-grouped list of the worker's upcoming published shifts over a forward window — no ISO-week strings (horizon-agnostic; #10 owns the publication-period model). |
+| PUT | `/svar/:token/availability` | Recurring layer **full whole-replace** (same as the manager availability PUT — arbitrary weekday ranges `{weekday 1-7, start_minute, end_minute}`, `0 <= start < end <= 1440`, no fixed buckets) + dated-exception **delta**: `{wishes[], blocks[], add_exceptions[], remove_exception_ids[]}`. The page is seeded from every recurring row, so re-submitting round-trips it; exceptions are only added/removed as listed, never blindly wiped. |

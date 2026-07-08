@@ -22,7 +22,7 @@ import { isoWeek, isoWeekPeriod, summarizeWishes, timeToMinutes } from '../time'
 import type { Shift, Staff as StaffRow } from '../types'
 
 function shareUrl(token: string): string {
-  return `${location.origin}/link/${token}`
+  return `${location.origin}/svar/${token}`
 }
 
 const WEEKDAY_CHIPS = ['Mån', 'Tis', 'Ons', 'Tors', 'Fre', 'Lör', 'Sön']

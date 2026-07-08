@@ -16,9 +16,9 @@ scheduling (arbetsschema) module only; plan lives in milestone
   no ORM**. Migrations are hand-written SQL via Alembic (`op.execute`,
   autogenerate disabled).
 - API convention: `docs/primitives.md` — `/data` (reads/writes), `/compute`
-  (pure, no side effects, may read), `/action` (does things). Staff-facing
-  share-link routes live under `/link/:token` and are the only
-  unauthenticated surface.
+  (pure, no side effects, may read), `/action` (does things). The staff
+  share-link (`/svar/:token` page + its `/data`/`/availability` JSON) is the
+  only unauthenticated surface; `/link/:token` 301-redirects to it.
 - Week semantics: ISO 8601 weeks, Monday start, evaluated in the org
   timezone; an overnight shift belongs to the week where it **starts**.
   Helpers in `app/weeks.py` — use them, don't reimplement.

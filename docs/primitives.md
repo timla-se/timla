@@ -22,8 +22,9 @@ that each family carries a guarantee:
   timezone. Timestamps are stored in UTC.
 - All `/data`, `/compute` and `/action` routes require an authenticated
   manager and are scoped to their organization. The only unauthenticated
-  surface is `/link/:token/*` — personal share-link views, where the token
-  itself identifies one staff member (see issue #13).
+  surface is the staff share-link: the page `/svar/:token` plus its JSON
+  `GET /svar/:token/data` and `PUT /svar/:token/availability`, where the
+  token itself identifies one staff member (see issue #13).
 
 ## Why "pure" allows reads
 
