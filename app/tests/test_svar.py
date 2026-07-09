@@ -1,12 +1,16 @@
 """Tests for the /svar staff share-link surface (issue #13).
 
-Self-contained: creates its own org + staff + token via direct SQL (the
-surface is unauthenticated, so no client auth fixtures are needed) and drives
-the endpoints through the test client. Skips when no DB is reachable.
+Self-contained: creates its own org + staff + token via direct SQL and drives
+the endpoints through the test client. The /svar surface itself is
+unauthenticated, so most tests need no auth fixtures; the issue #7 acceptance
+test additionally authenticates (an ``org_user`` row + ``X-Test-User``, the
+same pattern as ``conftest.py``) because it crosses over into the manager-only
+``/compute/conflicts`` and ``/data/shifts`` endpoints. Skips when no DB is
+reachable.
 """
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import psycopg
 import pytest
@@ -14,7 +18,7 @@ import pytest
 from app import app
 from config import DATABASE_URL
 from dbfixtures import db_available
-from weeks import iso_week_of
+from weeks import iso_week_of, local_instant
 
 pytestmark = pytest.mark.skipif(not db_available(), reason='no database reachable at DATABASE_URL')
 
@@ -288,6 +292,94 @@ def test_regenerated_token_kills_old(client, org):
 def test_rate_limit_is_ip_wide_across_tokens(client):
     codes = [client.get(f'/svar/guess{i}/data').status_code for i in range(40)]
     assert 429 in codes  # distinct tokens still share one IP bucket
+
+
+# --- end-to-end: svar-registered availability is respected by conflicts (#7) ---
+
+def _next_weekday(iso_weekday):
+    """The next date strictly after today whose ISO weekday is `iso_weekday`
+    (1=Mon .. 7=Sun). Derived from today so the test never pins a calendar
+    date and stays inside the add_exceptions ± window."""
+    today = date.today()
+    ahead = (iso_weekday - today.isoweekday()) % 7 or 7
+    return today + timedelta(days=ahead)
+
+
+def _conflicts(client, staff_id, start_dt, end_dt):
+    resp = client.post('/compute/conflicts', json={'shifts': [{
+        'staff_id': str(staff_id),
+        'starts_at': start_dt.isoformat(),
+        'ends_at': end_dt.isoformat(),
+    }]})
+    assert resp.status_code == 200, resp.get_json()
+    return resp.get_json()
+
+
+def test_svar_availability_respected_by_conflicts(client, org):
+    """The issue #7 "Done when": availability a worker registers through the
+    share link is what the conflict engine sees. Writes go in via
+    PUT /svar/:token/availability (the public surface) and the assertions read
+    back through /compute/conflicts and the /data/shifts write path — the same
+    engine a manager's shift editor uses."""
+    tz = 'Europe/Stockholm'
+    user_id = f'user_svar_{uuid.uuid4().hex}'
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org, name='Ada Ohlsson')
+            # Authenticate the same client for the manager-only endpoints.
+            cur.execute('INSERT INTO org_user (user_id, org_id) VALUES (%s, %s)', (user_id, org))
+        conn.commit()
+    client.environ_base['HTTP_X_TEST_USER'] = user_id
+
+    mon, sun, tue, wed = (_next_weekday(d) for d in (1, 7, 2, 3))
+    # Worker registers: wish Mon 09:00–17:00, hard block all day Sunday, and a
+    # single vacation day (an upcoming Wednesday) — all as local wall-clock.
+    put = client.put(f'/svar/{token}/availability', json={
+        'wishes': [{'weekday': 1, 'start_minute': 540, 'end_minute': 1020}],
+        'blocks': [{'weekday': 7, 'start_minute': 0, 'end_minute': 1440}],
+        'add_exceptions': [{'on_date': wed.isoformat()}],
+    })
+    assert put.status_code == 200, put.get_json()
+
+    def span(day):  # a 10:00–15:00 local shift on `day`
+        return local_instant(day, 600, tz), local_instant(day, 900, tz)
+
+    # Recurring Sunday block → hard `blocked` conflict. A blocked shift is also
+    # outside the (Mon-only) wishes, so don't assert warnings is empty here.
+    sun_start, sun_end = span(sun)
+    blocked = _conflicts(client, staff_id, sun_start, sun_end)
+    assert 'blocked' in {c['type'] for c in blocked['conflicts']}
+
+    # Dated vacation exception → hard `blocked` on that specific date.
+    wed_start, wed_end = span(wed)
+    vacation = _conflicts(client, staff_id, wed_start, wed_end)
+    assert 'blocked' in {c['type'] for c in vacation['conflicts']}
+
+    # Inside the Monday wish → fully clean: no conflicts and no warnings.
+    clean = _conflicts(client, staff_id, *span(mon))
+    assert clean['conflicts'] == [] and clean['warnings'] == []
+
+    # Tuesday: wishes exist but don't cover it → soft `outside_wishes` warning,
+    # no hard conflict.
+    tuesday = _conflicts(client, staff_id, *span(tue))
+    assert tuesday['conflicts'] == []
+    assert 'outside_wishes' in {w['type'] for w in tuesday['warnings']}
+
+    # Enforcement: the write path rejects a shift over the block without force.
+    rejected = client.post('/data/shifts', json={
+        'staff_id': str(staff_id),
+        'starts_at': sun_start.isoformat(),
+        'ends_at': sun_end.isoformat(),
+    })
+    assert rejected.status_code == 409
+    assert rejected.get_json()['error'] == 'conflict'
+    # ...and accepts it with ?force=true.
+    forced = client.post('/data/shifts?force=true', json={
+        'staff_id': str(staff_id),
+        'starts_at': sun_start.isoformat(),
+        'ends_at': sun_end.isoformat(),
+    })
+    assert forced.status_code == 201, forced.get_json()
 
 
 # --- cross-org isolation ---

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="apple-touch-icon" href="assets/app-icon.svg">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#e7ddc9;color:#231d16;font-family:'Hanken Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#c07f1e;text-decoration:none}
+  a:hover{color:#231d16}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  textarea{font-family:inherit}
+  textarea::placeholder{color:#b39a6f}
+  textarea:focus{outline:none;border-color:#e69a2e;box-shadow:0 0 0 3px rgba(230,154,46,.16)}
+  .scroll::-webkit-scrollbar{width:0}
+  @keyframes sheetUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#e7ddc9;display:flex;justify-content:center;padding:34px 16px">
+<div data-screen-label="Länk · Tillgänglighet" style="width:428px;max-width:100%;height:896px;background:#fdf8ee;border-radius:46px;border:1px solid #d3c3a2;box-shadow:0 34px 90px rgba(90,60,20,.26);overflow:hidden;position:relative;display:flex;flex-direction:column">
+
+  <!-- STATUS BAR -->
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 30px 6px">
+    <span class="mono" style="font-size:13px;font-weight:600;color:#231d16">9:41</span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="1" fill="#231d16"/><rect x="4.5" y="5" width="3" height="6" rx="1" fill="#231d16"/><rect x="9" y="2.5" width="3" height="8.5" rx="1" fill="#231d16"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="#231d16"/></svg>
+      <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="3" stroke="#231d16" stroke-width="1" opacity=".4"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.6" fill="#231d16"/><rect x="22" y="4" width="1.6" height="4" rx=".8" fill="#231d16" opacity=".4"/></svg>
+    </div>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll" style="flex:1;overflow-y:auto;overflow-x:hidden">
+
+    <!-- ===== CONTEXT HEADER ===== -->
+    <header style="padding:14px 24px 22px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+        <svg viewBox="0 0 166 48" height="22" fill="none" style="display:block"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></g><text x="47" y="36" font-family="'Hanken Grotesk',sans-serif" font-weight="800" font-size="40" letter-spacing="-1.2" fill="#231d16">timla</text></svg>
+        <span class="mono" style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:#8a7a5c;background:#f2e8d5;padding:5px 10px;border-radius:20px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M7 10V7.5a5 5 0 0 1 10 0V10" stroke="#8a7a5c" stroke-width="2" stroke-linecap="round"/><rect x="4.5" y="10" width="15" height="10" rx="2.5" stroke="#8a7a5c" stroke-width="2"/></svg>Säker länk</span>
+      </div>
+
+      <h1 style="font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:0 0 12px">Hej {{ firstName }}!</h1>
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 15px;background:#fff;border:1px solid #ecdfc8;border-radius:14px">
+        <div style="width:40px;height:40px;border-radius:11px;background:#c05a3a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex:none;letter-spacing:.02em">{{ businessInitials }}</div>
+        <div style="min-width:0">
+          <div style="font-weight:700;font-size:15.5px">{{ businessName }}</div>
+          <div class="mono" style="font-size:11px;color:#8a7a5c">Din arbetsplats</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;background:#fbf1dc;border:1px solid #eeddb8;border-radius:14px;margin-top:10px">
+        <span style="width:36px;height:36px;border-radius:10px;background:#f6e2b6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="#a5711a" stroke-width="1.8"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="#a5711a" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <div style="min-width:0"><div style="font-weight:700;font-size:13.5px;color:#5a4d38">Du svarar för schemat</div><div class="mono" style="font-size:12px;color:#a5711a">{{ periodLabel }}</div></div>
+      </div>
+      <p style="font-size:13.5px;line-height:1.5;color:#8a7a5c;margin:14px 2px 0">Fyll i din normalvecka en gång — den gäller hela perioden. Behöver en vecka se annorlunda ut lägger du till en avvikelse.</p>
+    </header>
+
+    <!-- ===== TILLGÄNGLIGHET ===== -->
+    <section style="padding:6px 24px 8px">
+      <h2 style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin:0 0 3px">Din tillgänglighet</h2>
+      <p style="font-size:13px;color:#8a7a5c;margin:0 0 14px">Din normalvecka — den gäller alla veckor i perioden.</p>
+
+      <div>
+          <div style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px">
+            <span style="width:26px;height:26px;border-radius:8px;background:#e7efe8;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3.5c1 3 3 4.5 5.5 5.5-2.5 1-4.5 2.5-5.5 5.5-1-3-3-4.5-5.5-5.5 2.5-1 4.5-2.5 5.5-5.5Z" stroke="#4f7358" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+            <div><div style="font-weight:700;font-size:15px;line-height:1.3">Vilka dagar vill du jobba?</div><div style="font-size:12.5px;color:#8a7a5c">Tryck på dagarna du kan jobba — hoppar du över en dag schemaläggs du inte den. Bara vissa tider? Öppna "Vissa tider".</div></div>
+          </div>
+
+          <sc-for list="{{ wantRows }}" as="row" hint-placeholder-count="7">
+            <div style="margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:14px;{{ row.cardStyle }}">
+                <div onClick="{{ row.toggle }}" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer">
+                  <span style="{{ row.dotStyle }}"><sc-if value="{{ row.on }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></sc-if></span>
+                  <div style="min-width:0"><div style="{{ row.nameStyle }}">{{ row.day }}</div><div style="{{ row.subStyle }}">{{ row.summary }}</div></div>
+                </div>
+                <sc-if value="{{ row.on }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ row.toggleOpen }}" style="{{ row.timesBtnStyle }}">{{ row.timesLabel }}</div>
+                </sc-if>
+              </div>
+              <sc-if value="{{ row.isOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:13px 10px 6px 47px">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:15px">
+                    <sc-for list="{{ row.presets }}" as="preset" hint-placeholder-count="4">
+                      <div onClick="{{ preset.set }}" style="{{ preset.style }}">{{ preset.label }}</div>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+                    <span class="mono" style="font-size:18px;font-weight:600;color:#231d16;letter-spacing:-.01em">{{ row.rangeText }}</span>
+                    <span style="font-size:12.5px;color:#8a7a5c">{{ row.durText }}</span>
+                  </div>
+                  <div onPointerDown="{{ row.trackDown }}" style="position:relative;height:34px;border-radius:17px;background:#f1e7d3;border:1px solid #e4d9c2;cursor:pointer;touch-action:none;user-select:none">
+                    <div style="{{ row.fillStyle }}"></div>
+                    <div style="{{ row.fromHandleStyle }}"></div>
+                    <div style="{{ row.toHandleStyle }}"></div>
+                  </div>
+                  <div class="mono" style="display:flex;justify-content:space-between;margin-top:7px;font-size:10px;color:#b39a6f">
+                    <span>06</span><span>10</span><span>14</span><span>18</span><span>22</span>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+
+          <!-- omfattning -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:14px 16px;background:#fff;border:1px solid #ecdfc8;border-radius:14px">
+            <div><div style="font-weight:700;font-size:14px">Önskat antal pass / vecka</div><div style="font-size:12px;color:#8a7a5c">Så mycket vill du gärna jobba.</div></div>
+            <div style="display:flex;align-items:center;gap:10px;flex:none">
+              <div onClick="{{ decWeek }}" style="width:34px;height:34px;border-radius:9px;border:1px solid #d8c19a;background:#fdf8ee;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:800;font-size:18px;color:#5a4d38;user-select:none">−</div>
+              <span class="mono" style="font-size:18px;font-weight:600;width:20px;text-align:center">{{ perWeek }}</span>
+              <div onClick="{{ incWeek }}" style="width:34px;height:34px;border-radius:9px;border:1px solid #d8c19a;background:#fdf8ee;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:800;font-size:18px;color:#5a4d38;user-select:none">+</div>
+            </div>
+          </div>
+
+          <!-- note -->
+          <div style="margin-top:14px">
+            <label style="display:block;font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#8a7a5c;margin-bottom:8px">Något chefen bör veta?</label>
+            <textarea onInput="{{ setNote }}" rows="2" placeholder="T.ex. pluggar tisdagar, kan hoppa in med kort varsel…" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #d8c19a;background:#fff;color:#231d16;font-size:14px;line-height:1.45;resize:none"></textarea>
+          </div>
+        </div>
+    </section>
+
+    <!-- ===== AVVIKELSER I PERIODEN ===== -->
+    <section style="padding:22px 24px 8px">
+      <h2 style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin:0 0 3px">Avvikelser i perioden</h2>
+      <p style="font-size:13px;color:#8a7a5c;margin:0 0 14px">Enstaka datum som bryter mot din normalvecka. Kan du inte en viss dag — eller kan hoppa in extra? Lägg till det här.</p>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ exceptions }}" as="ex" hint-placeholder-count="3">
+          <div style="padding:13px;background:#fff;border:1px solid #ecdfc8;border-radius:14px">
+            <div style="display:flex;align-items:center;gap:11px">
+              <span style="width:34px;height:34px;border-radius:9px;background:{{ ex.iconBg }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="{{ ex.iconColor }}" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="{{ ex.iconColor }}" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+              <div style="min-width:0;flex:1">
+                <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="mono" style="font-size:13.5px;font-weight:600;color:#231d16">{{ ex.text }}</span>
+                  <sc-if value="{{ ex.byManager }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#a5711a;background:#fbeed0;padding:2px 7px;border-radius:20px">Inlagt av {{ managerName }}</span>
+                  </sc-if>
+                </div>
+                <div style="font-size:12.5px;color:#8a7a5c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ex.reason }}</div>
+              </div>
+              <div onClick="{{ ex.remove }}" style="width:30px;height:30px;border-radius:8px;background:#f2e8d5;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#8a7a5c" stroke-width="2.1" stroke-linecap="round"/></svg></div>
+            </div>
+            <div style="display:flex;gap:4px;background:#f2e8d5;padding:4px;border-radius:10px;margin-top:11px">
+              <div onClick="{{ ex.setBlock }}" style="{{ ex.blockStyle }}">Kan inte</div>
+              <div onClick="{{ ex.setExtra }}" style="{{ ex.extraStyle }}">Kan extra</div>
+            </div>
+          </div>
+        </sc-for>
+        <div onClick="{{ addException }}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:12px;border:1.5px dashed #d8c19a;background:transparent;color:#c07f1e;font-weight:700;font-size:14px;cursor:pointer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#c07f1e" stroke-width="2" stroke-linecap="round"/></svg>Lägg till datum
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ÖVERBLICK (BEKRÄFTA) ===== -->
+    <section style="padding:26px 24px 8px">
+      <h2 style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin:0 0 3px">Din period i överblick</h2>
+      <p style="font-size:13px;color:#8a7a5c;margin:0 0 16px">Så här ser dina svar ut för hela perioden. Stämmer det? Spara längst ner.</p>
+
+      <sc-for list="{{ months }}" as="mo" hint-placeholder-count="2">
+        <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#c07f1e;margin:14px 2px 8px">{{ mo.name }}</div>
+        <!-- veckodagar -->
+        <div style="display:grid;grid-template-columns:24px repeat(7,1fr);gap:2px;padding:0 2px 4px">
+          <div></div>
+          <div class="mono" style="text-align:center;font-size:11px;font-weight:600;color:#a5936f">M</div>
+          <div class="mono" style="text-align:center;font-size:11px;font-weight:600;color:#a5936f">T</div>
+          <div class="mono" style="text-align:center;font-size:11px;font-weight:600;color:#a5936f">O</div>
+          <div class="mono" style="text-align:center;font-size:11px;font-weight:600;color:#a5936f">T</div>
+          <div class="mono" style="text-align:center;font-size:11px;font-weight:600;color:#a5936f">F</div>
+          <div class="mono" style="text-align:center;font-size:11px;font-weight:600;color:#c9b59a">L</div>
+          <div class="mono" style="text-align:center;font-size:11px;font-weight:600;color:#c9b59a">S</div>
+        </div>
+        <sc-for list="{{ mo.weeks }}" as="wk" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:24px repeat(7,1fr);gap:2px;align-items:center">
+            <div class="mono" style="text-align:right;padding-right:5px;font-size:9px;color:#cdbc9c">{{ wk.weekNo }}</div>
+            <sc-for list="{{ wk.cells }}" as="cell" hint-placeholder-count="7">
+              <div style="height:39px;display:flex;align-items:center;justify-content:center">
+                <div style="{{ cell.tokenStyle }}">{{ cell.num }}<sc-if value="{{ cell.isPartial }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#c05a3a"></span></sc-if></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </sc-for>
+
+      <!-- legend -->
+      <div style="display:flex;flex-wrap:wrap;gap:9px 14px;margin-top:16px;padding:0 2px">
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#3c5a44"><span style="width:12px;height:12px;border-radius:50%;background:#dceee2"></span>Vill jobba</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#a44227"><span style="width:12px;height:12px;border-radius:50%;background:#f4dbd1"></span>Kan inte</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#8a5e14"><span style="width:12px;height:12px;border-radius:50%;background:#f7e6bc"></span>Kan extra</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#a5936f"><span style="position:relative;width:12px;height:12px;border-radius:50%;background:#dceee2"><span style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#c05a3a"></span></span>Delvis</span>
+      </div>
+    </section>
+
+    <!-- ===== PUBLICERAT SCHEMA ===== -->
+    <section style="padding:26px 24px 8px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:4px">
+        <h2 style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin:0">Ditt schema</h2>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#3c5a44;background:#e7efe8;padding:5px 10px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#4f7358"></span>Publicerat</span>
+      </div>
+      <p class="mono" style="font-size:12px;color:#8a7a5c;margin:0 0 14px">{{ weekLabel }}</p>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border:1px solid #ecdfc8;border-radius:14px">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;flex:none"><span style="font-weight:800;font-size:14px;color:#231d16">Mån</span><span class="mono" style="font-size:11px;color:#b39a6f">7 jul</span></div>
+          <div style="width:1px;align-self:stretch;background:#f2e7cf"></div>
+          <div style="flex:1"><div class="mono" style="font-size:15px;font-weight:600;color:#231d16">09:30–15:00</div><div style="font-size:12px;color:#8a7a5c">Strandkiosken</div></div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#8a5e14;background:#fbeed0;padding:5px 9px;border-radius:8px;flex:none"><b class="mono" style="width:15px;height:15px;border-radius:4px;background:#f2c14e;color:#231d16;display:flex;align-items:center;justify-content:center;font-size:9px">Ö</b>Öppnar</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border:1px solid #ecdfc8;border-radius:14px">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;flex:none"><span style="font-weight:800;font-size:14px;color:#231d16">Tis</span><span class="mono" style="font-size:11px;color:#b39a6f">8 jul</span></div>
+          <div style="width:1px;align-self:stretch;background:#f2e7cf"></div>
+          <div style="flex:1"><div class="mono" style="font-size:15px;font-weight:600;color:#231d16">09:30–16:00</div><div style="font-size:12px;color:#8a7a5c">Strandkiosken</div></div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#8a5e14;background:#fbeed0;padding:5px 9px;border-radius:8px;flex:none"><b class="mono" style="width:15px;height:15px;border-radius:4px;background:#f2c14e;color:#231d16;display:flex;align-items:center;justify-content:center;font-size:9px">Ö</b>Öppnar</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border:1px solid #ecdfc8;border-radius:14px">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;flex:none"><span style="font-weight:800;font-size:14px;color:#231d16">Tors</span><span class="mono" style="font-size:11px;color:#b39a6f">10 jul</span></div>
+          <div style="width:1px;align-self:stretch;background:#f2e7cf"></div>
+          <div style="flex:1"><div class="mono" style="font-size:15px;font-weight:600;color:#231d16">09:30–15:00</div><div style="font-size:12px;color:#8a7a5c">Strandkiosken</div></div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#8a5e14;background:#fbeed0;padding:5px 9px;border-radius:8px;flex:none"><b class="mono" style="width:15px;height:15px;border-radius:4px;background:#f2c14e;color:#231d16;display:flex;align-items:center;justify-content:center;font-size:9px">Ö</b>Öppnar</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border:1px solid #ecdfc8;border-radius:14px">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;flex:none"><span style="font-weight:800;font-size:14px;color:#231d16">Lör</span><span class="mono" style="font-size:11px;color:#b39a6f">12 jul</span></div>
+          <div style="width:1px;align-self:stretch;background:#f2e7cf"></div>
+          <div style="flex:1"><div class="mono" style="font-size:15px;font-weight:600;color:#231d16">09:30–15:00</div><div style="font-size:12px;color:#8a7a5c">Strandkiosken</div></div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#8a5e14;background:#fbeed0;padding:5px 9px;border-radius:8px;flex:none"><b class="mono" style="width:15px;height:15px;border-radius:4px;background:#f2c14e;color:#231d16;display:flex;align-items:center;justify-content:center;font-size:9px">Ö</b>Öppnar</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:0 4px">
+        <span style="font-size:12.5px;color:#8a7a5c">4 pass den här veckan</span>
+        <span class="mono" style="font-size:13px;font-weight:600;color:#5a4d38">22 h</span>
+      </div>
+    </section>
+
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- STICKY SUBMIT -->
+  <footer style="flex:none;padding:14px 24px 22px;background:#fdf8ee;border-top:1px solid #ecdfc8;box-shadow:0 -10px 24px rgba(90,60,20,.05)">
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;justify-content:center">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#b39a6f" stroke-width="1.8"/><path d="M12 7.5v5M12 15.6v.2" stroke="#b39a6f" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span style="font-size:11.5px;color:#8a7a5c;text-align:center">Det du sparar ersätter din tidigare tillgänglighet.</span>
+    </div>
+    <button onClick="{{ submit }}" style="font-family:inherit;font-weight:700;font-size:16px;width:100%;padding:16px;border-radius:14px;border:none;background:#231d16;color:#fbf1dc;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#e69a2e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Spara min tillgänglighet</button>
+  </footer>
+
+  <!-- ===== CONFIRMATION ===== -->
+  <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(35,29,22,.42);display:flex;align-items:flex-end;animation:fadeIn .18s ease">
+      <div style="width:100%;background:#fdf8ee;border-radius:30px 30px 46px 46px;padding:32px 28px 30px;animation:sheetUp .26s cubic-bezier(.2,.8,.3,1)">
+        <div style="width:64px;height:64px;border-radius:50%;background:#e7efe8;display:flex;align-items:center;justify-content:center;margin:0 auto 18px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#4f7358" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h2 style="text-align:center;font-size:24px;font-weight:800;letter-spacing:-.025em;margin:0 0 8px">Tack {{ firstName }}!</h2>
+        <p style="text-align:center;font-size:14.5px;line-height:1.5;color:#5a4d38;margin:0 auto 20px;max-width:30ch">Din tillgänglighet är sparad. {{ businessName }} ser den direkt.</p>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:1;text-align:center;padding:14px 8px;background:#fff;border:1px solid #ecdfc8;border-radius:14px"><div style="font-size:22px;font-weight:800;color:#4f7358">{{ wantCount }}</div><div style="font-size:11px;color:#8a7a5c;line-height:1.3">önskade<br>dagar</div></div>
+          <div style="flex:1;text-align:center;padding:14px 8px;background:#fff;border:1px solid #ecdfc8;border-radius:14px"><div style="font-size:22px;font-weight:800;color:#231d16">{{ perWeek }}</div><div style="font-size:11px;color:#8a7a5c;line-height:1.3">pass<br>per vecka</div></div>
+          <div style="flex:1;text-align:center;padding:14px 8px;background:#fff;border:1px solid #ecdfc8;border-radius:14px"><div style="font-size:22px;font-weight:800;color:#231d16">{{ exCount }}</div><div style="font-size:11px;color:#8a7a5c;line-height:1.3">avvikelser<br>i perioden</div></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:9px;padding:12px 14px;background:#fbf1dc;border-radius:12px;margin:14px 0 20px">
+          <svg width="18" height="18" viewBox="0 0 48 48" fill="none" style="flex:none"><g transform="rotate(-90 24 24)"><rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#231d16"></rect><rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e"></rect><circle cx="24" cy="17" r="2.9" fill="#e69a2e"></circle><rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#231d16"></rect></g></svg>
+          <span style="font-size:12.5px;line-height:1.45;color:#5a4d38">Du kan öppna länken igen när som helst för att ändra.</span>
+        </div>
+
+        <button onClick="{{ closeConfirm }}" style="font-family:inherit;font-weight:700;font-size:16px;width:100%;padding:15px;border-radius:14px;border:none;background:#231d16;color:#fbf1dc;cursor:pointer">Klart</button>
+        <div onClick="{{ closeConfirm }}" style="text-align:center;margin-top:14px;font-size:14px;font-weight:700;color:#c07f1e;cursor:pointer">Ändra mina svar</div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:960},&quot;employeeName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Ada Ohlsson&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Länkdata (GET /link/:token)&quot;},&quot;businessName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Strandkiosken&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Länkdata (GET /link/:token)&quot;},&quot;businessInitials&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;SK&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Länkdata (GET /link/:token)&quot;},&quot;managerName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Malin&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Länkdata (GET /link/:token)&quot;},&quot;periodLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;V.28–31 · 7 jul–3 aug&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Länkdata (GET /link/:token)&quot;},&quot;weekLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Vecka 28 · 7–13 juli 2025&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Länkdata (GET /link/:token)&quot;}}">
+class Component extends DCLogic {
+  state = {
+    want: {
+      'Måndag':{on:true,custom:false,from:360,to:1320}, 'Tisdag':{on:true,custom:false,from:360,to:1320},
+      'Onsdag':{on:true,custom:false,from:360,to:1320}, 'Torsdag':{on:true,custom:false,from:360,to:1320},
+      'Fredag':{on:true,custom:true,from:360,to:960}, 'Lördag':{on:true,custom:true,from:660,to:1320},
+      'Söndag':{on:false,custom:false,from:360,to:1320}
+    },
+    openWant: {},
+    perWeek: 3,
+    note: '',
+    exceptions: [
+      { id: 1, text: '21–27 juli', reason: 'Semester, bortrest', byManager: false, type: 'block', d0: 14, d1: 20 },
+      { id: 2, text: '15 juli', reason: 'Läkarbesök (halvdag)', byManager: true, type: 'block', d0: 8, d1: 8 },
+      { id: 3, text: '2 aug', reason: 'Kan täcka lördagen om det behövs', byManager: false, type: 'extra', d0: 26, d1: 26 },
+    ],
+    submitted: false,
+  };
+
+  _dayOrder = ['Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag','Söndag'];
+  _MIN = 360; _MAX = 1320; _STEP = 15; _GAP = 30;
+  _start = (() => { const d = new Date(2025, 6, 7); d.setHours(0,0,0,0); return d; })();
+  _end = (() => { const d = new Date(2025, 7, 3); d.setHours(0,0,0,0); return d; })();
+  _total = 28;
+  _presetDefs = [
+    { label: 'Hela dagen', from: 360, to: 1320, whole: true },
+    { label: 'Morgon', from: 360, to: 660 },
+    { label: 'Dag', from: 660, to: 960 },
+    { label: 'Kväll', from: 960, to: 1320 },
+  ];
+  _fmt(m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+  _dur(from, to) {
+    const h = (to - from) / 60;
+    return (Number.isInteger(h) ? String(h) : h.toFixed(1).replace('.', ',')) + ' h';
+  }
+  _setRange(kind, day, from, to, custom) {
+    this.setState(s => { const next = { ...s[kind] }; next[day] = { ...next[day], on: true, custom, from, to }; return { [kind]: next }; });
+  }
+  _trackDown(kind, day, e) {
+    if (e.preventDefault) e.preventDefault();
+    const track = e.currentTarget;
+    const rect = track.getBoundingClientRect();
+    const getX = (ev) => ev.clientX != null ? ev.clientX : (ev.touches && ev.touches[0] ? ev.touches[0].clientX : 0);
+    const calc = (x) => {
+      let r = (x - rect.left) / rect.width; r = Math.max(0, Math.min(1, r));
+      return Math.round((this._MIN + r * (this._MAX - this._MIN)) / this._STEP) * this._STEP;
+    };
+    const d0 = this.state[kind][day];
+    const m0 = calc(getX(e));
+    const which = Math.abs(m0 - d0.from) <= Math.abs(m0 - d0.to) ? 'from' : 'to';
+    const apply = (m) => this.setState(s => {
+      const d = s[kind][day]; let from = d.from, to = d.to;
+      if (which === 'from') from = Math.min(m, to - this._GAP); else to = Math.max(m, from + this._GAP);
+      from = Math.max(this._MIN, from); to = Math.min(this._MAX, to);
+      const next = { ...s[kind] }; next[day] = { ...d, on: true, custom: true, from, to };
+      return { [kind]: next };
+    });
+    apply(m0);
+    const move = (ev) => apply(calc(getX(ev)));
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  }
+
+  _isoWeek(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = (t.getUTCDay() + 6) % 7;
+    t.setUTCDate(t.getUTCDate() - day + 3);
+    const first = new Date(Date.UTC(t.getUTCFullYear(), 0, 4));
+    return 1 + Math.round(((t - first) / 86400000 - 3 + ((first.getUTCDay() + 6) % 7)) / 7);
+  }
+  _statusOf(d) {
+    const o = Math.round((d - this._start) / 86400000);
+    if (o < 0 || o > this._total - 1) return 'out';
+    for (const ex of this.state.exceptions) {
+      if (ex.d0 != null && o >= ex.d0 && o <= ex.d1) return ex.type === 'extra' ? 'extra' : 'block';
+    }
+    const dn = this._dayOrder[(d.getDay() + 6) % 7];
+    const w = this.state.want[dn];
+    if (w.on) return w.custom ? 'partial' : 'want';
+    return 'ledig';
+  }
+  _cell(num, st) {
+    let bg = null, fg, weight = 600;
+    if (st === 'adj') fg = '#e0d3ba';
+    else if (st === 'out') fg = '#cdbfa4';
+    else if (st === 'ledig') { fg = '#231d16'; weight = 600; }
+    else if (st === 'want' || st === 'partial') { bg = '#dceee2'; fg = '#2e4a38'; weight = 700; }
+    else if (st === 'block') { bg = '#f4dbd1'; fg = '#a24327'; weight = 700; }
+    else if (st === 'extra') { bg = '#f7e6bc'; fg = '#8a5e14'; weight = 700; }
+    const token = bg
+      ? "width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;background:" + bg + ";color:" + fg + ";font-weight:" + weight + ";font-size:14px;"
+      : "display:flex;align-items:center;justify-content:center;font-weight:" + weight + ";font-size:14px;color:" + fg + ";";
+    return { num, isPartial: st === 'partial', tokenStyle: token };
+  }
+  _months() {
+    const names = ['Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December'];
+    const startMonth = new Date(this._start.getFullYear(), this._start.getMonth(), 1);
+    const endMonth = new Date(this._end.getFullYear(), this._end.getMonth(), 1);
+    const months = [];
+    for (let cur = new Date(startMonth); cur <= endMonth; cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1)) {
+      const y = cur.getFullYear(), m = cur.getMonth();
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+      const rows = Math.ceil((lead + daysInMonth) / 7);
+      const weeks = [];
+      for (let wi = 0; wi < rows; wi++) {
+        const cells = [];
+        let mon = null;
+        for (let di = 0; di < 7; di++) {
+          const dd = new Date(y, m, 1 - lead + wi * 7 + di);
+          if (di === 0) mon = dd;
+          const inMonth = dd.getMonth() === m;
+          cells.push(this._cell(dd.getDate(), inMonth ? this._statusOf(dd) : 'adj'));
+        }
+        weeks.push({ weekNo: this._isoWeek(mon), cells });
+      }
+      months.push({ name: names[m], weeks });
+    }
+    return months;
+  }
+
+  _overview() {
+    return [];
+  }
+
+  _rows(kind) {
+    const data = this.state[kind];
+    const openKey = kind === 'want' ? 'openWant' : 'openCannot';
+    const open = this.state[openKey] || {};
+    const accent = kind === 'want' ? '#4f7358' : '#c05a3a';
+    const tintBg = kind === 'want' ? '#eef4ef' : '#f9ebe4';
+    const tintBd = kind === 'want' ? '#cfe0d3' : '#efcdbf';
+    const subOn = kind === 'want' ? '#3c5a44' : '#a44227';
+    const presetBase = "font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:18px;cursor:pointer;user-select:none;transition:all .12s;";
+    const span = this._MAX - this._MIN;
+
+    return this._dayOrder.map(day => {
+      const d = data[day];
+      const on = d.on;
+      const summary = !on ? '—' : (d.custom ? (this._fmt(d.from) + '–' + this._fmt(d.to)) : 'Hela dagen');
+      const isOpen = !!open[day];
+      const leftPct = (d.from - this._MIN) / span * 100;
+      const rightPct = (d.to - this._MIN) / span * 100;
+      const presets = this._presetDefs.map(pd => {
+        const active = pd.whole ? !d.custom : (d.custom && d.from === pd.from && d.to === pd.to);
+        return {
+          label: pd.label,
+          style: presetBase + (active ? "background:" + accent + ";border:1px solid " + accent + ";color:#fff;" : "background:#fff;border:1px solid #d8c19a;color:#8a7a5c;"),
+          set: () => this._setRange(kind, day, pd.from, pd.to, !pd.whole),
+        };
+      });
+      const handleBase = "position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:30px;border-radius:8px;background:#fff;box-shadow:0 2px 6px rgba(90,60,20,.28);pointer-events:none;border:1.5px solid " + accent + ";";
+      return {
+        day, on, summary, isOpen, presets,
+        rangeText: this._fmt(d.from) + '–' + this._fmt(d.to),
+        durText: this._dur(d.from, d.to),
+        fillStyle: "position:absolute;top:3px;bottom:3px;border-radius:14px;left:" + leftPct + "%;width:" + (rightPct - leftPct) + "%;background:" + accent + ";",
+        fromHandleStyle: handleBase + "left:" + leftPct + "%;",
+        toHandleStyle: handleBase + "left:" + rightPct + "%;",
+        trackDown: (e) => this._trackDown(kind, day, e),
+        cardStyle: on ? ("background:" + tintBg + ";border:1px solid " + tintBd + ";") : "background:#fff;border:1px solid #e4d9c2;",
+        dotStyle: "width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;" + (on ? ("background:" + accent + ";") : "border:1.6px solid #d8c19a;background:transparent;"),
+        nameStyle: "font-weight:700;font-size:15px;line-height:1.25;color:" + (on ? '#231d16' : '#8a7a5c') + ";",
+        subStyle: "font-size:12px;line-height:1.3;margin-top:1px;color:" + (on ? subOn : '#c2b291') + ";",
+        timesBtnStyle: "flex:none;display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:7px 11px;border-radius:9px;cursor:pointer;user-select:none;background:rgba(255,255,255,.75);border:1px solid rgba(35,29,22,.06);color:#5a4d38;",
+        timesLabel: isOpen ? 'Vissa tider ▴' : 'Vissa tider ▾',
+        toggle: () => this.setState(s => {
+          const next = { ...s[kind] };
+          const nowOn = !next[day].on;
+          next[day] = { on: nowOn, custom: false, from: this._MIN, to: this._MAX };
+          const upd = { [kind]: next };
+          if (!nowOn) { const o = { ...s[openKey] }; delete o[day]; upd[openKey] = o; }
+          return upd;
+        }),
+        toggleOpen: () => this.setState(s => {
+          const o = { ...s[openKey] };
+          if (o[day]) delete o[day]; else o[day] = true;
+          return { [openKey]: o };
+        }),
+      };
+    });
+  }
+  _count(kind) {
+    return this._dayOrder.filter(day => this.state[kind][day].on).length;
+  }
+
+  renderVals() {
+    const p = this.props || {};
+    const employeeName = p.employeeName || 'Ada Ohlsson';
+    const businessName = p.businessName || 'Strandkiosken';
+    const managerName = p.managerName || 'Malin';
+    return {
+      firstName: employeeName.split(' ')[0],
+      employeeName,
+      businessName,
+      businessInitials: p.businessInitials || 'SK',
+      managerName,
+      weekLabel: p.weekLabel || 'Vecka 28 · 7–13 juli 2025',
+      periodLabel: p.periodLabel || 'V.28–31 · 7 jul–3 aug',
+
+      wantRows: this._rows('want'),
+      months: this._months(),
+
+      perWeek: this.state.perWeek,
+      incWeek: () => this.setState(s => ({ perWeek: Math.min(7, s.perWeek + 1) })),
+      decWeek: () => this.setState(s => ({ perWeek: Math.max(0, s.perWeek - 1) })),
+      setNote: (e) => { this.setState({ note: e.target.value }); },
+
+      exceptions: this.state.exceptions.map(ex => {
+        const isBlock = ex.type !== 'extra';
+        const seg = "flex:1;text-align:center;padding:8px 6px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;user-select:none;transition:all .12s;";
+        const setType = (t) => this.setState(s => ({ exceptions: s.exceptions.map(x => x.id === ex.id ? { ...x, type: t } : x) }));
+        return {
+          ...ex,
+          iconColor: isBlock ? '#c05a3a' : '#4f7358',
+          iconBg: isBlock ? '#f7e6df' : '#e7efe8',
+          blockStyle: seg + (isBlock ? "background:#c05a3a;color:#fff;box-shadow:0 1px 3px rgba(90,60,20,.14);" : "background:transparent;color:#8a7a5c;"),
+          extraStyle: seg + (!isBlock ? "background:#4f7358;color:#fff;box-shadow:0 1px 3px rgba(90,60,20,.14);" : "background:transparent;color:#8a7a5c;"),
+          setBlock: () => setType('block'),
+          setExtra: () => setType('extra'),
+          remove: () => this.setState(s => ({ exceptions: s.exceptions.filter(x => x.id !== ex.id) })),
+        };
+      }),
+      addException: () => this.setState(s => ({
+        exceptions: [...s.exceptions, { id: Date.now(), text: 'Nytt datum', reason: 'Lägg till orsak', byManager: false, type: 'block' }],
+      })),
+
+      submitted: this.state.submitted,
+      submit: () => this.setState({ submitted: true }),
+      closeConfirm: () => this.setState({ submitted: false }),
+      wantCount: this._count('want'),
+      exCount: this.state.exceptions.length,
+    };
+  }
+}
+</script>
+</body>
+</html>
