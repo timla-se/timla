@@ -22,7 +22,7 @@ function Shell({ children }: { children: ReactNode }) {
       <Flex
         direction="column"
         gap="4"
-        className="w-[440px] max-w-full rounded-2xl border border-warm-border bg-white p-8 shadow-[0_4px_20px_rgb(90_60_20/0.06)]"
+        className="w-110 max-w-full rounded-2xl border border-warm-border bg-white p-8 shadow-[0_4px_20px_rgb(90_60_20/0.06)]"
       >
         <Lockup className="mb-2 h-8 w-auto self-center" />
         {children}

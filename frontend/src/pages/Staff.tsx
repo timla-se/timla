@@ -79,15 +79,15 @@ function StaffFields({ form, set }: {
 }) {
   return (
     <>
-      <label className="mb-[18px] block">
+      <label className="mb-4.5 block">
         <FieldLabel>Namn</FieldLabel>
         <TextField.Root value={form.name} onChange={set('name')} placeholder="För- och efternamn" />
       </label>
-      <label className="mb-[18px] block">
+      <label className="mb-4.5 block">
         <FieldLabel>E-post</FieldLabel>
         <TextField.Root type="email" value={form.email} onChange={set('email')} placeholder="namn@example.se" />
       </label>
-      <div className="mb-[22px] flex gap-3.5">
+      <div className="mb-5.5 flex gap-3.5">
         <label className="min-w-0 flex-1">
           <FieldLabel>Roll</FieldLabel>
           <TextField.Root value={form.role} onChange={set('role')} placeholder="t.ex. servis" />
@@ -106,7 +106,7 @@ function MaxHoursField({ form, set }: {
   set: (field: keyof FormState) => (e: ChangeEvent<HTMLInputElement>) => void
 }) {
   return (
-    <label className="mb-[22px] block">
+    <label className="mb-5.5 block">
       <FieldLabel>Max timmar/vecka (tomt = ingen egen gräns)</FieldLabel>
       <TextField.Root value={form.maxHours} onChange={set('maxHours')} placeholder="t.ex. 30" inputMode="decimal" />
     </label>
@@ -167,9 +167,9 @@ function NewStaffModal({ onClose, onError, busy, error, onSubmit }: {
     >
       <StaffFields form={form} set={set} />
 
-      <div className="mb-[22px]">
+      <div className="mb-5.5">
         <FieldLabel>Arbetsdagar (önskemål, per vecka)</FieldLabel>
-        <div className="mb-3 mt-1 flex flex-wrap gap-[7px]">
+        <div className="mb-3 mt-1 flex flex-wrap gap-2">
           {WEEKDAY_CHIPS.map((label, i) => (
             <button
               key={label}
@@ -177,8 +177,8 @@ function NewStaffModal({ onClose, onError, busy, error, onSubmit }: {
               onClick={() => setDays((d) => d.map((on, j) => (j === i ? !on : on)))}
               className={
                 days[i]
-                  ? 'w-[46px] cursor-pointer rounded-[9px] border-0 bg-ink py-[9px] text-center font-mono text-[12.5px] font-semibold text-honey'
-                  : 'w-[46px] cursor-pointer rounded-[9px] border border-[#e4d9c2] bg-white py-2 text-center font-mono text-[12.5px] font-semibold text-warm-gray'
+                  ? 'w-11.5 cursor-pointer rounded-10 border-0 bg-ink py-2.25 text-center font-mono text-13 font-semibold text-honey'
+                  : 'w-11.5 cursor-pointer rounded-10 border border-warm-line-strong bg-white py-2 text-center font-mono text-13 font-semibold text-warm-gray'
               }
             >
               {label}
@@ -187,12 +187,12 @@ function NewStaffModal({ onClose, onError, busy, error, onSubmit }: {
         </div>
         <div className="flex items-center gap-2.5">
           <label className="min-w-0 flex-1">
-            <Mono className="text-[11px] text-warm-sand">Från</Mono>
+            <Mono className="text-11 text-warm-sand">Från</Mono>
             <TextField.Root type="time" className="mt-1 font-mono" value={from} onChange={(e) => setFrom(e.target.value)} />
           </label>
-          <span className="mt-5 text-[#c2b291]">–</span>
+          <span className="mt-5 text-mutedwarm">–</span>
           <label className="min-w-0 flex-1">
-            <Mono className="text-[11px] text-warm-sand">Till</Mono>
+            <Mono className="text-11 text-warm-sand">Till</Mono>
             <TextField.Root type="time" className="mt-1 font-mono" value={to} onChange={(e) => setTo(e.target.value)} />
           </label>
         </div>
@@ -200,11 +200,11 @@ function NewStaffModal({ onClose, onError, busy, error, onSubmit }: {
 
       <MaxHoursField form={form} set={set} />
 
-      <div className="flex items-center gap-3 rounded-xl border border-[#ecdfc8] bg-[#faf3e6] px-4 py-[15px]">
+      <div className="flex items-center gap-3 rounded-xl border border-warm-line bg-band px-4 py-4">
         <Switch semantic="success" checked={createLink} onCheckedChange={(v) => setCreateLink(v === true)} />
         <div>
           <div className="text-sm font-bold">Skapa delningslänk</div>
-          <div className="text-[12.5px] text-warm-gray">Personlig länk där medarbetaren fyller i sin tillgänglighet.</div>
+          <div className="text-13 text-warm-gray">Personlig länk där medarbetaren fyller i sin tillgänglighet.</div>
         </div>
       </div>
 
@@ -255,8 +255,8 @@ function EditStaffModal({ staff, onClose, busy, error, onError, onSubmit }: {
 
 function StatCard({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="rounded-[14px] border border-[#ecdfc8] bg-white p-5">
-      <Mono className="mb-3 block text-[11px] tracking-[.06em] text-warm-sand">{label}</Mono>
+    <div className="rounded-14 border border-warm-line bg-white p-5">
+      <Mono className="mb-3 block text-11 tracking-wider text-warm-sand">{label}</Mono>
       {children}
     </div>
   )
@@ -273,8 +273,8 @@ function FilterTab({ label, count, active, onClick }: {
       onClick={onClick}
       className={
         active
-          ? 'cursor-pointer rounded-lg border-0 bg-white px-[15px] py-2 text-[13.5px] font-bold text-ink shadow-[0_1px_3px_rgb(90_60_20/0.1)]'
-          : 'cursor-pointer rounded-lg border-0 bg-transparent px-[15px] py-2 text-[13.5px] font-semibold text-warm-gray'
+          ? 'cursor-pointer rounded-lg border-0 bg-white px-4 py-2 text-13 font-bold text-ink shadow-[0_1px_3px_rgb(90_60_20/0.1)]'
+          : 'cursor-pointer rounded-lg border-0 bg-transparent px-4 py-2 text-13 font-semibold text-warm-gray'
       }
     >
       {label} · {count}
@@ -430,10 +430,10 @@ export default function Staff() {
   return (
     <div>
       {/* Page header */}
-      <div className="mb-[26px] flex items-end justify-between gap-5">
+      <div className="mb-6.5 flex items-end justify-between gap-5">
         <div>
-          <h1 className="m-0 mb-1.5 text-[32px] font-extrabold tracking-[-.03em]">Personal</h1>
-          <p className="m-0 text-[14.5px] text-warm-gray">
+          <h1 className="m-0 mb-1.5 text-30 font-extrabold tracking-tight">Personal</h1>
+          <p className="m-0 text-15 text-warm-gray">
             {active.length} medarbetare · {activeThisWeek} aktiva den här veckan
           </p>
         </div>
@@ -447,28 +447,28 @@ export default function Staff() {
       </div>
 
       {/* Stat cards */}
-      <div className="mb-[26px] grid grid-cols-4 gap-4">
+      <div className="mb-6.5 grid grid-cols-4 gap-4">
         <StatCard label="AKTIVA">
           <div className="flex items-baseline gap-1">
-            <span className="text-[30px] font-extrabold tracking-[-.03em]">{active.length}</span>
-            <span className="text-[15px] font-semibold text-warm-sand">/ {staff.length}</span>
+            <span className="text-30 font-extrabold tracking-tight">{active.length}</span>
+            <span className="text-15 font-semibold text-warm-sand">/ {staff.length}</span>
           </div>
         </StatCard>
         <StatCard label={`PLANERADE TIMMAR · V.${weekNumber}`}>
-          <div className="flex items-baseline gap-[5px]">
-            <span className="text-[30px] font-extrabold tracking-[-.03em]">{Math.round(plannedHours)}</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-30 font-extrabold tracking-tight">{Math.round(plannedHours)}</span>
             <span className="text-sm font-semibold text-warm-sand">h</span>
           </div>
         </StatCard>
         <StatCard label="BEMANNING">
           <div className="flex items-center gap-2.5">
-            <span className="text-[30px] font-extrabold tracking-[-.03em] text-[#3c5a44]">
+            <span className="text-30 font-extrabold tracking-tight text-ok-strong">
               {share === null ? '–' : `${Math.round(share)}%`}
             </span>
             {shareDelta !== null && shareDelta !== 0 && (
               <span className={shareDelta > 0
-                ? 'rounded-[20px] bg-[#e7efe8] px-2 py-[3px] text-xs font-bold text-ok'
-                : 'rounded-[20px] bg-[#f7e6df] px-2 py-[3px] text-xs font-bold text-stop'}>
+                ? 'rounded-full bg-ok-soft px-2 py-0.5 text-xs font-bold text-ok'
+                : 'rounded-full bg-stop-soft px-2 py-0.5 text-xs font-bold text-stop'}>
                 {shareDelta > 0 ? '▲' : '▼'} {Math.abs(shareDelta)}
               </span>
             )}
@@ -476,11 +476,11 @@ export default function Staff() {
         </StatCard>
         <StatCard label="ÖPPNA PASS">
           <div className="flex items-center gap-2.5">
-            <span className={`text-[30px] font-extrabold tracking-[-.03em] ${openShifts > 0 ? 'text-[#a44227]' : ''}`}>
+            <span className={`text-30 font-extrabold tracking-tight ${openShifts > 0 ? 'text-stop-strong' : ''}`}>
               {openShifts}
             </span>
             {openShifts > 0 && (
-              <span className="rounded-[20px] bg-[#f7e6df] px-2 py-[3px] text-xs font-bold text-stop">
+              <span className="rounded-full bg-stop-soft px-2 py-0.5 text-xs font-bold text-stop">
                 behöver bemanning
               </span>
             )}
@@ -490,14 +490,14 @@ export default function Staff() {
 
       {/* Filter tabs + sort */}
       <div className="mb-3.5 flex items-center justify-between">
-        <div className="flex gap-1.5 rounded-[11px] bg-[#f2e8d5] p-1">
+        <div className="flex gap-1.5 rounded-10 bg-chip p-1">
           <FilterTab label="Alla" count={staff.length} active={tab === 'alla'} onClick={() => setTab('alla')} />
           <FilterTab label="Aktiva" count={active.length} active={tab === 'aktiva'} onClick={() => setTab('aktiva')} />
           <FilterTab label="Arkiverade" count={staff.length - active.length} active={tab === 'arkiverade'} onClick={() => setTab('arkiverade')} />
         </div>
         <button
           onClick={() => setSortBy((s) => (s === 'namn' ? 'roll' : 'namn'))}
-          className="flex cursor-pointer items-center gap-2 border-0 bg-transparent font-mono text-[12.5px] text-warm-gray"
+          className="flex cursor-pointer items-center gap-2 border-0 bg-transparent font-mono text-13 text-warm-gray"
         >
           <ListFilter size={15} strokeWidth={1.85} /> Sortera: {sortBy === 'namn' ? 'Namn' : 'Roll'}
         </button>
@@ -525,8 +525,8 @@ export default function Staff() {
             : undefined}
         />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[#ecdfc8] bg-white">
-          <div className={`${ROW_GRID} border-b border-[#ecdfc8] bg-[#faf3e6] px-[22px] py-[13px] font-mono text-[10.5px] uppercase tracking-[.06em] text-[#a5936f]`}>
+        <div className="overflow-hidden rounded-2xl border border-warm-line bg-white">
+          <div className={`${ROW_GRID} border-b border-warm-line bg-band px-5.5 py-3 font-mono text-11 uppercase tracking-wider text-warm-caption`}>
             <span>Medarbetare</span><span>Roll</span><span>Arbetstider</span>
             <span className="text-right">Timmar v.{weekNumber}</span><span>Status</span><span />
           </div>
@@ -537,21 +537,21 @@ export default function Staff() {
               <div
                 key={row.id}
                 onClick={() => navigate(`/staff/${row.id}`)}
-                className={`${ROW_GRID} cursor-pointer px-[22px] py-4 hover:bg-[#fffaf0] hover:shadow-[inset_3px_0_0_var(--ochre)] ${
-                  i < rows.length - 1 ? 'border-b border-[#f4ead2]' : ''
+                className={`${ROW_GRID} cursor-pointer px-5.5 py-4 hover:bg-paper-warm hover:shadow-[inset_3px_0_0_var(--ochre)] ${
+                  i < rows.length - 1 ? 'border-b border-warm-line' : ''
                 } ${row.archived ? 'opacity-70' : ''}`}
               >
                 <div className="flex items-center gap-3">
                   <Avatar id={row.id} name={row.name} muted={row.archived} />
                   <div className="min-w-0">
-                    <div className="text-[14.5px] font-bold">{row.name}</div>
-                    <Mono className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#a5936f]">
+                    <div className="text-15 font-bold">{row.name}</div>
+                    <Mono className="block overflow-hidden text-ellipsis whitespace-nowrap text-11 text-warm-caption">
                       {row.email ?? row.phone ?? '—'}
                     </Mono>
                   </div>
                 </div>
-                <div className="text-sm text-[#3a2f22]">{row.role ?? '—'}</div>
-                <Mono className="text-[12.5px] text-ink-soft">{row.archived ? '—' : wishSummary ?? '—'}</Mono>
+                <div className="text-sm text-ink-soft">{row.role ?? '—'}</div>
+                <Mono className="text-13 text-ink-soft">{row.archived ? '—' : wishSummary ?? '—'}</Mono>
                 <Mono className={`text-right text-sm font-bold ${hours === undefined ? 'text-warm-sand' : ''}`}>
                   {hours === undefined ? '—' : `${Math.round(hours * 10) / 10} h`}
                 </Mono>
@@ -565,7 +565,7 @@ export default function Staff() {
                     <Dropdown.Trigger>
                       <button
                         aria-label={`Åtgärder för ${row.name}`}
-                        className="cursor-pointer border-0 bg-transparent font-extrabold text-[#c2b291]"
+                        className="cursor-pointer border-0 bg-transparent font-extrabold text-mutedwarm"
                       >
                         {copiedId === row.id ? <Check size={18} className="text-ok" /> : <MoreHorizontal size={18} />}
                       </button>

@@ -145,7 +145,7 @@ export default function StaffDetail() {
   return (
     <Flex direction="column" gap="5" style={{ maxWidth: 640 }}>
       <Flex align="center" gap="3">
-        <Link to="/staff" className="flex items-center text-[var(--gray-11)]"><ArrowLeft size={18} /></Link>
+        <Link to="/staff" className="flex items-center text-warm-gray"><ArrowLeft size={18} /></Link>
         <Heading size="6">{staff.name}</Heading>
         {staff.role && <Badge semantic="neutral" text={staff.role} />}
         {/* Inactive = lera-grå per the fixed status roles (see status.ts) */}

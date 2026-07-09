@@ -41,12 +41,12 @@ function SidebarLockup() {
   return (
     <svg viewBox="0 0 166 48" height="27" fill="none" className="block" role="img" aria-label="Timla">
       <g transform="rotate(-90 24 24)">
-        <rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="#fbf1dc" />
-        <rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="#e69a2e" />
-        <circle cx="24" cy="17" r="2.9" fill="#e69a2e" />
-        <rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="#fbf1dc" />
+        <rect x="12" y="14" width="5.5" height="24" rx="2.75" fill="var(--cream)" />
+        <rect x="21.25" y="23" width="5.5" height="15" rx="2.75" fill="var(--ochre)" />
+        <circle cx="24" cy="17" r="2.9" fill="var(--ochre)" />
+        <rect x="30.5" y="19" width="5.5" height="19" rx="2.75" fill="var(--cream)" />
       </g>
-      <text x="47" y="36" fontWeight="800" fontSize="40" letterSpacing="-1.2" fill="#fbf1dc" fontFamily="var(--font-sans)">
+      <text x="47" y="36" fontWeight="800" fontSize="40" letterSpacing="-1.2" fill="var(--cream)" fontFamily="var(--font-sans)">
         timla
       </text>
     </svg>
@@ -59,8 +59,8 @@ function NavBadge({ value, active }: { value: number; active: boolean }) {
   return (
     <Mono
       className={cn(
-        'ml-auto rounded-[20px] px-[7px] py-[2px] text-[10px] font-semibold',
-        active ? 'bg-ink text-honey' : 'bg-[#3a3126] text-[#e0d4bd]',
+        'ml-auto rounded-full px-2 py-0.5 text-10 font-semibold',
+        active ? 'bg-ink text-honey' : 'bg-ink-raised-2 text-sidebar-muted',
       )}
     >
       {value}
@@ -74,11 +74,11 @@ function NavItem({ to, label, icon: Icon, badge }: {
   icon: typeof Users
   badge?: number
 }) {
-  const base = 'flex items-center gap-3 rounded-[10px] px-3 py-[11px] text-[14.5px] no-underline'
+  const base = 'flex items-center gap-3 rounded-10 px-3 py-3 text-15 no-underline'
   if (!to) {
     return (
-      <span title="Kommer senare" className={cn(base, 'cursor-default font-semibold text-[#b6a98f]')}>
-        <Icon size={19} strokeWidth={1.75} className="text-[#8a7c64]" /> {label}
+      <span title="Kommer senare" className={cn(base, 'cursor-default font-semibold text-sidebar-muted')}>
+        <Icon size={19} strokeWidth={1.75} className="text-sidebar-faint" /> {label}
       </span>
     )
   }
@@ -89,12 +89,12 @@ function NavItem({ to, label, icon: Icon, badge }: {
         base,
         isActive
           ? 'bg-ochre font-bold text-ink shadow-[0_4px_14px_rgb(230_154_46/0.28)]'
-          : 'font-semibold text-[#b6a98f] hover:bg-[#2f271c]',
+          : 'font-semibold text-sidebar-muted hover:bg-ink-raised',
       )}
     >
       {({ isActive }) => (
         <>
-          <Icon size={19} strokeWidth={1.85} className={isActive ? 'text-ink' : 'text-[#8a7c64]'} /> {label}
+          <Icon size={19} strokeWidth={1.85} className={isActive ? 'text-ink' : 'text-sidebar-faint'} /> {label}
           {badge !== undefined && <NavBadge value={badge} active={isActive} />}
         </>
       )}
@@ -127,15 +127,15 @@ export function Layout() {
           and topbar stay put. */}
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="flex w-[246px] shrink-0 flex-col overflow-y-auto bg-ink px-4 py-6">
-          <div className="px-2.5 pb-[26px] pt-1.5"><SidebarLockup /></div>
-          <Mono className="px-3 pb-2.5 text-[10px] tracking-[.14em] text-[#6b5f4c]">MENY</Mono>
-          <nav className="flex flex-col gap-[3px]">
+        <aside className="flex w-61.5 shrink-0 flex-col overflow-y-auto bg-ink px-4 py-6">
+          <div className="px-2.5 pb-6.5 pt-1.5"><SidebarLockup /></div>
+          <Mono className="px-3 pb-2.5 text-10 tracking-[.14em] text-sidebar-faint">MENY</Mono>
+          <nav className="flex flex-col gap-1">
             {NAV.map((item) => (
               <NavItem key={item.label} {...item} badge={item.to === '/staff' ? activeStaff : undefined} />
             ))}
           </nav>
-          <div className="mt-auto flex flex-col gap-[3px]">
+          <div className="mt-auto flex flex-col gap-1">
             <NavItem label="Inställningar" icon={Settings} />
             <button
               title="Logga ut"
@@ -143,28 +143,28 @@ export function Layout() {
                 // Signing out mid-task is annoying enough to confirm.
                 if (window.confirm('Logga ut?')) void signOut()
               }}
-              className="mt-2.5 flex cursor-pointer items-center gap-[11px] rounded-xl border-0 bg-[#2f271c] p-2.5 text-left"
+              className="mt-2.5 flex cursor-pointer items-center gap-3 rounded-xl border-0 bg-ink-raised p-2.5 text-left"
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-ok text-xs font-extrabold tracking-[.02em] text-white">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-10 bg-ok text-xs font-extrabold tracking-wide text-white">
                 {org ? initials(orgName) : '–'}
               </div>
               <div className="min-w-0">
-                <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13.5px] font-bold text-white">{orgName}</div>
-                <Mono className="text-[10.5px] text-[#8a7c64]">Verksamhet</Mono>
+                <div className="overflow-hidden text-ellipsis whitespace-nowrap text-13 font-bold text-white">{orgName}</div>
+                <Mono className="text-11 text-sidebar-faint">Verksamhet</Mono>
               </div>
-              <ChevronDown size={15} strokeWidth={1.9} className="ml-auto shrink-0 text-[#8a7c64]" />
+              <ChevronDown size={15} strokeWidth={1.9} className="ml-auto shrink-0 text-sidebar-faint" />
             </button>
           </div>
         </aside>
 
         {/* Main column */}
         <div className="flex min-w-0 flex-1 flex-col bg-paper">
-          <header className="flex items-center gap-5 border-b border-[#ecdfc8] px-[30px] py-4">
+          <header className="flex items-center gap-5 border-b border-warm-line px-7.5 py-4">
             <Mono className="text-xs text-warm-sand">
-              {orgName} <span className="text-[#d8c8a6]">/</span> <span className="text-ink-soft">{pageLabel(location.pathname)}</span>
+              {orgName} <span className="text-warm-sand">/</span> <span className="text-ink-soft">{pageLabel(location.pathname)}</span>
             </Mono>
             <div className="ml-auto flex items-center gap-3.5">
-              <div className="field-shell flex w-60 items-center gap-2 rounded-[10px] border border-[#e4d9c2] bg-white px-3 py-2">
+              <div className="field-shell flex w-60 items-center gap-2 rounded-10 border border-warm-line-strong bg-white px-3 py-2">
                 <Search size={16} strokeWidth={1.75} className="shrink-0 text-warm-sand" />
                 <input
                   placeholder={pageLabel(location.pathname) === 'Arbetsschema' ? 'Sök personal…' : 'Sök medarbetare…'}
@@ -175,16 +175,16 @@ export function Layout() {
               </div>
               <button
                 title="Notiser — kommer senare"
-                className="flex h-10 w-10 cursor-default items-center justify-center rounded-[10px] border border-[#e4d9c2] bg-white"
+                className="flex h-10 w-10 cursor-default items-center justify-center rounded-10 border border-warm-line-strong bg-white"
               >
                 <Bell size={18} strokeWidth={1.75} className="text-ink-soft" />
               </button>
-              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-ink">
+              <div className="flex h-10 w-10 items-center justify-center rounded-10 bg-ink">
                 <UserButton appearance={{ elements: { userButtonAvatarBox: 'h-7 w-7' } }} />
               </div>
             </div>
           </header>
-          <div className="flex-1 overflow-auto p-[30px]">
+          <div className="flex-1 overflow-auto p-7.5">
             <Outlet />
           </div>
         </div>

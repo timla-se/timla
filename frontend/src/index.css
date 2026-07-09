@@ -56,6 +56,58 @@
   --color-warm-border-strong: #d8c19a;
   --color-ochre-deep: #c07f1e;
 
+  /* --- Status tints & shades (issue #32) ---------------------------------
+   * color-mix-derived from the base status tokens, so retheming the base
+   * recolors them. Targets in comments are the hand-tuned mockup hexes they
+   * replace (small visual deltas accepted per the issue). */
+  --color-ok-soft: color-mix(in srgb, var(--color-ok) 13%, white); /* ≈ #e7efe8, absorbs #dceee2 #eef4ef */
+  --color-ok-line: color-mix(in srgb, var(--color-ok) 26%, white); /* ≈ #cfe0d3 */
+  --color-ok-strong: color-mix(in srgb, var(--color-ok), black 22%); /* ≈ #3c5a44, absorbs #2e4a38 */
+  --color-stop-soft: color-mix(in srgb, var(--color-stop) 14%, white); /* ≈ #f7e6df, absorbs #f9ebe4 #f4dbd1 */
+  --color-stop-line: color-mix(in srgb, var(--color-stop) 24%, white); /* ≈ #efcdbf */
+  --color-stop-strong: color-mix(in srgb, var(--color-stop), black 15%); /* ≈ #a44227, absorbs #a24327 */
+  --color-wait-soft: color-mix(in srgb, var(--color-wait) 35%, white); /* ≈ #f6e2b6 */
+  --color-wait-line: color-mix(in srgb, var(--color-wait) 28%, white); /* ≈ #eeddb8 */
+  --color-wait-strong: color-mix(in srgb, var(--color-wait), black 28%); /* ≈ #a5711a, absorbs #8a5e14 #c9a24a */
+
+  /* --- Warm neutral surfaces/lines (canonical raw hex — design-picked,
+   * extending the :root neutral ramp; not derivable from a base) --------- */
+  --color-warm-line: #ecdfc8; /* hairline card/table border; absorbs #f2e7cf #f4ead2 #f6ead0 */
+  --color-warm-line-strong: #e4d9c2; /* input/secondary borders; absorbs #e6d8bd #e7ddc9 */
+  --color-chip: #f2e8d5; /* segmented-control/chip background; absorbs #f1e7d3 */
+  --color-band: #faf3e6; /* table header/footer band */
+  --color-paper-warm: #fffaf0; /* hover/today background */
+  --color-warm-caption: #a5936f; /* mono captions on tinted bands */
+
+  /* --- Sidebar (dark-on-ink) --------------------------------------------- */
+  --color-ink-raised: color-mix(in srgb, var(--color-ink), var(--color-cream) 6%); /* ≈ #2f271c */
+  --color-ink-raised-2: color-mix(in srgb, var(--color-ink), var(--color-cream) 12%); /* ≈ #3a3126 */
+  --color-sidebar-muted: #b6a98f; /* absorbs #c9bdaa #e0d4bd */
+  --color-sidebar-faint: #8a7c64; /* absorbs #6b5f4c */
+
+  /* --- Coverage heat ramp (Schedule) — data-viz roles, not decorative
+   * tints; meaning-bearing like --ok/--stop (issue #32 DD7) -------------- */
+  --color-cover-outside: #efe6d4;
+  --color-cover-gap: #e8b7a5;
+  --color-cover-thin: #f0d3a0;
+  --color-cover-two: #d8e4d2;
+  --color-cover-ok: #bcd3c0;
+
+  /* --- Type & radius scale (issue #32) — the px steps the design actually
+   * uses, additive alongside Tailwind's defaults (text-xs/sm/lg… still
+   * apply where they match). Font-size only: no --line-height pair, so
+   * these behave exactly like the text-[Npx] values they replace. -------- */
+  --text-10: 10px;
+  --text-11: 11px;
+  --text-13: 13px;
+  --text-15: 15px;
+  --text-19: 19px;
+  --text-22: 22px;
+  --text-30: 30px;
+  --radius-10: 10px; /* buttons/inputs — matches .rt-Button */
+  --radius-14: 14px; /* the /svar card radius */
+  --radius-20: 20px; /* modal panel radius */
+
   --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
@@ -247,7 +299,7 @@ body {
   color: var(--cream);
 }
 .rt-Button.btn-ink:hover:not(:disabled) {
-  background: #3a3126;
+  background: var(--color-ink-raised-2);
 }
 
 /* Etikett (design system type scale): small uppercase warm label — used
