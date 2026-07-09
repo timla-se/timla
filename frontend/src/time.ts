@@ -193,10 +193,14 @@ export function localInstant(isoDate: string, minute: number, timeZone: string):
 
   let instant = target
   for (let pass = 0; pass < 2; pass++) instant += target - naiveOf(instant)
-  // fold=0: if an hour earlier still shows the same wall clock, the time is
-  // ambiguous (autumn fall-back) and the earlier instant is the one the
-  // backend picks (DST shifts are 1 h in the org timezone).
-  if (naiveOf(instant - 3_600_000) === target) instant -= 3_600_000
+  // fold=0: an ambiguous autumn wall time (fall-back) has an earlier instant
+  // showing the same wall clock, and zoneinfo picks that first occurrence. The
+  // gap between the two is the DST delta — derive it from the offset a day
+  // earlier (the pre-transition regime) instead of assuming 1 h, so non-hour
+  // folds resolve correctly too (e.g. Australia/Lord_Howe's 30-minute shift).
+  const offsetAt = (ms: number) => naiveOf(ms) - ms
+  const dstDelta = offsetAt(instant - 86_400_000) - offsetAt(instant)
+  if (dstDelta > 0 && naiveOf(instant - dstDelta) === target) instant -= dstDelta
   return new Date(instant).toISOString()
 }
 

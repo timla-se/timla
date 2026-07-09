@@ -95,8 +95,9 @@ export function ShiftModal({ initial, period, tz, staff, onClose }: {
     [staff],
   )
   // Keep the current assignee selectable in edit mode even when archived, so a
-  // note/time-only edit doesn't force an unassignment (the backend allows an
-  // unchanged archived staff_id). Never offered for new shifts.
+  // note/time-only edit doesn't force an unassignment. save omits an unchanged
+  // staff_id from the PATCH so the backend's archived guard doesn't reject it.
+  // Never offered for new shifts.
   const archivedCurrent = editShift?.staff_id
     ? staff.find((s) => s.id === editShift.staff_id && s.archived) ?? null
     : null
@@ -125,13 +126,16 @@ export function ShiftModal({ initial, period, tz, staff, onClose }: {
   const seqRef = useRef(0)
 
   useEffect(() => {
+    // Bump the sequence up front so an in-flight request from a prior run is
+    // invalidated even when we bail early below — otherwise a stale promise
+    // (e.g. after switching to Öppet pass) could repopulate the cleared state.
+    const seq = ++seqRef.current
     if (!instants) { setLive({ conflicts: [], warnings: [], checked: false }); return }
     if (staffId === null) {
       // Open shifts have no assignee, so the engine finds nothing — skip the call.
       setLive({ conflicts: [], warnings: [], checked: true })
       return
     }
-    const seq = ++seqRef.current
     const timer = setTimeout(() => {
       computeConflicts([{ id: editingId ?? undefined, staff_id: staffId, starts_at: instants.starts_at, ends_at: instants.ends_at }])
         .then((res) => {
@@ -163,8 +167,16 @@ export function ShiftModal({ initial, period, tz, staff, onClose }: {
 
   const save = useMutation({
     mutationFn: (force: boolean) => {
-      const payload = { staff_id: staffId, starts_at: instants!.starts_at, ends_at: instants!.ends_at, note: note.trim() || null }
-      return editingId ? updateShift(editingId, payload, force) : createShift(payload, force)
+      const base = { starts_at: instants!.starts_at, ends_at: instants!.ends_at, note: note.trim() || null }
+      // Omit staff_id when unchanged in edit mode: the backend rejects any
+      // archived staff_id in the payload (400 archived_staff), even the shift's
+      // own current archived assignee, so sending it would make note/time-only
+      // edits of such shifts unsaveable.
+      if (editingId) {
+        const payload = staffId === (editShift?.staff_id ?? null) ? base : { ...base, staff_id: staffId }
+        return updateShift(editingId, payload, force)
+      }
+      return createShift({ ...base, staff_id: staffId }, force)
     },
     onSuccess: () => { invalidate(); onClose() },
     onError: (err) => {
@@ -228,7 +240,7 @@ export function ShiftModal({ initial, period, tz, staff, onClose }: {
       >
         <label className="mb-4.5 block">
           <FieldLabel>Personal</FieldLabel>
-          <Select.Root value={staffValue} onValueChange={(v) => { if (v) setStaffValue(v) }}>
+          <Select.Root value={staffValue} disabled={busy} onValueChange={(v) => { if (v) setStaffValue(v) }}>
             <Select.Trigger className="w-full" />
             <Select.Content>
               <Select.Item value={OPEN}>Öppet pass</Select.Item>
@@ -242,7 +254,7 @@ export function ShiftModal({ initial, period, tz, staff, onClose }: {
 
         <label className="mb-4.5 block">
           <FieldLabel>Dag</FieldLabel>
-          <Select.Root value={dayIso} onValueChange={(v) => { if (v) setDayIso(v) }}>
+          <Select.Root value={dayIso} disabled={busy} onValueChange={(v) => { if (v) setDayIso(v) }}>
             <Select.Trigger className="w-full" />
             <Select.Content>
               {weekDays.map((d) => <Select.Item key={d} value={d}>{formatIsoDate(d)}</Select.Item>)}
@@ -253,19 +265,19 @@ export function ShiftModal({ initial, period, tz, staff, onClose }: {
         <div className="flex items-end gap-2.5">
           <label className="min-w-0 flex-1">
             <FieldLabel>Börjar</FieldLabel>
-            <TextField.Root type="time" className="font-mono" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            <TextField.Root type="time" className="font-mono" disabled={busy} value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </label>
           <span className="mb-2.5 text-mutedwarm">–</span>
           <label className="min-w-0 flex-1">
             <FieldLabel>Slutar</FieldLabel>
-            <TextField.Root type="time" className="font-mono" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            <TextField.Root type="time" className="font-mono" disabled={busy} value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </label>
         </div>
         <p className={`mt-1.5 text-12 text-warm-gray ${endsNextDay ? '' : 'invisible'}`}>Passet slutar nästa dag.</p>
 
         <label className="mb-2 mt-3 block">
           <FieldLabel>Anteckning (valfritt)</FieldLabel>
-          <TextField.Root value={note} onChange={(e) => setNote(e.target.value)} placeholder="t.ex. öppning, stängning" />
+          <TextField.Root value={note} disabled={busy} onChange={(e) => setNote(e.target.value)} placeholder="t.ex. öppning, stängning" />
         </label>
 
         <div className="mt-4 flex flex-col gap-2.5">
