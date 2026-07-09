@@ -1,4 +1,7 @@
-import type { AvailabilityDocument, ExceptionInterval, Org, Publication, Rules, Shift, Staff } from './types'
+import type {
+  AvailabilityDocument, ConflictItem, ConflictResult, ExceptionInterval, Org,
+  Publication, Rules, Shift, ShiftWriteResult, Staff,
+} from './types'
 
 // Registered once by main.tsx's ClerkBridge; every request awaits this for
 // the current session token (Clerk auto-refreshes the short-lived JWT).
@@ -11,11 +14,20 @@ export function setTokenGetter(fn: () => Promise<string | null>): void {
 export class ApiError extends Error {
   status: number
   code: string
+  /** A 409 from /data/shifts carries the conflict list here (issue #5);
+   * empty for errors that don't ({conflicts: [], warnings: []}). */
+  conflicts: ConflictItem[]
+  warnings: ConflictItem[]
 
-  constructor(status: number, code: string, message: string) {
+  constructor(
+    status: number, code: string, message: string,
+    conflicts: ConflictItem[] = [], warnings: ConflictItem[] = [],
+  ) {
     super(message)
     this.status = status
     this.code = code
+    this.conflicts = conflicts
+    this.warnings = warnings
   }
 }
 
@@ -33,8 +45,14 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   if (resp.status === 204) return undefined as T
   const data: unknown = await resp.json().catch(() => null)
   if (!resp.ok) {
-    const err = (data ?? {}) as { error?: string; message?: string }
-    throw new ApiError(resp.status, err.error ?? 'unknown', err.message ?? `HTTP ${resp.status}`)
+    const err = (data ?? {}) as {
+      error?: string; message?: string
+      conflicts?: ConflictItem[]; warnings?: ConflictItem[]
+    }
+    throw new ApiError(
+      resp.status, err.error ?? 'unknown', err.message ?? `HTTP ${resp.status}`,
+      err.conflicts ?? [], err.warnings ?? [],
+    )
   }
   return data as T
 }
@@ -90,6 +108,30 @@ export const createOrg = (payload: { name: string; timezone?: string }) =>
 /** period: ISO week like '2026-W28' */
 export const listShifts = (period: string) =>
   request<Shift[]>('GET', `/data/shifts?period=${encodeURIComponent(period)}`)
+
+export interface ShiftPayload {
+  staff_id?: string | null
+  starts_at?: string
+  ends_at?: string
+  note?: string | null
+}
+
+/** A hard-conflict 409 keeps its conflict list on the thrown ApiError; pass
+ * force to override once the manager has seen and accepted it (issue #5). */
+export const createShift = (payload: ShiftPayload, force = false) =>
+  request<ShiftWriteResult>('POST', `/data/shifts${force ? '?force=true' : ''}`, payload)
+
+export const updateShift = (id: string, payload: ShiftPayload, force = false) =>
+  request<ShiftWriteResult>('PATCH', `/data/shifts/${id}${force ? '?force=true' : ''}`, payload)
+
+export const deleteShift = (id: string) =>
+  request<void>('DELETE', `/data/shifts/${id}`)
+
+/** Pure live check. Pass the edited shift's own `id` so the engine excludes
+ * its saved copy from double-booking/hours math. */
+export const computeConflicts = (
+  shifts: { id?: string; staff_id?: string | null; starts_at: string; ends_at: string }[],
+) => request<ConflictResult>('POST', '/compute/conflicts', { shifts })
 
 /** null when the week is unpublished. */
 export const getPublication = (period: string) =>

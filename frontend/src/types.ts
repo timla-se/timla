@@ -53,6 +53,37 @@ export interface Publication {
   published_at: string
 }
 
+/** One entry from the conflict engine (issue #5). `type` drives the Swedish
+ * copy in the editor; `message` is the server's English fallback. Detail
+ * fields are only present on some types (max_hours, insufficient_rest). */
+export interface ConflictItem {
+  type:
+    | 'archived_staff'
+    | 'double_booking'
+    | 'blocked'
+    | 'max_hours'
+    | 'insufficient_rest'
+    | 'outside_wishes'
+  shift_index: number
+  shift_id: string | null
+  staff_id: string | null
+  message: string
+  week?: string
+  total_hours?: number
+  effective_max?: number
+  rest_hours?: number
+  min_rest_hours?: number
+}
+
+export interface ConflictResult {
+  conflicts: ConflictItem[]
+  warnings: ConflictItem[]
+}
+
+/** POST /data/shifts and PATCH /data/shifts/:id echo the saved shift plus the
+ * conflict/warning result the engine produced for it. */
+export type ShiftWriteResult = { shift: Shift } & ConflictResult
+
 // --- staff share-link (/svar) surface (issue #13) ---
 
 export interface SvarRecurring {

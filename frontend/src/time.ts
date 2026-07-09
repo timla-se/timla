@@ -160,6 +160,50 @@ export function wallClock(isoInstant: string, timeZone: string): {
   }
 }
 
+/** Wall-clock minute-of-day on a local date → UTC instant (ISO string).
+ * The inverse of wallClock; mirrors app/weeks.py:local_instant so a time the
+ * manager types resolves to the same instant the backend stores and checks.
+ *
+ * Method: guess the instant as if the zone offset were zero, then correct by
+ * the wall-clock error read back through wallClock. Two passes converge even
+ * across a DST transition — the first correction can land in the other offset
+ * regime, the second settles it. `minute` may be >= 1440 for next-day ends
+ * (1440 = next day 00:00); it's normalized onto the date first.
+ *
+ * Fold policy matches zoneinfo's default fold=0: an ambiguous autumn wall time
+ * (e.g. Europe/Stockholm 2026-10-25 02:30, which occurs twice) resolves to the
+ * FIRST occurrence. Spring-forward non-existent times land just after the gap,
+ * same instant the backend produces. */
+export function localInstant(isoDate: string, minute: number, timeZone: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate)
+  if (!match) throw new Error(`invalid date: ${isoDate}`)
+  const [, y, mo, d] = match
+  // Next-day ends: 1440 → +1 day, minute 0 (and any larger overflow).
+  const dayOffset = Math.floor(minute / 1440)
+  const minOfDay = minute - dayOffset * 1440
+  // Target wall clock as a naive-UTC timestamp; Date.UTC rolls the day over.
+  const target = Date.UTC(Number(y), Number(mo) - 1, Number(d) + dayOffset, 0, minOfDay)
+
+  // The wall clock a UTC instant shows in the zone, back as a naive-UTC ms.
+  const naiveOf = (instantMs: number): number => {
+    const wc = wallClock(new Date(instantMs).toISOString(), timeZone)
+    const [wy, wm, wd] = wc.isoDate.split('-')
+    return Date.UTC(Number(wy), Number(wm) - 1, Number(wd), 0, wc.minuteOfDay)
+  }
+
+  let instant = target
+  for (let pass = 0; pass < 2; pass++) instant += target - naiveOf(instant)
+  // fold=0: an ambiguous autumn wall time (fall-back) has an earlier instant
+  // showing the same wall clock, and zoneinfo picks that first occurrence. The
+  // gap between the two is the DST delta — derive it from the offset a day
+  // earlier (the pre-transition regime) instead of assuming 1 h, so non-hour
+  // folds resolve correctly too (e.g. Australia/Lord_Howe's 30-minute shift).
+  const offsetAt = (ms: number) => naiveOf(ms) - ms
+  const dstDelta = offsetAt(instant - 86_400_000) - offsetAt(instant)
+  if (dstDelta > 0 && naiveOf(instant - dstDelta) === target) instant -= dstDelta
+  return new Date(instant).toISOString()
+}
+
 /** One-line summary of weekly wishes per the Personal design:
  * "Mån–Fre · 09–17" when all days share one window, a day list when
  * non-contiguous, "Varierar" when windows differ, null when empty. */
