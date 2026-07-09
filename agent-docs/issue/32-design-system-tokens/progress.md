@@ -31,11 +31,14 @@ Complete for PR 1. Phases 4–5 (SegmentedControl/RangeSlider → `@swedev/ui`
 - Type-token deviation from plan: no `--text-N--line-height` pairs — the
   arbitrary values being replaced set font-size only, so pairing line-heights
   would have changed rendering.
-- Visual pass limitation: the authenticated pages (Staff/Schedule/Layout/
-  modals) could not be driven in the automation browser (Clerk session signed
-  out; no credentials to automate). Verified: full-page `/svar` mobile
-  (identical), sign-in screen (covers SignInScreen sweep + rounded-20 +
-  sidebar-muted). Manager pages verified by build/lint/typecheck; **eyeball
-  them during PR review** — the swept values are 1:1 token mappings.
+- Visual pass COMPLETE (updated): solved the Clerk automation gap via
+  Clerk's dev-instance test account (`dev+clerk_test@timla.se`, verification
+  code 424242, Turnstile passes with a click in a real browser) + an SQL
+  org_user binding to the seeded org. Recipe recorded in
+  `.claude/skills/verify/SKILL.md`. Verified live on this branch: Personal
+  (sidebar/stat cards/chip tabs/band header/avatars), Arbetsschema (coverage
+  heat ramp, legend, today column, shift bars), Ny medarbetare modal
+  (rounded-20 panel, etikett labels, weekday chips, band footer), full-page
+  `/svar` mobile, sign-in screen. All pixel-equivalent.
 - Open-shift fill `rgb(232 183 165 / 0.35)` → `color-mix(in srgb,
   var(--color-cover-gap) 35%, transparent)`.
