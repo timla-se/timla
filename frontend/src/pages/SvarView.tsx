@@ -168,7 +168,7 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-115 flex-col bg-paper">
+    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col bg-paper">
       <div className="flex-1 overflow-y-auto">
         {/* Context header */}
         <header className="px-6 pb-5 pt-4">

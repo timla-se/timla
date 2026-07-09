@@ -362,6 +362,16 @@ body {
 .svar-range .rt-SliderTrack {
   background-color: var(--color-chip);
 }
+/* Radix keeps large thumbs inside the track by insetting them proportionally to
+ * their measured width, which decouples the thumb from the range fill (raw %) at
+ * the extremes once the thumb is big. Shrink the actual thumb box to a point so
+ * that inset is negligible and the visible pill tracks the fill edge exactly
+ * (like the original hand-rolled slider). The pill and hit-area come from
+ * ::after/::before below, so the tiny box itself is invisible. */
+.svar-range .rt-SliderThumb {
+  width: 2px;
+  min-width: 2px;
+}
 .svar-range .rt-SliderThumb::after {
   inset: auto;
   top: 50%;
