@@ -153,8 +153,9 @@ export default function StaffDetail() {
       </Flex>
 
       <Text size="2" color="gray">
-        Tillgänglighet ifylld åt personal som hellre ringer in sina tider.
-        När delningslänkarna (issue #13) finns fyller personalen i själva.
+        Personalen fyller normalt i sin tillgänglighet själva via sin personliga
+        länk. Här ser du samma uppgifter och kan justera dem — eller fylla i åt
+        personal som hellre ringer in sina tider.
       </Text>
 
       {docLoading ? (
