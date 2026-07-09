@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Calendar, Check, ChevronDown, ChevronRight, Lock, Plus, Sparkles, X } from 'lucide-react'
+import { RangeSlider, SegmentedControl } from '@swedev/ui'
 
 import { ApiError } from '../api'
 import { getSvarContext, putSvarAvailability } from '../svarApi'
@@ -211,10 +212,16 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
           <h2 className="m-0 mb-0.5 text-xl font-extrabold tracking-tight">Din tillgänglighet</h2>
           <p className="m-0 mb-4 text-13 text-warm-gray">Din normalvecka — den gäller alla veckor i perioden.</p>
 
-          <div className="mb-4.5 flex gap-1.5 rounded-14 bg-chip p-1.5">
-            <TabButton active={tab === 'want'} onClick={() => setTab('want')} icon={<Sparkles size={15} />}>Vill jobba</TabButton>
-            <TabButton active={tab === 'cannot'} onClick={() => setTab('cannot')} icon={<X size={15} />}>Kan inte</TabButton>
-          </div>
+          <SegmentedControl
+            className="mb-4.5 w-full"
+            size="3"
+            value={tab}
+            onValueChange={(v) => setTab(v as 'want' | 'cannot')}
+            items={[
+              { value: 'want', label: 'Vill jobba', icon: Sparkles },
+              { value: 'cannot', label: 'Kan inte', icon: X },
+            ]}
+          />
 
           {tab === 'want' ? (
             <>
@@ -294,19 +301,6 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
         />
       )}
     </div>
-  )
-}
-
-function TabButton({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex flex-1 items-center justify-center gap-2 rounded-10 px-1.5 py-3 text-13 font-bold ${
-        active ? 'bg-white text-ink shadow-[0_1px_3px_rgb(90_60_20/0.12)]' : 'bg-transparent text-warm-gray'
-      }`}
-    >
-      {icon} {children}
-    </button>
   )
 }
 
@@ -391,7 +385,12 @@ function DayList({ kind, ranges, dates, open, onToggleDay, onSetRange, onToggleO
               )}
             </div>
             {range && isOpen && (
-              <RangeControl range={range} accent={accent} onChange={(r) => onSetRange(weekday, r)} />
+              <RangeControl
+                range={range}
+                accent={accent}
+                semantic={kind === 'want' ? 'success' : 'error'}
+                onChange={(r) => onSetRange(weekday, r)}
+              />
             )}
           </div>
         )
@@ -400,7 +399,7 @@ function DayList({ kind, ranges, dates, open, onToggleDay, onSetRange, onToggleO
   )
 }
 
-function RangeControl({ range, accent, onChange }: { range: DayRange; accent: string; onChange: (r: DayRange) => void }) {
+function RangeControl({ range, accent, semantic, onChange }: { range: DayRange; accent: string; semantic: 'success' | 'error'; onChange: (r: DayRange) => void }) {
   return (
     <div className="px-3 pb-1.5 pt-3">
       <div className="mb-4 flex gap-1.5">
@@ -426,65 +425,19 @@ function RangeControl({ range, accent, onChange }: { range: DayRange; accent: st
         </span>
         <span className="text-13 text-warm-gray">{durationLabel(range)}</span>
       </div>
-      <RangeSlider from={range.start} to={range.end} accent={accent} onChange={(s, e) => onChange({ start: s, end: e })} />
+      <RangeSlider
+        className="svar-range"
+        semantic={semantic}
+        min={DAY_MIN}
+        max={DAY_MAX}
+        step={STEP}
+        minGap={GAP}
+        value={[range.start, range.end]}
+        onValueChange={([s, e]) => onChange({ start: s, end: e })}
+      />
       <div className="mt-2 flex justify-between font-mono text-10 text-warm-sand">
         <span>06</span><span>10</span><span>14</span><span>18</span><span>22</span>
       </div>
-    </div>
-  )
-}
-
-/** Dual-handle range slider on the 06:00–22:00 canvas. Click/drag anywhere;
- * the nearer handle follows, snapping to STEP with a GAP-minute minimum span.
- * Handles are pointer-events:none so the track owns the gesture. */
-function RangeSlider({ from, to, accent, onChange }: {
-  from: number
-  to: number
-  accent: string
-  onChange: (from: number, to: number) => void
-}) {
-  const trackRef = useRef<HTMLDivElement>(null)
-  const pct = (m: number) => ((m - DAY_MIN) / (DAY_MAX - DAY_MIN)) * 100
-  const calc = (clientX: number) => {
-    const el = trackRef.current
-    if (!el) return from
-    const rect = el.getBoundingClientRect()
-    const r = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    return Math.round((DAY_MIN + r * (DAY_MAX - DAY_MIN)) / STEP) * STEP
-  }
-  const onPointerDown = (e: React.PointerEvent) => {
-    e.preventDefault()
-    const startFrom = from
-    const startTo = to
-    const m0 = calc(e.clientX)
-    const which = Math.abs(m0 - startFrom) <= Math.abs(m0 - startTo) ? 'from' : 'to'
-    const apply = (m: number) => {
-      if (which === 'from') onChange(Math.min(m, startTo - GAP), startTo)
-      else onChange(startFrom, Math.max(m, startFrom + GAP))
-    }
-    apply(m0)
-    const move = (ev: PointerEvent) => apply(calc(ev.clientX))
-    const up = () => {
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', up)
-    }
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up)
-  }
-  const handle = 'pointer-events-none absolute top-1/2 h-7.5 w-5.5 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white'
-  const handleStyle = { border: `1.5px solid ${accent}`, boxShadow: '0 2px 6px rgba(90,60,20,.28)' }
-  return (
-    <div
-      ref={trackRef}
-      onPointerDown={onPointerDown}
-      className="relative h-8.5 cursor-pointer touch-none select-none rounded-full border border-warm-line-strong bg-chip"
-    >
-      <div
-        className="pointer-events-none absolute inset-y-1 rounded-14"
-        style={{ left: `${pct(from)}%`, width: `${pct(to) - pct(from)}%`, background: accent }}
-      />
-      <div className={handle} style={{ ...handleStyle, left: `${pct(from)}%` }} />
-      <div className={handle} style={{ ...handleStyle, left: `${pct(to)}%` }} />
     </div>
   )
 }

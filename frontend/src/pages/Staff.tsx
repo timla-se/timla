@@ -2,7 +2,7 @@ import type { ChangeEvent, ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Flex, Spinner } from '@radix-ui/themes'
-import { Badge, Button, Callout, ConfirmModal, Dropdown, Switch, TextField } from '@swedev/ui'
+import { Badge, Button, Callout, ConfirmModal, Dropdown, SegmentedControl, Switch, TextField } from '@swedev/ui'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive, ArchiveRestore, Check, Copy, ListFilter, MoreHorizontal, Pencil,
@@ -262,26 +262,6 @@ function StatCard({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function FilterTab({ label, count, active, onClick }: {
-  label: string
-  count: number
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={
-        active
-          ? 'cursor-pointer rounded-lg border-0 bg-white px-4 py-2 text-13 font-bold text-ink shadow-[0_1px_3px_rgb(90_60_20/0.1)]'
-          : 'cursor-pointer rounded-lg border-0 bg-transparent px-4 py-2 text-13 font-semibold text-warm-gray'
-      }
-    >
-      {label} · {count}
-    </button>
-  )
-}
-
 const ROW_GRID = 'grid grid-cols-[2.3fr_1.5fr_1.6fr_1fr_1.1fr_40px] items-center gap-3.5'
 
 type Tab = 'alla' | 'aktiva' | 'arkiverade'
@@ -490,11 +470,15 @@ export default function Staff() {
 
       {/* Filter tabs + sort */}
       <div className="mb-3.5 flex items-center justify-between">
-        <div className="flex gap-1.5 rounded-10 bg-chip p-1">
-          <FilterTab label="Alla" count={staff.length} active={tab === 'alla'} onClick={() => setTab('alla')} />
-          <FilterTab label="Aktiva" count={active.length} active={tab === 'aktiva'} onClick={() => setTab('aktiva')} />
-          <FilterTab label="Arkiverade" count={staff.length - active.length} active={tab === 'arkiverade'} onClick={() => setTab('arkiverade')} />
-        </div>
+        <SegmentedControl
+          value={tab}
+          onValueChange={(v) => setTab(v as Tab)}
+          items={[
+            { value: 'alla', label: 'Alla', count: staff.length },
+            { value: 'aktiva', label: 'Aktiva', count: active.length },
+            { value: 'arkiverade', label: 'Arkiverade', count: staff.length - active.length },
+          ]}
+        />
         <button
           onClick={() => setSortBy((s) => (s === 'namn' ? 'roll' : 'namn'))}
           className="flex cursor-pointer items-center gap-2 border-0 bg-transparent font-mono text-13 text-warm-gray"
