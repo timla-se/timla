@@ -1,0 +1,7 @@
+{
+  "owner": "timla-se",
+  "name": "timla",
+  "default_branch": "main",
+  "pr_base_branch": "main",
+  "release_branch": "release/<major>.<minor>.x"
+}

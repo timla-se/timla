@@ -9,6 +9,11 @@ scheduling (arbetsschema) module only; plan lives in milestone
 - Branch + PR flow — never commit directly to main.
 - **All PRs are squash-merged** (enforced in repo settings).
 - CI must be green before merge: eslint, tsc, vite build, alembic + pytest.
+- **Issue creation:** always set the GitHub **issue type** (`Task` /
+  `Bug` / `Feature`) — it is the primary classifier, not labels. There is
+  no `bug` label; bugs are the `Bug` issue type. The canonical repo label
+  set lives in [`agent-docs/github/labels.json`](agent-docs/github/labels.json)
+  — use those; don't invent new labels ad hoc.
 
 ## Architecture
 

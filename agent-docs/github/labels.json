@@ -1,0 +1,42 @@
+[
+  {
+    "name": "documentation",
+    "description": "Improvements or additions to documentation",
+    "color": "0075ca"
+  },
+  {
+    "name": "question",
+    "description": "Further information is requested",
+    "color": "d876e3"
+  },
+  {
+    "name": "reviewed",
+    "description": "PR for this issue has been reviewed",
+    "color": "0e8a16"
+  },
+  {
+    "name": "plan exists",
+    "description": "Implementation plan exists in agent-docs/issue/",
+    "color": "0e8a16"
+  },
+  {
+    "name": "area: backend",
+    "description": "Flask/psycopg3 code in app/",
+    "color": "1d76db"
+  },
+  {
+    "name": "area: frontend",
+    "description": "React/Vite code in frontend/",
+    "color": "5319e7"
+  },
+  {
+    "name": "area: db",
+    "description": "Alembic migrations & schema",
+    "color": "b60205"
+  },
+  {
+    "name": "area: design-system",
+    "description": "Design system: /design source docs, tokens, @swedev/ui components",
+    "color": "c2e0c6"
+  }
+]
