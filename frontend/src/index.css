@@ -66,8 +66,13 @@
   --color-stop-soft: color-mix(in srgb, var(--color-stop) 14%, white); /* ≈ #f7e6df, absorbs #f9ebe4 #f4dbd1 */
   --color-stop-line: color-mix(in srgb, var(--color-stop) 24%, white); /* ≈ #efcdbf */
   --color-stop-strong: color-mix(in srgb, var(--color-stop), black 15%); /* ≈ #a44227, absorbs #a24327 */
-  --color-wait-soft: color-mix(in srgb, var(--color-wait) 35%, white); /* ≈ #f6e2b6 */
-  --color-wait-line: color-mix(in srgb, var(--color-wait) 28%, white); /* ≈ #eeddb8 */
+  /* The wait/amber ramp is hand-tuned toward tan, not a linear tint of the
+   * saturated base — color-mix(wait, white) stays orange and can't reach these
+   * targets (and 28% would compute lighter than the 35% soft, inverting the
+   * soft<line order ok/stop keep). So soft/line are canonical raw hex; only
+   * the darker -strong (hue-preserving) stays color-mix-derived. */
+  --color-wait-soft: #f6e2b6;
+  --color-wait-line: #eeddb8;
   --color-wait-strong: color-mix(in srgb, var(--color-wait), black 28%); /* ≈ #a5711a, absorbs #8a5e14 #c9a24a */
 
   /* --- Warm neutral surfaces/lines (canonical raw hex — design-picked,
