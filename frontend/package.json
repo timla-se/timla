@@ -15,7 +15,7 @@
     "@fontsource-variable/hanken-grotesk": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@radix-ui/themes": "^3.0.0",
-    "@swedev/ui": "^0.4.0",
+    "@swedev/ui": "^0.5.0",
     "@tanstack/react-query": "^5.62.0",
     "lucide-react": "^0.469.0",
     "react": "^19.0.0",

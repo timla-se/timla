@@ -333,6 +333,62 @@ body {
   font-family: var(--font-mono);
 }
 
+/* @swedev/ui ships SegmentedControl's skin in @layer swedev, but this app
+ * imports Radix Themes CSS unlayered (main.tsx), so those layered overrides
+ * lose to Radix's own defaults on colliding properties (same cascade reason as
+ * the .font-mono override above). Re-assert just the colliding bits unlayered:
+ * the chip radius and the inset white indicator pill. Pinned to radix-themes 3.3. */
+.rt-SegmentedControlRoot {
+  --segmented-control-border-radius: 14px;
+  background-color: var(--gray-3);
+}
+.rt-SegmentedControlIndicator::before {
+  inset: 4px;
+  border-radius: 10px;
+  background-color: var(--color-panel-solid, #fff);
+  box-shadow: 0 1px 3px rgb(90 60 20 / 0.12);
+}
+
+/* Chunky availability slider (/svar): the @swedev/ui RangeSlider renders a
+ * plain Radix Slider; this scopes the Timla look (taller warm track, rounded
+ * white pill handles) to that control only. The accent follows the `semantic`
+ * prop via --accent-9 (jade/red, remapped to --color-ok/--color-stop above),
+ * so the range fill is already correct and needs no override. The thumb
+ * ::before is Radix's touch target — capped so it doesn't overflow the track.
+ * Pinned to radix-themes 3.3 pseudo-element structure. */
+.svar-range {
+  --slider-track-size: 34px;
+}
+.svar-range .rt-SliderTrack {
+  background-color: var(--color-chip);
+}
+/* Radix keeps large thumbs inside the track by insetting them proportionally to
+ * their measured width, which decouples the thumb from the range fill (raw %) at
+ * the extremes once the thumb is big. Shrink the actual thumb box to a point so
+ * that inset is negligible and the visible pill tracks the fill edge exactly
+ * (like the original hand-rolled slider). The pill and hit-area come from
+ * ::after/::before below, so the tiny box itself is invisible. */
+.svar-range .rt-SliderThumb {
+  width: 2px;
+  min-width: 2px;
+}
+.svar-range .rt-SliderThumb::after {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 30px;
+  border-radius: 8px;
+  background-color: #fff;
+  border: 1.5px solid var(--accent-9);
+  box-shadow: 0 2px 6px rgb(90 60 20 / 0.28);
+}
+.svar-range .rt-SliderThumb::before {
+  width: 44px;
+  height: var(--slider-track-size);
+}
+
 /* Warm focus ring for elements without component-specific focus styling
  * (e.g. plain buttons) — the browser default ring is blue. :where() keeps
  * specificity at zero so Radix's own focus styles always win. */
