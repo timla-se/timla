@@ -15,18 +15,18 @@ import { Lockup } from './Lockup'
 export default function SignUpScreen() {
   return (
     <Flex align="center" justify="center" style={{ minHeight: '100vh' }} className="bg-paper">
-      <Flex className="max-w-full overflow-hidden rounded-[22px] border border-warm-border shadow-[0_24px_70px_rgb(90_60_20/0.18)]">
+      <Flex className="max-w-full overflow-hidden rounded-20 border border-warm-border shadow-[0_24px_70px_rgb(90_60_20/0.18)]">
         <Flex
           direction="column"
           justify="between"
-          className="hidden w-[400px] shrink-0 bg-ink p-[46px_42px] md:flex"
+          className="hidden w-100 shrink-0 bg-ink px-10.5 py-11.5 md:flex"
         >
-          <Lockup variant="cream" className="h-[30px] w-auto" />
+          <Lockup variant="cream" className="h-7.5 w-auto" />
           <div>
-            <h1 className="m-0 mb-5 max-w-[15ch] text-[34px] font-extrabold leading-[1.1] tracking-[-.03em] text-white">
+            <h1 className="m-0 mb-5 max-w-[15ch] text-30 font-extrabold leading-none tracking-tight text-white">
               Kom igång på några minuter.
             </h1>
-            <p className="m-0 max-w-[34ch] text-[15px] leading-relaxed text-[#c9bdaa]">
+            <p className="m-0 max-w-[34ch] text-15 leading-relaxed text-sidebar-muted">
               Skapa ett konto, sätt upp din verksamhet och bjud in kollegor sen.
             </p>
           </div>

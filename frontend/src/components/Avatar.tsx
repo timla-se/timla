@@ -3,12 +3,12 @@
  * color. Ink gets honey text, ochre gets ink — the design's pairings. */
 
 const PALETTE: { bg: string; fg: string }[] = [
-  { bg: '#e69a2e', fg: '#231d16' },
-  { bg: '#4f7358', fg: '#ffffff' },
-  { bg: '#c05a3a', fg: '#ffffff' },
-  { bg: '#7a6a52', fg: '#ffffff' },
-  { bg: '#231d16', fg: '#f2c14e' },
-  { bg: '#b98a2e', fg: '#ffffff' },
+  { bg: 'var(--ochre)', fg: 'var(--ink)' },
+  { bg: 'var(--ok)', fg: 'white' },
+  { bg: 'var(--stop)', fg: 'white' },
+  { bg: 'var(--ink-soft)', fg: 'white' }, // was 7a6a52 — snapped
+  { bg: 'var(--ink)', fg: 'var(--honey)' },
+  { bg: 'var(--ochre-deep)', fg: 'white' }, // was b98a2e — snapped
 ]
 
 export function initials(name: string): string {
@@ -31,8 +31,8 @@ export function Avatar({ id, name, size = 38, muted = false }: {
   muted?: boolean
 }) {
   const { bg, fg } = muted
-    ? { bg: '#c2b291', fg: '#ffffff' }
-    : PALETTE[hash(id) % PALETTE.length] ?? { bg: '#e69a2e', fg: '#231d16' }
+    ? { bg: 'var(--muted)', fg: 'white' } // was c2b291 — snapped to lera-grå
+    : PALETTE[hash(id) % PALETTE.length] ?? { bg: 'var(--ochre)', fg: 'var(--ink)' }
   return (
     <div
       aria-hidden
