@@ -1,14 +1,15 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { Flex, Spinner } from '@radix-ui/themes'
-import { Callout } from '@swedev/ui'
+import { Button, Callout } from '@swedev/ui'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { getOrg, getPublication, listShifts, listStaff } from '../api'
 import { EmptyState } from '../components/EmptyState'
 import { useTopbarSearch } from '../components/Layout'
 import { Mono } from '../components/Mono'
+import { ShiftModal, type ShiftModalInitial } from '../components/ShiftModal'
 import { addWeeks, formatDayDate, formatIsoDate, formatWeekLabel, minutesToTime, parseWeekPeriod, wallClock } from '../time'
 import type { Shift } from '../types'
 
@@ -130,6 +131,7 @@ export default function Schedule() {
   const navigate = useNavigate()
   const { week: period = '' } = useParams()
   const { query } = useTopbarSearch()
+  const [modal, setModal] = useState<ShiftModalInitial | null>(null)
 
   const validPeriod = useMemo(() => {
     try { parseWeekPeriod(period); return true } catch { return false }
@@ -168,7 +170,20 @@ export default function Schedule() {
   const scheduledStaff = new Set(shifts.map((s) => s.staff_id).filter(Boolean)).size
   const needle = query.trim().toLowerCase()
 
+  // "Nytt pass" defaults to today when this week is shown, else its Monday.
+  const defaultCreateDate = days.find((d) => d.isoDate === today)?.isoDate ?? days[0]?.isoDate ?? ''
+  const openCreate = (isoDate: string, startMinute?: number) =>
+    setModal({ mode: 'create', isoDate, startMinute })
+
   const pct = (minute: number) => ((minute - firstHour * 60) / spanMinutes) * 100
+
+  // Inverse of pct: the clicked point on a day row → the whole hour it lands in
+  // (clamped to the visible span), for prefilling a new shift.
+  const hourFromClick = (e: { clientX: number; currentTarget: HTMLElement }): number => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const minute = firstHour * 60 + ((e.clientX - rect.left) / rect.width) * spanMinutes
+    return Math.max(firstHour, Math.min(lastHour - 1, Math.floor(minute / 60))) * 60
+  }
 
   const coverageFor = (day: Day, hour: number): { color: string; count: number } => {
     const hourStart = hour * 60, hourEnd = hourStart + 60
@@ -231,8 +246,8 @@ export default function Schedule() {
             {shifts.length} pass · {scheduledStaff} i personal
           </Mono>
         </div>
-        {/* "Publicera schema" (#10) and "Auto-schemalägg" (#11) land here */}
-        <div className="mb-0.5">
+        {/* "Publicera schema" (#10) and "Auto-schemalägg" (#11) land here too */}
+        <div className="mb-0.5 flex items-center gap-3">
           {publicationLoaded && (publication ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-3 py-1.5 text-13 font-semibold text-ok-strong">
               <span className="h-1.75 w-1.75 rounded-full bg-ok" />
@@ -244,6 +259,10 @@ export default function Schedule() {
               Utkast
             </span>
           ))}
+          <Button
+            className="btn-ink" semantic="action" icon={CalendarPlus} text="Nytt pass"
+            onClick={() => openCreate(defaultCreateDate)}
+          />
         </div>
       </div>
 
@@ -264,7 +283,13 @@ export default function Schedule() {
       {empty ? (
         <EmptyState
           title="Inga pass den här veckan ännu"
-          description="Passläggning kommer med schemaredigeraren (#9)."
+          description="Skapa det första passet för veckan."
+          action={
+            <Button
+              className="btn-ink" semantic="action" icon={CalendarPlus} text="Skapa första passet"
+              onClick={() => openCreate(defaultCreateDate)}
+            />
+          }
         />
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-warm-line bg-white">
@@ -300,7 +325,8 @@ export default function Schedule() {
                     </Mono>
                   </div>
                   <div
-                    className="relative"
+                    className="relative cursor-pointer"
+                    onClick={(e) => openCreate(day.isoDate, hourFromClick(e))}
                     style={{
                       height: rowHeight,
                       // f6ead0/f4ead2 both snapped onto warm-line — the
@@ -335,10 +361,13 @@ export default function Schedule() {
                       const tint = colorKey(s.shift.staff_id)
                       const dimmed = needle !== '' && !name.toLowerCase().includes(needle)
                       return (
-                        <div
+                        <button
                           key={s.shift.id}
+                          type="button"
                           title={s.shift.note ?? undefined}
-                          className="absolute flex items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg border px-2.25 text-11"
+                          aria-label={`Redigera pass, ${name} ${timeLabel(s)}`}
+                          onClick={(e) => { e.stopPropagation(); setModal({ mode: 'edit', shift: s.shift }) }}
+                          className="absolute flex cursor-pointer items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg border px-2.25 text-left text-11 hover:brightness-95"
                           style={{
                             left: `${pct(s.startMinute)}%`,
                             width: `${pct(s.endMinute) - pct(s.startMinute)}%`,
@@ -353,7 +382,7 @@ export default function Schedule() {
                         >
                           <span className="font-bold">{name}</span>
                           <Mono className="text-10 opacity-80">{timeLabel(s)}</Mono>
-                        </div>
+                        </button>
                       )
                     })}
                   </div>
@@ -362,6 +391,17 @@ export default function Schedule() {
             })}
           </div>
         </div>
+      )}
+
+      {modal && (
+        <ShiftModal
+          key={modal.mode === 'edit' ? modal.shift.id : `create-${modal.isoDate}-${modal.startMinute ?? ''}`}
+          initial={modal}
+          period={period}
+          tz={tz}
+          staff={staff}
+          onClose={() => setModal(null)}
+        />
       )}
     </div>
   )
