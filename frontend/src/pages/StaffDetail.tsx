@@ -142,10 +142,15 @@ export default function StaffDetail() {
   const [showTimes, setShowTimes] = useState(false)
 
   // Önskemål: per-staff fields from /data/staff (not the availability doc) —
-  // their own dirty flag + save so a failed request can't half-save the page.
+  // their own save so a failed request can't half-save the page. Dirty is
+  // tracked per field (like the phone's dirtyPerWeek/dirtyNote): the PATCH
+  // omits untouched fields, so a stale loaded value can never overwrite a
+  // concurrent edit from the staff link.
   const [desiredShifts, setDesiredShifts] = useState('')
   const [prefsNote, setPrefsNote] = useState('')
-  const [prefsDirty, setPrefsDirty] = useState(false)
+  const [dirtyDesired, setDirtyDesired] = useState(false)
+  const [dirtyNote, setDirtyNote] = useState(false)
+  const prefsDirty = dirtyDesired || dirtyNote
   const [prefsFor, setPrefsFor] = useState<string | null>(null)
   useEffect(() => {
     if (!staff) return
@@ -156,7 +161,8 @@ export default function StaffDetail() {
       setPrefsFor(staff.id)
       setDesiredShifts(staff.desired_shifts_per_week === null ? '' : String(staff.desired_shifts_per_week))
       setPrefsNote(staff.availability_note ?? '')
-      setPrefsDirty(false)
+      setDirtyDesired(false)
+      setDirtyNote(false)
     }
   }, [staff, prefsDirty, prefsFor])
 
@@ -193,14 +199,22 @@ export default function StaffDetail() {
   const parsedDesired = parseDesiredShifts(desiredShifts)
   const savePrefs = useMutation({
     mutationFn: () => updateStaff(staffId, {
-      // The save button is disabled while parsedDesired === 'invalid', so the
-      // fallback here only satisfies the type checker.
-      desired_shifts_per_week: parsedDesired === 'invalid' ? null : parsedDesired,
-      availability_note: prefsNote.trim() || null,
+      // Only the fields the manager touched: the backend PATCH is per-field,
+      // so omitting a key leaves any concurrent /svar edit of it intact.
+      // (The save button is disabled while parsedDesired === 'invalid', so
+      // that fallback only satisfies the type checker.)
+      ...(dirtyDesired
+        ? { desired_shifts_per_week: parsedDesired === 'invalid' ? null : parsedDesired }
+        : {}),
+      ...(dirtyNote ? { availability_note: prefsNote.trim() || null } : {}),
     }),
     // Invalidate the whole ['staff'] family: this page and Staff.tsx share
     // the ['staff', true] list query.
-    onSuccess: () => { setPrefsDirty(false); queryClient.invalidateQueries({ queryKey: ['staff'] }) },
+    onSuccess: () => {
+      setDirtyDesired(false)
+      setDirtyNote(false)
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
+    },
   })
 
   const removeException = useMutation({
@@ -279,13 +293,13 @@ export default function StaffDetail() {
               <TextField.Root
                 inputMode="numeric" placeholder="–" style={{ width: 72 }}
                 value={desiredShifts}
-                onChange={(e) => { setDesiredShifts(e.target.value); setPrefsDirty(true) }}
+                onChange={(e) => { setDesiredShifts(e.target.value); setDirtyDesired(true) }}
               />
             </Flex>
             <TextArea.Root
               placeholder="Anteckning om tillgänglighet — samma text som personalens &quot;Något chefen bör veta?&quot;"
               maxLength={1000} value={prefsNote}
-              onChange={(e) => { setPrefsNote(e.target.value); setPrefsDirty(true) }}
+              onChange={(e) => { setPrefsNote(e.target.value); setDirtyNote(true) }}
             />
             <Flex gap="3" align="center">
               <Button
@@ -325,7 +339,12 @@ export default function StaffDetail() {
               <Button
                 semantic="neutral" variant={showTimes ? 'soft' : 'ghost'} size="1"
                 icon={ChevronDown} text="Vissa tider" aria-expanded={showTimes}
-                onClick={() => setShowTimes((v) => !v)}
+                onClick={() => {
+                  // Collapsing resets to whole day: hidden times must never be
+                  // submitted, nor block the add button while invisible.
+                  if (showTimes) { setNewExceptionStart('00:00'); setNewExceptionEnd('00:00') }
+                  setShowTimes(!showTimes)
+                }}
               />
             </Flex>
             {showTimes && (
