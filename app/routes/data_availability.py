@@ -1,8 +1,9 @@
 """/data/availability — the availability document per staff member.
 
-Two layers (see issue #2): wishes (recurring only) and hard blocks
-(recurring pattern + dated exceptions). PUT replaces the recurring
-patterns; dated exceptions have their own sub-resource. With a period
+Two layers (issues #2, #40): soft wishes and hard blocks, each either
+recurring (weekday) or dated (on_date); dated rows of both kinds live
+under `exceptions`. PUT replaces the recurring pattern per submitted
+kind; dated exceptions have their own sub-resource. With a period
 query, GET returns the read-only expansion to concrete UTC intervals.
 """
 
@@ -134,6 +135,17 @@ def replace_availability(staff_id):
         with conn.cursor() as cur:
             submitted = [(k, v) for k, v in (('wish', wishes), ('block', blocks)) if v is not None]
             if submitted:
+                # Rows that round-trip verbatim keep their prior provenance —
+                # re-stamping them would attribute staff-entered rows to the
+                # manager surface. Mirrors the /svar PUT.
+                cur.execute(
+                    """SELECT kind, weekday, start_minute, end_minute, source
+                       FROM availability_interval
+                       WHERE staff_id = %s AND on_date IS NULL AND kind = ANY(%s)""",
+                    (staff_id, [k for k, _ in submitted]),
+                )
+                prior_source = {(r['kind'], r['weekday'], r['start_minute'], r['end_minute']): r['source']
+                                for r in cur.fetchall()}
                 cur.execute(
                     """DELETE FROM availability_interval
                        WHERE staff_id = %s AND on_date IS NULL AND kind = ANY(%s)""",
@@ -141,12 +153,14 @@ def replace_availability(staff_id):
                 )
                 for kind, items in submitted:
                     for item in items:
+                        key = (kind, item['weekday'], item['start_minute'], item['end_minute'])
                         cur.execute(
                             """INSERT INTO availability_interval
                                    (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
-                               VALUES (%s, %s, %s, %s, %s, %s, 'manager')""",
+                               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                             (org['id'], staff_id, kind, item['weekday'],
-                             item['start_minute'], item['end_minute']),
+                             item['start_minute'], item['end_minute'],
+                             prior_source[key] if key in prior_source else 'manager'),
                         )
         conn.commit()
         rows = _load_intervals(conn, staff_id)

@@ -140,6 +140,25 @@ def test_manager_put_per_kind_presence_semantics(client, make_staff):
     assert client.put(f"/data/availability/{sid}", json={'wishes': None}).status_code == 400
 
 
+def test_manager_put_preserves_provenance_on_verbatim_rows(client, make_staff, org_id):
+    sid = make_staff()['id']
+    with psycopg.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO availability_interval
+                       (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+                   VALUES (%s, %s, 'wish', 2, 540, 1020, 'staff')""",
+                (org_id, sid),
+            )
+        conn.commit()
+    client.put(f"/data/availability/{sid}", json={'wishes': [
+        {'weekday': 2, 'start_minute': 540, 'end_minute': 1020},   # verbatim round-trip
+        {'weekday': 5, 'start_minute': 600, 'end_minute': 960},    # actually new
+    ]})
+    doc = client.get(f"/data/availability/{sid}").get_json()
+    assert {w['weekday']: w['source'] for w in doc['wishes']} == {2: 'staff', 5: 'manager'}
+
+
 def test_manager_dated_wish_exception_with_note_and_provenance(client, make_staff):
     sid = make_staff()['id']
     resp = client.post(f"/data/availability/{sid}/exceptions",

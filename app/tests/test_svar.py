@@ -51,11 +51,11 @@ def _add_exception(cur, org_id, staff_id, on_date, start=0, end=1440):
     return str(cur.fetchone()['id'])
 
 
-def _add_recurring(cur, org_id, staff_id, kind, weekday, start=0, end=1440):
+def _add_recurring(cur, org_id, staff_id, kind, weekday, start=0, end=1440, source=None):
     cur.execute(
-        """INSERT INTO availability_interval (org_id, staff_id, kind, weekday, start_minute, end_minute)
-           VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
-        (org_id, staff_id, kind, weekday, start, end),
+        """INSERT INTO availability_interval (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+           VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+        (org_id, staff_id, kind, weekday, start, end, source),
     )
     return str(cur.fetchone()['id'])
 
@@ -432,6 +432,22 @@ def test_put_empty_body_is_noop(client, org):
     body = resp.get_json()
     assert {w['weekday'] for w in body['availability']['wishes']} == {3}
     assert {b['weekday'] for b in body['availability']['blocks']} == {7}
+
+
+def test_put_preserves_provenance_on_verbatim_rows(client, org):
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            _add_recurring(cur, org, staff_id, 'wish', 2, 540, 1020, source='manager')
+            _add_recurring(cur, org, staff_id, 'wish', 4, 540, 1020)  # pre-#40 row, provenance unknown
+        conn.commit()
+    body = client.put(f'/svar/{token}/availability', json={'wishes': [
+        {'weekday': 2, 'start_minute': 540, 'end_minute': 1020},   # verbatim round-trip
+        {'weekday': 4, 'start_minute': 540, 'end_minute': 1020},   # verbatim, unknown source
+        {'weekday': 5, 'start_minute': 600, 'end_minute': 960},    # actually new
+    ]}).get_json()
+    by_day = {w['weekday']: w['source'] for w in body['availability']['wishes']}
+    assert by_day == {2: 'manager', 4: None, 5: 'staff'}
 
 
 @pytest.mark.parametrize('payload', [{'wishes': None}, {'blocks': None}])

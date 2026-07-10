@@ -157,6 +157,17 @@ def put_availability(token):
             #    are untouched here; they have their own delta below (review H1).
             submitted = [(k, v) for k, v in (('wish', wishes), ('block', blocks)) if v is not None]
             if submitted:
+                # Rows that round-trip verbatim (untouched weekdays sent back
+                # exactly as stored) keep their prior provenance — re-stamping
+                # them would attribute manager-entered rows to the phone.
+                cur.execute(
+                    """SELECT kind, weekday, start_minute, end_minute, source
+                       FROM availability_interval
+                       WHERE staff_id = %s AND on_date IS NULL AND kind = ANY(%s)""",
+                    (staff['id'], [k for k, _ in submitted]),
+                )
+                prior_source = {(r['kind'], r['weekday'], r['start_minute'], r['end_minute']): r['source']
+                                for r in cur.fetchall()}
                 cur.execute(
                     """DELETE FROM availability_interval
                        WHERE staff_id = %s AND on_date IS NULL AND kind = ANY(%s)""",
@@ -164,12 +175,14 @@ def put_availability(token):
                 )
                 for kind, items in submitted:
                     for it in items:
+                        key = (kind, it['weekday'], it['start_minute'], it['end_minute'])
                         cur.execute(
                             """INSERT INTO availability_interval
                                    (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
-                               VALUES (%s, %s, %s, %s, %s, %s, 'staff')""",
+                               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                             (staff['org_id'], staff['id'], kind,
-                             it['weekday'], it['start_minute'], it['end_minute']),
+                             it['weekday'], it['start_minute'], it['end_minute'],
+                             prior_source[key] if key in prior_source else 'staff'),
                         )
             # 2. Dated exceptions: explicit delta, never a blind delete-all
             #    (review H1). Remove only ids that belong to this staff.
