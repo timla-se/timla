@@ -83,26 +83,39 @@ def current_org(conn):
     return org
 
 
-def resolve_period(required=True):
-    """Parse ?period=2026-W28 or ?from=YYYY-MM-DD&to=YYYY-MM-DD (to inclusive).
+def parse_period(mapping, *, reject_both=False):
+    """Parse a period from a dict-like: period=2026-W28 or from/to ISO dates
+    (to inclusive). Shared by the query side (resolve_period) and JSON bodies
+    (POST /action/publish), so it must be robust to JSON-typed garbage that
+    query strings can't produce (numbers, lists, null → 400, never a 500).
 
-    Returns local dates [start, end) or None when absent and not required.
+    Returns local dates [start, end), or None when neither form is present.
+    With reject_both (write bodies), giving both forms is a 400; otherwise
+    period wins silently (the established query-side behavior).
     """
-    period = request.args.get('period')
-    if period:
+    period = mapping.get('period')
+    has_period = period is not None and period != ''
+    from_v, to_v = mapping.get('from'), mapping.get('to')
+    has_range = (from_v is not None and from_v != '') or (to_v is not None and to_v != '')
+
+    if reject_both and has_period and has_range:
+        raise ApiError(400, 'invalid_period', 'give period or from/to, not both')
+
+    if has_period:
+        if not isinstance(period, str):
+            raise ApiError(400, 'invalid_period', "period must be an ISO week like '2026-W28'")
         try:
             monday = week_monday(period)
         except ValueError:
             raise ApiError(400, 'invalid_period', "period must be an ISO week like '2026-W28'")
         return monday, monday + timedelta(days=7)
 
-    from_s, to_s = request.args.get('from'), request.args.get('to')
-    if from_s or to_s:
-        if not (from_s and to_s):
+    if has_range:
+        if (from_v is None or from_v == '') or (to_v is None or to_v == ''):
             raise ApiError(400, 'invalid_period', 'from and to must both be given')
         try:
-            start, to = date.fromisoformat(from_s), date.fromisoformat(to_s)
-        except ValueError:
+            start, to = date.fromisoformat(from_v), date.fromisoformat(to_v)
+        except (TypeError, ValueError):
             raise ApiError(400, 'invalid_period', 'from/to must be ISO dates (YYYY-MM-DD)')
         if to < start:
             raise ApiError(400, 'invalid_period', 'to must not be before from')
@@ -110,9 +123,18 @@ def resolve_period(required=True):
             raise ApiError(400, 'invalid_period', 'range must be at most one year')
         return start, to + timedelta(days=1)
 
-    if required:
-        raise ApiError(400, 'missing_period', "give ?period=2026-W28 or ?from=...&to=...")
     return None
+
+
+def resolve_period(required=True):
+    """Parse ?period=2026-W28 or ?from=YYYY-MM-DD&to=YYYY-MM-DD (to inclusive).
+
+    Returns local dates [start, end) or None when absent and not required.
+    """
+    result = parse_period(request.args)
+    if result is None and required:
+        raise ApiError(400, 'missing_period', "give ?period=2026-W28 or ?from=...&to=...")
+    return result
 
 
 def require_staff(conn, org_id, staff_id):

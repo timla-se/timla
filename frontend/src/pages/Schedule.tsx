@@ -2,16 +2,16 @@ import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { Flex, Spinner } from '@radix-ui/themes'
 import { Button, Callout } from '@swedev/ui'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { getOrg, getPublication, listShifts, listStaff } from '../api'
+import { ApiError, getOrg, getPublications, listShifts, listStaff, publishSchedule } from '../api'
 import { EmptyState } from '../components/EmptyState'
 import { useTopbarSearch } from '../components/Layout'
 import { Mono } from '../components/Mono'
 import { ShiftModal, type ShiftModalInitial } from '../components/ShiftModal'
 import { addWeeks, formatDayDate, formatIsoDate, formatWeekLabel, minutesToTime, parseWeekPeriod, wallClock } from '../time'
-import type { Shift } from '../types'
+import type { Publication, Shift } from '../types'
 
 /** Read-only Arbetsschema week view (issue #8), per
  * design/Timla App - Arbetsschema Strandkiosken.dc.html. Editing is #9,
@@ -111,6 +111,31 @@ function buildDays(shifts: Shift[], tz: string, period: string): Day[] {
   })
 }
 
+/** The week's publish badge, derived from the publications overlapping it
+ * (#10). Publications are arbitrary date ranges, so a week can be covered by
+ * none, part, one, or several of them:
+ * - no day covered → draft ("Utkast")
+ * - every day covered, none diverged → published (latest published_at)
+ * - every day covered, some diverged → "Ändringar sedan publicering"
+ * - some days covered → "Delvis publicerad" (distinct wording — "changed
+ *   since publish" would be a lie about days that were never published) */
+export type PublishState =
+  | { kind: 'draft' }
+  | { kind: 'published'; publishedAt: string }
+  | { kind: 'diverged' }
+  | { kind: 'partial' }
+
+export function publishState(isoDates: string[], pubs: Publication[]): PublishState {
+  // Inclusive from/to; ISO date strings compare correctly as strings.
+  const covered = isoDates.filter((d) => pubs.some((p) => p.from <= d && d <= p.to))
+  if (covered.length === 0) return { kind: 'draft' }
+  if (covered.length < isoDates.length) return { kind: 'partial' }
+  if (pubs.some((p) => p.diverged)) return { kind: 'diverged' }
+  // pubs is non-empty here (some day was covered), so a latest stamp exists.
+  const publishedAt = pubs.map((p) => p.published_at).sort()[pubs.length - 1]!
+  return { kind: 'published', publishedAt }
+}
+
 function hourSpan(days: Day[]): { firstHour: number; lastHour: number } {
   const all = days.flatMap((d) => d.shifts)
   if (all.length === 0) return { firstHour: 8, lastHour: 20 }
@@ -147,10 +172,16 @@ export default function Schedule() {
     queryFn: () => listShifts(period),
     enabled: validPeriod,
   })
-  const { data: publication, isSuccess: publicationLoaded } = useQuery({
+  const { data: publications = [], isSuccess: publicationLoaded } = useQuery({
     queryKey: ['publication', period],
-    queryFn: () => getPublication(period),
+    queryFn: () => getPublications(period),
     enabled: validPeriod,
+  })
+
+  const queryClient = useQueryClient()
+  const publish = useMutation({
+    mutationFn: () => publishSchedule({ period }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['publication'] }),
   })
 
   const tz = org?.timezone ?? 'Europe/Stockholm'
@@ -167,6 +198,7 @@ export default function Schedule() {
   const staffById = new Map(staff.map((s) => [s.id, s]))
   const today = wallClock(new Date().toISOString(), tz).isoDate
   const label = formatWeekLabel(period)
+  const pubState = publishState(days.map((d) => d.isoDate), publications)
   const scheduledStaff = new Set(shifts.map((s) => s.staff_id).filter(Boolean)).size
   const needle = query.trim().toLowerCase()
 
@@ -246,25 +278,48 @@ export default function Schedule() {
             {shifts.length} pass · {scheduledStaff} i personal
           </Mono>
         </div>
-        {/* "Publicera schema" (#10) and "Auto-schemalägg" (#11) land here too */}
+        {/* "Auto-schemalägg" (#11) lands here too */}
         <div className="mb-0.5 flex items-center gap-3">
-          {publicationLoaded && (publication ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-3 py-1.5 text-13 font-semibold text-ok-strong">
-              <span className="h-1.75 w-1.75 rounded-full bg-ok" />
-              Publicerad {formatDayDate(new Date(publication.published_at))}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-chip px-3 py-1.5 text-13 font-semibold text-warm-gray">
-              <span className="h-1.75 w-1.75 rounded-full bg-warm-sand" />
-              Utkast
-            </span>
-          ))}
+          {publicationLoaded && (
+            pubState.kind === 'published' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-3 py-1.5 text-13 font-semibold text-ok-strong">
+                <span className="h-1.75 w-1.75 rounded-full bg-ok" />
+                Publicerad {formatDayDate(new Date(pubState.publishedAt))}
+              </span>
+            ) : pubState.kind === 'diverged' || pubState.kind === 'partial' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-wait-soft px-3 py-1.5 text-13 font-semibold text-wait-strong">
+                <span className="h-1.75 w-1.75 rounded-full bg-wait" />
+                {pubState.kind === 'diverged' ? 'Ändringar sedan publicering' : 'Delvis publicerad'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-chip px-3 py-1.5 text-13 font-semibold text-warm-gray">
+                <span className="h-1.75 w-1.75 rounded-full bg-warm-sand" />
+                Utkast
+              </span>
+            )
+          )}
+          <Button
+            semantic="action" variant="surface" text={publish.isPending ? 'Publicerar…' : 'Publicera schema'}
+            disabled={publish.isPending} onClick={() => publish.mutate()}
+          />
           <Button
             className="btn-ink" semantic="action" icon={CalendarPlus} text="Nytt pass"
             onClick={() => openCreate(defaultCreateDate)}
           />
         </div>
       </div>
+
+      {publish.isError && (
+        <div className="mb-3.5">
+          <Callout
+            semantic="error"
+            title="Kunde inte publicera"
+            message={publish.error instanceof ApiError && publish.error.status === 409
+              ? 'Publiceringen krockade med en annan publicering — försök igen.'
+              : 'Något gick fel — försök igen.'}
+          />
+        </div>
+      )}
 
       {/* Legend (Erfarenhet group joins via #27) */}
       <div className="mb-3.5 flex flex-wrap items-center gap-4 text-13">

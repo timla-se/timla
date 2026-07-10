@@ -143,33 +143,56 @@ def test_dated_block_is_allowed(db, org_id, staff_id):
         assert cur.fetchone()[0] is not None
 
 
-def test_publication_upsert_one_per_week(db, org_id):
-    with db.cursor() as cur:
-        cur.execute(
-            """INSERT INTO publication (org_id, week, shifts) VALUES (%s, '2026-W28', '[]')""",
-            (org_id,),
-        )
-        cur.execute(
-            """INSERT INTO publication (org_id, week, shifts)
-               VALUES (%s, '2026-W28', '[{"replaced": true}]')
-               ON CONFLICT (org_id, week)
-               DO UPDATE SET shifts = EXCLUDED.shifts, published_at = now()""",
-            (org_id,),
-        )
-        cur.execute('SELECT count(*), max(shifts::text) FROM publication WHERE org_id = %s', (org_id,))
-        count, shifts = cur.fetchone()
-    assert count == 1
-    assert 'replaced' in shifts
+def _insert_publication(cur, org_id, start, end):
+    cur.execute(
+        """INSERT INTO publication (org_id, period_start, period_end, shifts)
+           VALUES (%s, %s, %s, '[]') RETURNING id""",
+        (org_id, start, end),
+    )
+    return cur.fetchone()[0]
 
 
-@pytest.mark.parametrize('week', ['vecka-28', '2026-W00', '2026-W99'])
-def test_publication_rejects_malformed_or_out_of_range_week(db, org_id, week):
+def test_publication_rejects_non_positive_span(db, org_id):
     with pytest.raises(psycopg.errors.CheckViolation):
         with db.cursor() as cur:
-            cur.execute(
-                'INSERT INTO publication (org_id, week, shifts) VALUES (%s, %s, \'[]\')',
-                (org_id, week),
-            )
+            _insert_publication(cur, org_id, '2026-07-06', '2026-07-06')
+
+
+def test_publication_rejects_over_one_year_span(db, org_id):
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            _insert_publication(cur, org_id, '2026-01-01', '2027-01-03')
+
+
+def test_publication_rejects_overlap_within_org(db, org_id):
+    with pytest.raises(psycopg.errors.ExclusionViolation):
+        with db.cursor() as cur:
+            _insert_publication(cur, org_id, '2026-07-06', '2026-07-20')
+            _insert_publication(cur, org_id, '2026-07-13', '2026-07-27')
+
+
+def test_publication_allows_adjacent_ranges_and_other_org(db, org_id, other_org_id):
+    with db.cursor() as cur:
+        # end-exclusive storage: [06, 13) and [13, 20) are adjacent, not overlapping
+        _insert_publication(cur, org_id, '2026-07-06', '2026-07-13')
+        _insert_publication(cur, org_id, '2026-07-13', '2026-07-20')
+        # the same range in another org is fine — the constraint is per org
+        _insert_publication(cur, other_org_id, '2026-07-06', '2026-07-13')
+        cur.execute('SELECT count(*) FROM publication WHERE org_id IN (%s, %s)', (org_id, other_org_id))
+        assert cur.fetchone()[0] == 3
+
+
+@pytest.mark.parametrize('week, monday', [
+    ('2026-W01', '2025-12-29'),  # year-boundary ISO week
+    ('2026-W28', '2026-07-06'),
+    ('2020-W53', '2020-12-28'),  # long ISO year
+])
+def test_iso_week_backfill_expression_gives_monday(db, week, monday):
+    # Pins the 0004 backfill's parsing rule: to_date(week, 'IYYY-"W"IW')
+    # must yield the ISO week's Monday.
+    with db.cursor() as cur:
+        cur.execute("""SELECT to_date(%s, 'IYYY-"W"IW')""", (week,))
+        assert cur.fetchone()[0].isoformat() == monday
 
 
 @pytest.fixture

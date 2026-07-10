@@ -18,7 +18,7 @@ import pytest
 from app import app
 from config import DATABASE_URL
 from dbfixtures import db_available
-from weeks import iso_week_of, local_instant
+from weeks import iso_week_of, local_instant, week_monday
 
 pytestmark = pytest.mark.skipif(not db_available(), reason='no database reachable at DATABASE_URL')
 
@@ -63,13 +63,18 @@ def _add_recurring(cur, org_id, staff_id, kind, weekday, start=0, end=1440, sour
 def _publish_shift(cur, org_id, staff_id, tz, hours_from_now=26, length=6):
     starts = datetime.now(timezone.utc) + timedelta(hours=hours_from_now)
     ends = starts + timedelta(hours=length)
-    week = iso_week_of(starts, tz)
+    monday = week_monday(iso_week_of(starts, tz))
     snapshot = [{'id': str(uuid.uuid4()), 'staff_id': str(staff_id),
-                 'starts_at': starts.isoformat(), 'ends_at': ends.isoformat()}]
+                 'starts_at': starts.isoformat(), 'ends_at': ends.isoformat(),
+                 'note': None}]
     cur.execute(
-        """INSERT INTO publication (org_id, week, shifts) VALUES (%s, %s, %s)
-           ON CONFLICT (org_id, week) DO UPDATE SET shifts = EXCLUDED.shifts""",
-        (org_id, week, json.dumps(snapshot)),
+        'DELETE FROM publication WHERE org_id = %s AND period_start < %s AND period_end > %s',
+        (org_id, monday + timedelta(days=7), monday),
+    )
+    cur.execute(
+        """INSERT INTO publication (org_id, period_start, period_end, shifts)
+           VALUES (%s, %s, %s, %s)""",
+        (org_id, monday, monday + timedelta(days=7), json.dumps(snapshot)),
     )
     return starts
 
@@ -521,6 +526,78 @@ def test_staff_params_validation_400(client, org, payload):
             _, token = _mk_staff(cur, org)
         conn.commit()
     assert client.put(f'/svar/{token}/availability', json=payload).status_code == 400
+
+
+# --- publications as date ranges (#10) ---
+
+def test_multiweek_publication_spans_weeks(client, org):
+    """One publication spanning several ISO weeks: the link view shows shifts
+    from across the whole span (the read is a plain overlap query)."""
+    now = datetime.now(timezone.utc)
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            snapshot = []
+            for days_ahead in (2, 9):  # two shifts in different ISO weeks
+                starts = now + timedelta(days=days_ahead)
+                snapshot.append({'id': str(uuid.uuid4()), 'staff_id': str(staff_id),
+                                 'starts_at': starts.isoformat(),
+                                 'ends_at': (starts + timedelta(hours=4)).isoformat(),
+                                 'note': None})
+            cur.execute(
+                """INSERT INTO publication (org_id, period_start, period_end, shifts)
+                   VALUES (%s, %s, %s, %s)""",
+                (org, now.date() - timedelta(days=1), now.date() + timedelta(days=14),
+                 json.dumps(snapshot)),
+            )
+        conn.commit()
+    sched = client.get(f'/svar/{token}/data').get_json()['schedule']
+    assert sched['shift_count'] == 2
+    assert sched['hours'] == 8.0
+
+
+def test_staff_read_snapshot_not_live_edits(client, org):
+    """The issue #10 "Done when": with the manager mid-edit on a published
+    period, the staff link shows exactly the last published snapshot."""
+    user_id = f'user_pub_{uuid.uuid4().hex}'
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            cur.execute('INSERT INTO org_user (user_id, org_id) VALUES (%s, %s)', (user_id, org))
+        conn.commit()
+    client.environ_base['HTTP_X_TEST_USER'] = user_id
+
+    starts = (datetime.now(timezone.utc) + timedelta(days=2)).replace(microsecond=0)
+    ends = starts + timedelta(hours=6)
+    created = client.post('/data/shifts', json={
+        'staff_id': str(staff_id),
+        'starts_at': starts.isoformat(), 'ends_at': ends.isoformat()})
+    assert created.status_code == 201, created.get_json()
+    shift = created.get_json()['shift']
+
+    frm = (starts.date() - timedelta(days=1)).isoformat()
+    to = (starts.date() + timedelta(days=1)).isoformat()
+    pub = client.post('/action/publish', json={'from': frm, 'to': to})
+    assert pub.status_code == 200, pub.get_json()
+    assert pub.get_json()['shift_count'] == 1
+
+    sched = client.get(f'/svar/{token}/data').get_json()['schedule']
+    assert sched['shift_count'] == 1
+    published_start = sched['shifts'][0]['starts_at']
+
+    # Manager moves the live shift — the link still shows the snapshot.
+    moved = starts + timedelta(hours=2)
+    patched = client.patch(f"/data/shifts/{shift['id']}", json={
+        'starts_at': moved.isoformat(), 'ends_at': (ends + timedelta(hours=2)).isoformat()})
+    assert patched.status_code == 200, patched.get_json()
+    sched = client.get(f'/svar/{token}/data').get_json()['schedule']
+    assert sched['shifts'][0]['starts_at'] == published_start
+
+    # Re-publish → the link converges on the edit.
+    assert client.post('/action/publish', json={'from': frm, 'to': to}).status_code == 200
+    sched = client.get(f'/svar/{token}/data').get_json()['schedule']
+    assert sched['shift_count'] == 1
+    assert sched['shifts'][0]['starts_at'] != published_start
 
 
 # --- cross-org isolation ---

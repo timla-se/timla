@@ -105,6 +105,7 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 | Method | Path | Notes |
 |--------|------|-------|
 | POST | `/action/staff/:id/regenerate-link` | Generates (first time) or regenerates the staff member's share-link token; the old link stops working. Returns the full staff object. 400 `archived_staff` for archived staff. The public `/svar/:token` surface consuming the token is issue #13. |
+| POST | `/action/publish` | Freezes the period's live shifts into a `publication` snapshot that staff links read (#10). Body: `{period: "2026-W28"}` **or** `{from, to}` (ISO dates, `to` inclusive, ≤ 1 year); both forms at once → 400 `invalid_period`, unknown fields → 400 `unknown_field`. A shift belongs to the period where it **starts** (org timezone); open shifts are snapshotted too. Publishing an empty period is legal — it retracts staff-visible shifts for the range. Overlapped older publications are deleted/trimmed/split so the newest publish wins per date (trimmed fragments keep their original `published_at`). Returns `{from, to, published_at, shift_count}`. A raced concurrent publish → 409 `publish_conflict` (retry). |
 
 ## Rules
 
@@ -124,7 +125,7 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 
 | Method | Path | Notes |
 |--------|------|-------|
-| GET | `/data/publications?period=…` | Period required (`YYYY-Www` only — not from/to). `{week, published_at}` or `null` when the week is unpublished. The publish action is #10. |
+| GET | `/data/publications?period=…` | Period required — `?period=YYYY-Www` or `?from=…&to=…` (publications are date ranges since #10). Returns the **list** of publications overlapping the range ordered by start, each `{from, to, published_at, diverged}` (`to` inclusive); `[]` when nothing overlaps. `diverged` = the period's live shifts no longer match the snapshot (id-insensitive multiset; note edits count) and is a property of the publication, not of the requested range. Publishing is `POST /action/publish`. |
 
 ## Staff share-link (`/svar`) — the only unauthenticated surface
 
@@ -138,5 +139,5 @@ enumeration). `/link/:token` 301-redirects here.
 
 | Method | Path | Notes |
 |--------|------|-------|
-| GET | `/svar/:token/data` | View context: `{staff:{first_name, name, desired_shifts_per_week, availability_note}, org:{name,initials,timezone}, availability:{wishes,blocks,exceptions}, schedule:{from,to,shifts,shift_count,hours}}`. `schedule` is a flat, date-grouped list of the worker's upcoming published shifts over a forward window — no ISO-week strings (horizon-agnostic; #10 owns the publication-period model). |
+| GET | `/svar/:token/data` | View context: `{staff:{first_name, name, desired_shifts_per_week, availability_note}, org:{name,initials,timezone}, availability:{wishes,blocks,exceptions}, schedule:{from,to,shifts,shift_count,hours}}`. `schedule` is a flat, date-grouped list of the worker's upcoming published shifts over a forward window — no ISO-week strings. Reads the publication snapshots overlapping the window (#10): staff always see the last published state, never live edits. |
 | PUT | `/svar/:token/availability` | Recurring layer **per-kind whole-replace by key presence** (same semantics as the manager PUT: omitted `wishes`/`blocks` key untouched, `[]` clears, explicit `null` → 400; arbitrary weekday ranges `{weekday 1-7, start_minute, end_minute}`, `0 <= start < end <= 1440`) + dated-exception **delta** + optional per-staff params: `{wishes?[], blocks?[], add_exceptions?[], remove_exception_ids?[], desired_shifts_per_week?, availability_note?}`. For a submitted kind the client sends the complete desired recurring state, so rows the mobile editor can't represent survive a save that didn't touch that weekday; omitting `blocks` lets the v2 phone leave manager-set recurring blocks intact. `add_exceptions` entries accept `{on_date, kind?='block' (wish\|block), start_minute?, end_minute?, note?}`; writes stamp `source=staff`, except recurring rows resubmitted verbatim, which keep their prior `source`. Exceptions are only added/removed as listed, never blindly wiped. |
