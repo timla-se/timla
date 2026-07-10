@@ -9,6 +9,7 @@ import { OnboardingGate } from './components/OnboardingGate'
 import SignInScreen from './components/SignInScreen'
 import SignUpScreen from './components/SignUpScreen'
 import Schedule from './pages/Schedule'
+import Settings from './pages/Settings'
 import Staff from './pages/Staff'
 import StaffDetail from './pages/StaffDetail'
 import { isoWeekPeriod, wallClock } from './time'
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/staff/:staffId" element={<StaffDetail />} />
           <Route path="/schema" element={<ScheduleRedirect />} />
           <Route path="/schema/:week" element={<Schedule />} />
+          <Route path="/installningar" element={<Settings />} />
           <Route path="*" element={<Navigate to="/staff" replace />} />
         </Route>
       </Routes>

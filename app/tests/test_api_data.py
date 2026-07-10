@@ -356,6 +356,65 @@ def test_org_read(client, org_id):
     assert body['timezone']
 
 
+def test_org_patch_name_only(client):
+    resp = client.patch('/data/org', json={'name': '  Nya Kiosken  '})
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['name'] == 'Nya Kiosken'  # trimmed
+    assert body['timezone'] == 'Europe/Stockholm'  # untouched
+    assert client.get('/data/org').get_json()['name'] == 'Nya Kiosken'
+
+
+def test_org_patch_timezone_only(client):
+    resp = client.patch('/data/org', json={'timezone': 'Europe/Helsinki'})
+    assert resp.status_code == 200
+    assert resp.get_json()['timezone'] == 'Europe/Helsinki'
+    body = client.get('/data/org').get_json()
+    assert body['timezone'] == 'Europe/Helsinki'
+    assert body['name'] == 'API-testorg'  # untouched
+
+
+def test_org_patch_both_fields(client, org_id):
+    resp = client.patch('/data/org', json={'name': 'Bytt', 'timezone': 'UTC'})
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body == {'id': org_id, 'name': 'Bytt', 'timezone': 'UTC'}
+    assert client.get('/data/org').get_json() == body
+
+
+def test_org_patch_invalid(client):
+    # empty body / no editable fields
+    resp = client.patch('/data/org', json={})
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'invalid'
+    # bad names
+    for name in ['', '   ', 123, None]:
+        resp = client.patch('/data/org', json={'name': name})
+        assert resp.status_code == 400, name
+        assert resp.get_json()['error'] == 'invalid'
+    # bad timezones, incl. the path-like regression and non-strings
+    for tz in ['Mars/Olympus', '/Europe/Stockholm', '../UTC', 42, None]:
+        resp = client.patch('/data/org', json={'timezone': tz})
+        assert resp.status_code == 400, tz
+        assert resp.get_json()['error'] == 'invalid'
+    # unknown field
+    resp = client.patch('/data/org', json={'nmae': 'typo'})
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'unknown_field'
+    # a rejected request changes nothing
+    body = client.get('/data/org').get_json()
+    assert body['name'] == 'API-testorg'
+
+
+def test_org_patch_auth(client):
+    assert app.test_client().patch('/data/org', json={'name': 'X'}).status_code == 401
+    no_org = app.test_client()
+    no_org.environ_base['HTTP_X_TEST_USER'] = 'user_test_no_org_patch'
+    resp = no_org.patch('/data/org', json={'name': 'X'})
+    assert resp.status_code == 403
+    assert resp.get_json()['error'] == 'no_org'
+
+
 # --- publications ---
 
 def test_publications_read(client, org_id):

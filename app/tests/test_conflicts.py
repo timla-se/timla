@@ -285,6 +285,31 @@ def test_note_only_patch_does_not_retrigger_enforcement(client, make_staff):
     assert resp.status_code == 409
 
 
+def test_rule_change_is_not_retroactive(client, make_staff):
+    """Documents #14's requirement by construction: updating a rule never
+    mutates saved shifts; the new rule applies to conflict checking from
+    that point on (compute + unforced writes)."""
+    staff = make_staff()
+    # 12 h shift, valid while no rules exist.
+    saved = create_shift(client, staff['id'], '2026-07-13T06:00:00+00:00', '2026-07-13T18:00:00+00:00')
+    # Tighten the org rules afterwards.
+    resp = client.put('/data/rules', json={'max_hours_per_week': 10, 'min_rest_hours': 11})
+    assert resp.status_code == 200
+    # The saved shift survives untouched.
+    shifts = client.get('/data/shifts?period=2026-W29').get_json()
+    assert [s['id'] for s in shifts] == [saved['id']]
+    # ...but new proposals are checked under the new rules (hard conflicts).
+    proposal = {'staff_id': staff['id'],
+                'starts_at': '2026-07-14T02:00:00+00:00',  # 04:00 local, 10 h after 20:00 end
+                'ends_at': '2026-07-14T04:00:00+00:00'}
+    result = check(client, [proposal])
+    assert conflict_types(result) == ['insufficient_rest', 'max_hours']
+    # ...and an equivalent unforced write is rejected.
+    resp = client.post('/data/shifts', json=proposal)
+    assert resp.status_code == 409
+    assert resp.get_json()['error'] == 'conflict'
+
+
 # --- enforcement on /data/shifts ---
 
 def test_write_rejects_hard_conflicts_unless_forced(client, make_staff):

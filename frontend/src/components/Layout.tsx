@@ -105,8 +105,13 @@ function NavItem({ to, label, icon: Icon, badge }: {
 function pageLabel(pathname: string): string {
   if (pathname.startsWith('/staff')) return 'Personal'
   if (pathname.startsWith('/schema')) return 'Arbetsschema'
+  if (pathname.startsWith('/installningar')) return 'Inställningar'
   return ''
 }
+
+/** Only these pages consume the topbar search (Personal table filter and the
+ * schedule board) — elsewhere the field would be nonfunctional and misleading. */
+const SEARCH_PAGES = new Set(['Personal', 'Arbetsschema'])
 
 export function Layout() {
   const location = useLocation()
@@ -136,7 +141,7 @@ export function Layout() {
             ))}
           </nav>
           <div className="mt-auto flex flex-col gap-1">
-            <NavItem label="Inställningar" icon={Settings} />
+            <NavItem to="/installningar" label="Inställningar" icon={Settings} />
             <button
               title="Logga ut"
               onClick={() => {
@@ -164,15 +169,17 @@ export function Layout() {
               {orgName} <span className="text-warm-sand">/</span> <span className="text-ink-soft">{pageLabel(location.pathname)}</span>
             </Mono>
             <div className="ml-auto flex items-center gap-3.5">
-              <div className="field-shell flex w-60 items-center gap-2 rounded-10 border border-warm-line-strong bg-white px-3 py-2">
-                <Search size={16} strokeWidth={1.75} className="shrink-0 text-warm-sand" />
-                <input
-                  placeholder={pageLabel(location.pathname) === 'Arbetsschema' ? 'Sök personal…' : 'Sök medarbetare…'}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="w-full border-0 bg-transparent text-sm text-ink outline-none placeholder:text-warm-sand"
-                />
-              </div>
+              {SEARCH_PAGES.has(pageLabel(location.pathname)) && (
+                <div className="field-shell flex w-60 items-center gap-2 rounded-10 border border-warm-line-strong bg-white px-3 py-2">
+                  <Search size={16} strokeWidth={1.75} className="shrink-0 text-warm-sand" />
+                  <input
+                    placeholder={pageLabel(location.pathname) === 'Arbetsschema' ? 'Sök personal…' : 'Sök medarbetare…'}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full border-0 bg-transparent text-sm text-ink outline-none placeholder:text-warm-sand"
+                  />
+                </div>
+              )}
               <button
                 title="Notiser — kommer senare"
                 className="flex h-10 w-10 cursor-default items-center justify-center rounded-10 border border-warm-line-strong bg-white"
