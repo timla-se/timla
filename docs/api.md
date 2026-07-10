@@ -27,28 +27,34 @@ to the period in which it **starts**.
 | Method | Path | Notes |
 |--------|------|-------|
 | GET | `/data/staff` | Active staff. `?include_archived=1` for all. |
-| POST | `/data/staff` | `{name, phone?, email?, role?, max_hours_per_week?}` → 201 |
+| POST | `/data/staff` | `{name, phone?, email?, role?, max_hours_per_week?, desired_shifts_per_week?, availability_note?}` → 201 |
 | PATCH | `/data/staff/:id` | Any subset of the above, plus `archived: bool` |
 | DELETE | `/data/staff/:id` | Archives (soft) — history survives; unarchive via PATCH |
 
-Staff JSON: `{id, name, phone, email, role, max_hours_per_week, share_token, archived}`.
+Staff JSON: `{id, name, phone, email, role, max_hours_per_week,
+desired_shifts_per_week, availability_note, share_token, archived}`.
 The effective max hours/week for scheduling is the stricter of the org
-rule and the staff member's own value.
+rule and the staff member's own value. `desired_shifts_per_week` (integer
+0–50, `null` = unspecified) is a soft target the scheduler ignores today
+(a future suggest-schedule reads it); `availability_note` (≤1000 chars,
+trimmed, empty → `null`) is a free-text note to the manager.
 
 ## Availability
 
-Two layers: **wishes** (preferred working times, recurring weekly) and
-**hard blocks** (cannot work: recurring weekly + dated exceptions).
-Recurring entries are `{weekday: 1-7 (ISO, 1=Monday), start_minute,
-end_minute}` — wall-clock minutes in the org timezone, `0 <= start < end
-<= 1440`.
+A **2×2 matrix**: every interval is a **wish** (soft preference) or a hard
+**block**, and either **recurring** (`weekday: 1-7`, ISO, 1=Monday) or
+**dated** (`on_date`). Recurring wishes + blocks are the normal week; dated
+rows of either kind ("Kan inte" / "Kan extra") are **exceptions**. Times are
+wall-clock minutes in the org timezone, `0 <= start_minute < end_minute <=
+1440`. Each interval also carries `source` (provenance: `staff` | `manager`
+| `null` when unknown) and an optional `note` (≤500 chars).
 
 | Method | Path | Notes |
 |--------|------|-------|
-| GET | `/data/availability/:staff` | The document: `{wishes, blocks, exceptions}` |
-| GET | `/data/availability/:staff?period=…` | Read-only expansion: concrete UTC intervals per date, `source: recurring \| exception` |
-| PUT | `/data/availability/:staff` | Replaces `wishes` + `blocks` patterns. Never touches dated exceptions. |
-| POST | `/data/availability/:staff/exceptions` | `{on_date, start_minute?=0, end_minute?=1440}` → 201 |
+| GET | `/data/availability/:staff` | The document: `{wishes, blocks, exceptions}`. `wishes`/`blocks` are the recurring layers only; every dated row (either kind) is in `exceptions`. |
+| GET | `/data/availability/:staff?period=…` | Read-only expansion: concrete UTC intervals per date, `source: recurring \| exception` (here `source` is the expansion **origin**, not the provenance column) |
+| PUT | `/data/availability/:staff` | Replaces recurring patterns **per kind, by key presence**: an omitted `wishes`/`blocks` key leaves that kind untouched, `[]` clears it, explicit `null` → 400. Never touches dated exceptions. New/edited rows stamp `source=manager`; rows resubmitted verbatim keep their prior `source`. |
+| POST | `/data/availability/:staff/exceptions` | `{on_date, kind?='block' (`wish`\|`block`), start_minute?=0, end_minute?=1440, note?}` → 201. Stamps `source=manager`. |
 | DELETE | `/data/availability/:staff/exceptions/:id` | |
 
 ## Shifts
@@ -87,8 +93,10 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
   `max_hours` (against the effective cap — stricter of org rule and
   per-staff), `insufficient_rest`, `archived_staff` (new shifts — no
   `id` — for archived staff, mirroring the write path's rejection).
-- Soft warnings: `outside_wishes` — only for staff who have wishes
-  registered; with none, all time is neutral.
+- Soft warnings: `outside_wishes` — only for staff who have a **recurring**
+  wish (a normal-week baseline); with none, all time is neutral. A dated
+  wish ("Kan extra") only widens coverage on its own date, never triggers a
+  warning by itself.
 - Each item carries `shift_index` (payload position), `shift_id`,
   `staff_id`, `type`, `message` and type-specific details.
 
@@ -130,5 +138,5 @@ enumeration). `/link/:token` 301-redirects here.
 
 | Method | Path | Notes |
 |--------|------|-------|
-| GET | `/svar/:token/data` | View context: `{staff:{first_name,name}, org:{name,initials,timezone}, availability:{wishes,blocks,exceptions}, schedule:{from,to,shifts,shift_count,hours}}`. `schedule` is a flat, date-grouped list of the worker's upcoming published shifts over a forward window — no ISO-week strings (horizon-agnostic; #10 owns the publication-period model). |
-| PUT | `/svar/:token/availability` | Recurring layer **full whole-replace** (same as the manager availability PUT — arbitrary weekday ranges `{weekday 1-7, start_minute, end_minute}`, `0 <= start < end <= 1440`, no fixed buckets) + dated-exception **delta**: `{wishes[], blocks[], add_exceptions[], remove_exception_ids[]}`. The client submits the complete desired recurring state (edited weekdays as the chosen range, untouched weekdays verbatim), so the replace is faithful — rows the mobile editor can't represent (split/out-of-canvas) survive a save that didn't touch that weekday. Exceptions are only added/removed as listed, never blindly wiped. |
+| GET | `/svar/:token/data` | View context: `{staff:{first_name, name, desired_shifts_per_week, availability_note}, org:{name,initials,timezone}, availability:{wishes,blocks,exceptions}, schedule:{from,to,shifts,shift_count,hours}}`. `schedule` is a flat, date-grouped list of the worker's upcoming published shifts over a forward window — no ISO-week strings (horizon-agnostic; #10 owns the publication-period model). |
+| PUT | `/svar/:token/availability` | Recurring layer **per-kind whole-replace by key presence** (same semantics as the manager PUT: omitted `wishes`/`blocks` key untouched, `[]` clears, explicit `null` → 400; arbitrary weekday ranges `{weekday 1-7, start_minute, end_minute}`, `0 <= start < end <= 1440`) + dated-exception **delta** + optional per-staff params: `{wishes?[], blocks?[], add_exceptions?[], remove_exception_ids?[], desired_shifts_per_week?, availability_note?}`. For a submitted kind the client sends the complete desired recurring state, so rows the mobile editor can't represent survive a save that didn't touch that weekday; omitting `blocks` lets the v2 phone leave manager-set recurring blocks intact. `add_exceptions` entries accept `{on_date, kind?='block' (wish\|block), start_minute?, end_minute?, note?}`; writes stamp `source=staff`, except recurring rows resubmitted verbatim, which keep their prior `source`. Exceptions are only added/removed as listed, never blindly wiped. |

@@ -144,6 +144,59 @@ def test_wishes_warn_softly_and_only_when_wishes_exist(client, make_staff):
     assert inside['warnings'] == []
 
 
+def test_dated_wish_widens_coverage_and_warns_elsewhere(client, make_staff):
+    """A dated "Kan extra" silences its own date for staff with a recurring
+    baseline, but other days still warn (#40)."""
+    staff = make_staff()
+    client.put(f"/data/availability/{staff['id']}", json={
+        'wishes': [{'weekday': 1, 'start_minute': 540, 'end_minute': 1020}],  # Mon 09-17
+    })
+    # Dated wish on Tue 2026-07-14, 10:00-15:00 local.
+    resp = client.post(f"/data/availability/{staff['id']}/exceptions",
+                       json={'on_date': '2026-07-14', 'kind': 'wish',
+                             'start_minute': 600, 'end_minute': 900})
+    assert resp.status_code == 201, resp.get_json()
+    tue = check(client, [{'staff_id': staff['id'],           # 10:00-15:00 local, inside
+                          'starts_at': '2026-07-14T08:00:00+00:00',
+                          'ends_at': '2026-07-14T13:00:00+00:00'}])
+    assert tue['warnings'] == [] and tue['conflicts'] == []
+    wed = check(client, [{'staff_id': staff['id'],           # Wednesday, no wish
+                          'starts_at': '2026-07-15T08:00:00+00:00',
+                          'ends_at': '2026-07-15T13:00:00+00:00'}])
+    assert [w['type'] for w in wed['warnings']] == ['outside_wishes']
+
+
+def test_only_dated_wish_never_warns(client, make_staff):
+    """Recurring-only gate: staff whose sole wish is a dated one stay
+    all-neutral — no outside_wishes anywhere (#40)."""
+    staff = make_staff()
+    resp = client.post(f"/data/availability/{staff['id']}/exceptions",
+                       json={'on_date': '2026-07-14', 'kind': 'wish',
+                             'start_minute': 600, 'end_minute': 900})
+    assert resp.status_code == 201, resp.get_json()
+    other = check(client, [{'staff_id': staff['id'],
+                            'starts_at': '2026-07-15T08:00:00+00:00',
+                            'ends_at': '2026-07-15T13:00:00+00:00'}])
+    inside = check(client, [{'staff_id': staff['id'],
+                             'starts_at': '2026-07-14T08:00:00+00:00',
+                             'ends_at': '2026-07-14T13:00:00+00:00'}])
+    assert other['warnings'] == [] and inside['warnings'] == []
+
+
+def test_dated_block_beats_dated_wish_same_day(client, make_staff):
+    staff = make_staff()
+    client.post(f"/data/availability/{staff['id']}/exceptions",
+                json={'on_date': '2026-07-14', 'kind': 'wish',
+                      'start_minute': 600, 'end_minute': 900})
+    client.post(f"/data/availability/{staff['id']}/exceptions",
+                json={'on_date': '2026-07-14', 'kind': 'block',
+                      'start_minute': 0, 'end_minute': 1440})
+    result = check(client, [{'staff_id': staff['id'],
+                             'starts_at': '2026-07-14T08:00:00+00:00',
+                             'ends_at': '2026-07-14T13:00:00+00:00'}])
+    assert 'blocked' in conflict_types(result)
+
+
 def test_open_shifts_have_no_conflicts(client, make_staff):
     make_staff()
     result = check(client, [{'staff_id': None,

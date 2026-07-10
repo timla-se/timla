@@ -51,6 +51,15 @@ def _add_exception(cur, org_id, staff_id, on_date, start=0, end=1440):
     return str(cur.fetchone()['id'])
 
 
+def _add_recurring(cur, org_id, staff_id, kind, weekday, start=0, end=1440, source=None):
+    cur.execute(
+        """INSERT INTO availability_interval (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+           VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+        (org_id, staff_id, kind, weekday, start, end, source),
+    )
+    return str(cur.fetchone()['id'])
+
+
 def _publish_shift(cur, org_id, staff_id, tz, hours_from_now=26, length=6):
     starts = datetime.now(timezone.utc) + timedelta(hours=hours_from_now)
     ends = starts + timedelta(hours=length)
@@ -380,6 +389,138 @@ def test_svar_availability_respected_by_conflicts(client, org):
         'ends_at': sun_end.isoformat(),
     })
     assert forced.status_code == 201, forced.get_json()
+
+
+# --- per-kind non-destructive PUT + dated wish + staff params (#40) ---
+
+def test_put_omitting_blocks_preserves_recurring_blocks(client, org):
+    """The wipe #40 fixes: a v2 phone save sends only `wishes`; a manager-set
+    recurring block must survive it."""
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            _add_recurring(cur, org, staff_id, 'block', 7)  # manager's Sunday block
+            _add_recurring(cur, org, staff_id, 'wish', 3)   # a pre-existing wish
+        conn.commit()
+    body = client.put(f'/svar/{token}/availability', json={
+        'wishes': [{'weekday': 1, 'start_minute': 540, 'end_minute': 1020}]}).get_json()
+    assert {b['weekday'] for b in body['availability']['blocks']} == {7}   # untouched
+    assert {w['weekday'] for w in body['availability']['wishes']} == {1}   # replaced
+
+
+def test_put_empty_list_clears_only_that_kind(client, org):
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            _add_recurring(cur, org, staff_id, 'block', 7)
+            _add_recurring(cur, org, staff_id, 'wish', 3)
+        conn.commit()
+    body = client.put(f'/svar/{token}/availability', json={'blocks': []}).get_json()
+    assert body['availability']['blocks'] == []                            # cleared
+    assert {w['weekday'] for w in body['availability']['wishes']} == {3}   # untouched
+
+
+def test_put_empty_body_is_noop(client, org):
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            _add_recurring(cur, org, staff_id, 'wish', 3)
+            _add_recurring(cur, org, staff_id, 'block', 7)
+        conn.commit()
+    resp = client.put(f'/svar/{token}/availability', json={})
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert {w['weekday'] for w in body['availability']['wishes']} == {3}
+    assert {b['weekday'] for b in body['availability']['blocks']} == {7}
+
+
+def test_put_preserves_provenance_on_verbatim_rows(client, org):
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            _add_recurring(cur, org, staff_id, 'wish', 2, 540, 1020, source='manager')
+            _add_recurring(cur, org, staff_id, 'wish', 4, 540, 1020)  # pre-#40 row, provenance unknown
+        conn.commit()
+    body = client.put(f'/svar/{token}/availability', json={'wishes': [
+        {'weekday': 2, 'start_minute': 540, 'end_minute': 1020},   # verbatim round-trip
+        {'weekday': 4, 'start_minute': 540, 'end_minute': 1020},   # verbatim, unknown source
+        {'weekday': 5, 'start_minute': 600, 'end_minute': 960},    # actually new
+    ]}).get_json()
+    by_day = {w['weekday']: w['source'] for w in body['availability']['wishes']}
+    assert by_day == {2: 'manager', 4: None, 5: 'staff'}
+
+
+@pytest.mark.parametrize('payload', [{'wishes': None}, {'blocks': None}])
+def test_put_explicit_null_list_is_400(client, org, payload):
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            _, token = _mk_staff(cur, org)
+        conn.commit()
+    assert client.put(f'/svar/{token}/availability', json=payload).status_code == 400
+
+
+def test_add_dated_wish_exception_roundtrips_and_not_in_wishes(client, org):
+    today = datetime.now(timezone.utc).date()
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            _, token = _mk_staff(cur, org)
+        conn.commit()
+    body = client.put(f'/svar/{token}/availability', json={
+        'add_exceptions': [{'on_date': (today + timedelta(days=5)).isoformat(),
+                            'kind': 'wish', 'note': 'Kan extra'}]}).get_json()
+    exc = body['availability']['exceptions']
+    assert len(exc) == 1
+    assert exc[0]['kind'] == 'wish' and exc[0]['note'] == 'Kan extra'
+    assert exc[0]['source'] == 'staff'                     # provenance stamped
+    assert body['availability']['wishes'] == []            # not double-listed
+
+
+@pytest.mark.parametrize('bad', [{'kind': 'maybe'}, {'note': 'x' * 501}])
+def test_add_exception_validation_400(client, org, bad):
+    today = datetime.now(timezone.utc).date()
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            _, token = _mk_staff(cur, org)
+        conn.commit()
+    ex = {'on_date': (today + timedelta(days=5)).isoformat(), **bad}
+    assert client.put(f'/svar/{token}/availability', json={'add_exceptions': [ex]}).status_code == 400
+
+
+def test_staff_params_roundtrip_presence_and_clear(client, org):
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            _, token = _mk_staff(cur, org)
+        conn.commit()
+    # set both (note is trimmed, empty→null)
+    body = client.put(f'/svar/{token}/availability', json={
+        'desired_shifts_per_week': 4, 'availability_note': '  pluggar tisdagar  '}).get_json()
+    assert body['staff']['desired_shifts_per_week'] == 4
+    assert body['staff']['availability_note'] == 'pluggar tisdagar'
+    # a save that omits them preserves
+    body = client.put(f'/svar/{token}/availability', json={'wishes': []}).get_json()
+    assert body['staff']['desired_shifts_per_week'] == 4
+    # readback via GET matches
+    got = client.get(f'/svar/{token}/data').get_json()['staff']
+    assert got['desired_shifts_per_week'] == 4 and got['availability_note'] == 'pluggar tisdagar'
+    # explicit null clears
+    body = client.put(f'/svar/{token}/availability', json={
+        'desired_shifts_per_week': None, 'availability_note': None}).get_json()
+    assert body['staff']['desired_shifts_per_week'] is None
+    assert body['staff']['availability_note'] is None
+
+
+@pytest.mark.parametrize('payload', [
+    {'desired_shifts_per_week': 3.5},
+    {'desired_shifts_per_week': True},
+    {'desired_shifts_per_week': 51},
+    {'availability_note': 'x' * 1001},
+])
+def test_staff_params_validation_400(client, org, payload):
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            _, token = _mk_staff(cur, org)
+        conn.commit()
+    assert client.put(f'/svar/{token}/availability', json=payload).status_code == 400
 
 
 # --- cross-org isolation ---

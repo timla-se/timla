@@ -119,6 +119,85 @@ def test_availability_rejects_wish_without_weekday(client, make_staff):
     assert resp.status_code == 400
 
 
+def test_manager_put_per_kind_presence_semantics(client, make_staff):
+    sid = make_staff()['id']
+    client.put(f"/data/availability/{sid}", json={
+        'wishes': [{'weekday': 1, 'start_minute': 540, 'end_minute': 1020}],
+        'blocks': [{'weekday': 7, 'start_minute': 0, 'end_minute': 1440}],
+    })
+    # Omitting a key leaves that kind untouched; the present kind is replaced.
+    client.put(f"/data/availability/{sid}", json={
+        'wishes': [{'weekday': 2, 'start_minute': 540, 'end_minute': 1020}]})
+    doc = client.get(f"/data/availability/{sid}").get_json()
+    assert {w['weekday'] for w in doc['wishes']} == {2}
+    assert {b['weekday'] for b in doc['blocks']} == {7}
+    # Empty list clears just that kind.
+    client.put(f"/data/availability/{sid}", json={'blocks': []})
+    doc = client.get(f"/data/availability/{sid}").get_json()
+    assert doc['blocks'] == [] and {w['weekday'] for w in doc['wishes']} == {2}
+    # {} is a no-op (200); explicit null is a 400.
+    assert client.put(f"/data/availability/{sid}", json={}).status_code == 200
+    assert client.put(f"/data/availability/{sid}", json={'wishes': None}).status_code == 400
+
+
+def test_manager_put_preserves_provenance_on_verbatim_rows(client, make_staff, org_id):
+    sid = make_staff()['id']
+    with psycopg.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO availability_interval
+                       (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+                   VALUES (%s, %s, 'wish', 2, 540, 1020, 'staff')""",
+                (org_id, sid),
+            )
+        conn.commit()
+    client.put(f"/data/availability/{sid}", json={'wishes': [
+        {'weekday': 2, 'start_minute': 540, 'end_minute': 1020},   # verbatim round-trip
+        {'weekday': 5, 'start_minute': 600, 'end_minute': 960},    # actually new
+    ]})
+    doc = client.get(f"/data/availability/{sid}").get_json()
+    assert {w['weekday']: w['source'] for w in doc['wishes']} == {2: 'staff', 5: 'manager'}
+
+
+def test_manager_dated_wish_exception_with_note_and_provenance(client, make_staff):
+    sid = make_staff()['id']
+    resp = client.post(f"/data/availability/{sid}/exceptions",
+                       json={'on_date': '2026-07-15', 'kind': 'wish', 'note': 'Kan täcka'})
+    assert resp.status_code == 201
+    ex = resp.get_json()
+    assert ex['kind'] == 'wish' and ex['note'] == 'Kan täcka' and ex['source'] == 'manager'
+    doc = client.get(f"/data/availability/{sid}").get_json()
+    assert doc['wishes'] == []                       # dated wish not double-listed under wishes
+    assert len(doc['exceptions']) == 1 and doc['exceptions'][0]['kind'] == 'wish'
+    # a bad kind is rejected
+    assert client.post(f"/data/availability/{sid}/exceptions",
+                       json={'on_date': '2026-07-16', 'kind': 'perhaps'}).status_code == 400
+
+
+def test_staff_availability_params_crud(client):
+    created = client.post('/data/staff', json={
+        'name': 'Kim', 'desired_shifts_per_week': 3,
+        'availability_note': '  vill helst kväll  '}).get_json()
+    assert created['desired_shifts_per_week'] == 3
+    assert created['availability_note'] == 'vill helst kväll'      # trimmed
+    patched = client.patch(f"/data/staff/{created['id']}",
+                           json={'desired_shifts_per_week': 5}).get_json()
+    assert patched['desired_shifts_per_week'] == 5
+    assert patched['availability_note'] == 'vill helst kväll'      # untouched
+    cleared = client.patch(f"/data/staff/{created['id']}",
+                           json={'availability_note': None}).get_json()
+    assert cleared['availability_note'] is None
+
+
+@pytest.mark.parametrize('bad', [
+    {'desired_shifts_per_week': 3.5},
+    {'desired_shifts_per_week': 51},
+    {'availability_note': 'x' * 1001},
+])
+def test_staff_availability_params_validation_400(client, bad):
+    assert client.post('/data/staff', json={'name': 'X', **bad}).status_code == 400
+
+
 # --- shifts ---
 
 def test_shift_crud_and_week_filter(client, make_staff):

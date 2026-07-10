@@ -17,6 +17,21 @@ def is_strict_int(value):
     return isinstance(value, int) and not isinstance(value, bool)
 
 
+def normalize_note(value, cap, *, field='note'):
+    """A free-text field: None or a string, trimmed, empty/whitespace → None,
+    length-capped. Returns the value to store; raises ApiError(400) on a bad
+    type or over-length. Used for availability exception notes and the
+    per-staff availability note, both reachable from the public /svar surface."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ApiError(400, 'invalid', f'{field} must be a string or null')
+    trimmed = value.strip()
+    if len(trimmed) > cap:
+        raise ApiError(400, 'invalid', f'{field} must be at most {cap} characters')
+    return trimmed or None
+
+
 class ApiError(Exception):
     """Raised by route code; rendered as the canonical error shape.
     ``extra`` keys are merged into the response body (e.g. conflict lists)."""
