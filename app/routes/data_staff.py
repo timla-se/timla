@@ -3,12 +3,14 @@ hard-deletes, so shift history always survives."""
 
 from flask import Blueprint, jsonify, request
 
-from api_utils import ApiError, current_org, get_json_body, is_number, require_staff
+from api_utils import (ApiError, current_org, get_json_body, is_number, is_strict_int,
+                       normalize_note, require_staff)
 from db import get_db
 
 bp = Blueprint('data_staff', __name__)
 
-EDITABLE_FIELDS = ('name', 'phone', 'email', 'role', 'max_hours_per_week')
+EDITABLE_FIELDS = ('name', 'phone', 'email', 'role', 'max_hours_per_week',
+                   'desired_shifts_per_week', 'availability_note')
 
 
 def staff_json(s):
@@ -19,6 +21,8 @@ def staff_json(s):
         'email': s['email'],
         'role': s['role'],
         'max_hours_per_week': float(s['max_hours_per_week']) if s['max_hours_per_week'] is not None else None,
+        'desired_shifts_per_week': s['desired_shifts_per_week'],
+        'availability_note': s['availability_note'],
         'share_token': s['share_token'],
         'archived': s['archived_at'] is not None,
     }
@@ -39,6 +43,11 @@ def _validate(body, *, require_name, allow_archived):
     max_hours = body.get('max_hours_per_week')
     if max_hours is not None and (not is_number(max_hours) or not 0 < max_hours <= 168):
         raise ApiError(400, 'invalid', 'max_hours_per_week must be a number between 0 and 168')
+    dspw = body.get('desired_shifts_per_week')
+    if dspw is not None and not (is_strict_int(dspw) and 0 <= dspw <= 50):
+        raise ApiError(400, 'invalid', 'desired_shifts_per_week must be an integer 0-50 or null')
+    if 'availability_note' in body:
+        normalize_note(body['availability_note'], 1000, field='availability_note')
 
 
 @bp.get('/data/staff')
@@ -60,10 +69,13 @@ def create_staff():
         _validate(body, require_name=True, allow_archived=False)
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO staff (org_id, name, phone, email, role, max_hours_per_week)
-                   VALUES (%s, %s, %s, %s, %s, %s) RETURNING *""",
+                """INSERT INTO staff (org_id, name, phone, email, role, max_hours_per_week,
+                                      desired_shifts_per_week, availability_note)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING *""",
                 (org['id'], body['name'].strip(), body.get('phone'), body.get('email'),
-                 body.get('role'), body.get('max_hours_per_week')),
+                 body.get('role'), body.get('max_hours_per_week'),
+                 body.get('desired_shifts_per_week'),
+                 normalize_note(body.get('availability_note'), 1000, field='availability_note')),
             )
             row = cur.fetchone()
         conn.commit()
@@ -82,7 +94,12 @@ def update_staff(staff_id):
         for field in EDITABLE_FIELDS:
             if field in body:
                 sets.append(f'{field} = %s')
-                values.append(body[field].strip() if field == 'name' else body[field])
+                if field == 'name':
+                    values.append(body[field].strip())
+                elif field == 'availability_note':
+                    values.append(normalize_note(body[field], 1000, field='availability_note'))
+                else:
+                    values.append(body[field])
         if 'archived' in body:
             sets.append('archived_at = ' + ('now()' if body['archived'] else 'NULL'))
         if not sets:

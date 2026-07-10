@@ -75,14 +75,49 @@ def test_shift_rejects_negative_span(db, org_id):
             )
 
 
-def test_wish_cannot_be_dated(db, org_id, staff_id):
+def test_dated_wish_is_allowed(db, org_id, staff_id):
+    # Issue #40 dropped availability_wish_is_recurring: a dated wish
+    # ("Kan extra") is now legal — the 2x2 matrix is complete.
+    with db.cursor() as cur:
+        cur.execute(
+            """INSERT INTO availability_interval
+                   (org_id, staff_id, kind, on_date, start_minute, end_minute)
+               VALUES (%s, %s, 'wish', '2026-07-15', 0, 1440) RETURNING id""",
+            (org_id, staff_id),
+        )
+        assert cur.fetchone()[0] is not None
+
+
+def test_source_check_rejects_unknown_value(db, org_id, staff_id):
     with pytest.raises(psycopg.errors.CheckViolation):
         with db.cursor() as cur:
             cur.execute(
                 """INSERT INTO availability_interval
-                       (org_id, staff_id, kind, on_date, start_minute, end_minute)
-                   VALUES (%s, %s, 'wish', '2026-07-15', 0, 1440)""",
+                       (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+                   VALUES (%s, %s, 'wish', 1, 540, 1020, 'robot')""",
                 (org_id, staff_id),
+            )
+
+
+def test_source_allows_null_and_known_values(db, org_id, staff_id):
+    with db.cursor() as cur:
+        cur.execute(
+            """INSERT INTO availability_interval
+                   (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+               VALUES (%s, %s, 'wish', 1, 540, 1020, NULL),
+                      (%s, %s, 'block', 7, 0, 1440, 'manager'),
+                      (%s, %s, 'wish', 2, 540, 1020, 'staff') RETURNING id""",
+            (org_id, staff_id) * 3,
+        )
+        assert len(cur.fetchall()) == 3
+
+
+def test_desired_shifts_per_week_check(db, org_id):
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            cur.execute(
+                "INSERT INTO staff (org_id, name, desired_shifts_per_week) VALUES (%s, 'X', 51)",
+                (org_id,),
             )
 
 

@@ -8,9 +8,11 @@ a week boundary. Proposed shifts replace their saved counterparts
 (matched by id) during evaluation.
 
 Hard conflicts: double_booking, blocked, max_hours, insufficient_rest.
-Soft warnings: outside_wishes — only emitted for staff who have wishes
-registered at all; with no wishes, all time is neutral and silence is
-the honest answer.
+Soft warnings: outside_wishes — only emitted for staff who have a
+recurring wish (a normal-week baseline); with none, all time is neutral
+and silence is the honest answer. A dated wish ("Kan extra") never turns
+a neutral schedule into warnings — it only widens coverage on its own
+date for staff who already have a recurring baseline.
 """
 
 import uuid as uuid_lib
@@ -141,7 +143,12 @@ def _check_availability(timeline, blocks, wishes, tz, conflicts, warnings):
                 conflicts.append(_item(
                     'blocked', p, 'Overlaps a time the staff member cannot work'))
                 break
-        if wishes and not _covered(entry, _expanded(wishes, entry, tz)):
+        # Gate on RECURRING wishes (the normal week): a staff member whose only
+        # wish is a dated "Kan extra" stays all-neutral instead of warning on
+        # every other day. Coverage below still counts all wishes, so a dated
+        # wish widens (silences) its own date for staff with a recurring baseline.
+        if any(w['weekday'] is not None for w in wishes) \
+                and not _covered(entry, _expanded(wishes, entry, tz)):
             warnings.append(_item(
                 'outside_wishes', p, 'Outside the staff member’s wished working times'))
 

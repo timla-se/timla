@@ -20,7 +20,7 @@ from zoneinfo import ZoneInfo
 
 from flask import Blueprint, jsonify, redirect
 
-from api_utils import ApiError, get_json_body, is_strict_int
+from api_utils import ApiError, get_json_body, is_strict_int, normalize_note
 from db import get_db
 from routes.data_availability import _document, _load_intervals
 from weeks import iso_week_of, week_monday
@@ -112,7 +112,12 @@ def _context(conn, staff):
     rows = _load_intervals(conn, staff['id'])
     name = staff['name'] or ''
     return {
-        'staff': {'first_name': name.split()[0] if name.split() else name, 'name': name},
+        'staff': {
+            'first_name': name.split()[0] if name.split() else name,
+            'name': name,
+            'desired_shifts_per_week': staff['desired_shifts_per_week'],
+            'availability_note': staff['availability_note'],
+        },
         'org': {
             'name': staff['org_name'],
             'initials': _initials(staff['org_name']),
@@ -135,32 +140,37 @@ def get_data(token):
 @bp.put('/svar/<token>/availability')
 def put_availability(token):
     body = get_json_body()
-    wishes, blocks, add_exceptions, remove_ids = _validate(body)
+    wishes, blocks, add_exceptions, remove_ids, staff_updates = _validate(body)
     with get_db() as conn:
         staff = _staff_by_token(conn, token, for_update=True)
         with conn.cursor() as cur:
-            # 1. Recurring layer: full whole-replace of both kinds, mirroring the
-            #    manager availability PUT. This is faithful because the client
-            #    submits the COMPLETE desired recurring state — weekdays the
-            #    worker edited as their chosen range, untouched weekdays as their
-            #    exact stored rows — so rows the mobile editor can't represent
-            #    (split intervals, times outside its 06:00–22:00 canvas) survive
-            #    a save that didn't touch that weekday. Dated exceptions
-            #    (on_date NOT NULL) are untouched here; they have their own
-            #    delta below (review H1).
-            cur.execute(
-                'DELETE FROM availability_interval WHERE staff_id = %s AND on_date IS NULL',
-                (staff['id'],),
-            )
-            for kind, items in (('wish', wishes), ('block', blocks)):
-                for it in items:
-                    cur.execute(
-                        """INSERT INTO availability_interval
-                               (org_id, staff_id, kind, weekday, start_minute, end_minute)
-                           VALUES (%s, %s, %s, %s, %s, %s)""",
-                        (staff['org_id'], staff['id'], kind,
-                         it['weekday'], it['start_minute'], it['end_minute']),
-                    )
+            # 1. Recurring layer: per-kind whole-replace. Only the kinds the
+            #    client actually submitted are touched — an omitted 'wishes'/
+            #    'blocks' key leaves that kind's recurring rows intact (so a v2
+            #    phone that sends only wishes never wipes manager-set recurring
+            #    blocks), an explicit [] clears it. For a submitted kind the
+            #    client sends the COMPLETE desired recurring state (edited
+            #    weekdays as their chosen range, untouched weekdays verbatim),
+            #    so rows the mobile editor can't represent (split intervals,
+            #    times outside its 06:00–22:00 canvas) survive a save that
+            #    didn't touch that weekday. Dated exceptions (on_date NOT NULL)
+            #    are untouched here; they have their own delta below (review H1).
+            submitted = [(k, v) for k, v in (('wish', wishes), ('block', blocks)) if v is not None]
+            if submitted:
+                cur.execute(
+                    """DELETE FROM availability_interval
+                       WHERE staff_id = %s AND on_date IS NULL AND kind = ANY(%s)""",
+                    (staff['id'], [k for k, _ in submitted]),
+                )
+                for kind, items in submitted:
+                    for it in items:
+                        cur.execute(
+                            """INSERT INTO availability_interval
+                                   (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+                               VALUES (%s, %s, %s, %s, %s, %s, 'staff')""",
+                            (staff['org_id'], staff['id'], kind,
+                             it['weekday'], it['start_minute'], it['end_minute']),
+                        )
             # 2. Dated exceptions: explicit delta, never a blind delete-all
             #    (review H1). Remove only ids that belong to this staff.
             if remove_ids:
@@ -176,10 +186,20 @@ def put_availability(token):
             for ex in add_exceptions:
                 cur.execute(
                     """INSERT INTO availability_interval
-                           (org_id, staff_id, kind, on_date, start_minute, end_minute)
-                       VALUES (%s, %s, 'block', %s, %s, %s)""",
-                    (staff['org_id'], staff['id'], ex['on_date'], ex['start_minute'], ex['end_minute']),
+                           (org_id, staff_id, kind, on_date, start_minute, end_minute, note, source)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, 'staff')""",
+                    (staff['org_id'], staff['id'], ex['kind'], ex['on_date'],
+                     ex['start_minute'], ex['end_minute'], ex['note']),
                 )
+            # 3. Per-staff parameters: only the keys present in the body are
+            #    written; an explicit null clears one back to "unspecified".
+            if staff_updates:
+                sets = ', '.join(f'{col} = %s' for col in staff_updates)
+                cur.execute(
+                    f'UPDATE staff SET {sets} WHERE id = %s',
+                    (*staff_updates.values(), staff['id']),
+                )
+                staff = {**staff, **staff_updates}  # reflect the write in the returned context
         conn.commit()
         return jsonify(_context(conn, staff))
 
@@ -195,14 +215,35 @@ def link_redirect(token):
 # --- validation (public write surface — stricter than the manager PUT) ---
 
 def _validate(body):
-    unknown = set(body) - {'wishes', 'blocks', 'add_exceptions', 'remove_exception_ids'}
+    unknown = set(body) - {'wishes', 'blocks', 'add_exceptions', 'remove_exception_ids',
+                           'desired_shifts_per_week', 'availability_note'}
     if unknown:
         raise ApiError(400, 'unknown_field', f'Unknown fields: {", ".join(sorted(unknown))}')
-    wishes = _validate_recurring(body.get('wishes', []), 'wishes')
-    blocks = _validate_recurring(body.get('blocks', []), 'blocks')
+    # Presence-based per kind: an absent key is None (leave that recurring layer
+    # untouched); a present key is validated (an explicit null fails the list
+    # check → 400, which is correct — null is not "absent").
+    wishes = _validate_recurring(body['wishes'], 'wishes') if 'wishes' in body else None
+    blocks = _validate_recurring(body['blocks'], 'blocks') if 'blocks' in body else None
     add_exceptions = _validate_add_exceptions(body.get('add_exceptions', []))
     remove_ids = _validate_remove_ids(body.get('remove_exception_ids', []))
-    return wishes, blocks, add_exceptions, remove_ids
+    staff_updates = _validate_staff_params(body)
+    return wishes, blocks, add_exceptions, remove_ids, staff_updates
+
+
+def _validate_staff_params(body):
+    """Per-staff parameters editable from the phone (issue #40). Presence-based
+    like the recurring keys, but here an explicit null is meaningful: it clears
+    the field back to "unspecified"."""
+    updates = {}
+    if 'desired_shifts_per_week' in body:
+        v = body['desired_shifts_per_week']
+        if v is not None and not (is_strict_int(v) and 0 <= v <= 50):
+            raise ApiError(400, 'invalid', 'desired_shifts_per_week must be an integer 0-50 or null')
+        updates['desired_shifts_per_week'] = v
+    if 'availability_note' in body:
+        updates['availability_note'] = normalize_note(
+            body['availability_note'], 1000, field='availability_note')
+    return updates
 
 
 def _validate_recurring(items, field):
@@ -230,7 +271,7 @@ def _validate_add_exceptions(items):
     for ex in items:
         if not isinstance(ex, dict):
             raise ApiError(400, 'invalid', 'each add_exceptions entry must be an object')
-        if set(ex) - {'on_date', 'start_minute', 'end_minute'}:
+        if set(ex) - {'on_date', 'start_minute', 'end_minute', 'kind', 'note'}:
             raise ApiError(400, 'invalid', 'exception has unknown fields')
         try:
             d = date.fromisoformat(ex.get('on_date', ''))
@@ -242,7 +283,13 @@ def _validate_add_exceptions(items):
         e = ex.get('end_minute', 1440)
         if not (is_strict_int(s) and is_strict_int(e) and 0 <= s < e <= 1440):
             raise ApiError(400, 'invalid', 'start_minute/end_minute must satisfy 0 <= start < end <= 1440')
-        out.append({'on_date': d, 'start_minute': s, 'end_minute': e})
+        # A dated exception can now be a hard "no" (block) or positive "Kan
+        # extra" (wish); default block keeps every current client working.
+        kind = ex.get('kind', 'block')
+        if kind not in ('wish', 'block'):
+            raise ApiError(400, 'invalid', "kind must be 'wish' or 'block'")
+        note = normalize_note(ex.get('note'), 500)
+        out.append({'on_date': d, 'start_minute': s, 'end_minute': e, 'kind': kind, 'note': note})
     return out
 
 
