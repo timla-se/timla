@@ -108,10 +108,17 @@ export const deleteException = (staffId: string, exceptionId: string) =>
 
 export const getRules = () => request<Rules>('GET', '/data/rules')
 
+/** PUT /data/rules is a full replace — always send both fields, or the
+ * omitted one is silently cleared to null. */
+export const putRules = (payload: Rules) => request<Rules>('PUT', '/data/rules', payload)
+
 export const getOrg = () => request<Org>('GET', '/data/org')
 
 export const createOrg = (payload: { name: string; timezone?: string }) =>
   request<Org>('POST', '/data/org', payload)
+
+export const updateOrg = (payload: { name?: string; timezone?: string }) =>
+  request<Org>('PATCH', '/data/org', payload)
 
 /** period: ISO week like '2026-W28' */
 export const listShifts = (period: string) =>

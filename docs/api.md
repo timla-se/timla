@@ -118,8 +118,18 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
 
 | Method | Path | Notes |
 |--------|------|-------|
-| GET | `/data/org` | `{id, name, timezone}` for the calling org. Editing is #14. |
+| GET | `/data/org` | `{id, name, timezone}` for the calling org. |
 | POST | `/data/org` | Onboarding: `{name, timezone?}` → 201. Creates the org and links it to the calling user. `409 already_onboarded` if the user already has one. |
+| PATCH | `/data/org` | Any subset of `{name, timezone}` (name trimmed, timezone a valid IANA zone); empty body → 400 `invalid`, unknown keys → 400 `unknown_field`. Returns the updated `{id, name, timezone}`. |
+
+**Timezone changes reinterpret, never rebase.** All local-time semantics are
+evaluated in the org's *current* timezone: availability wishes/blocks are
+wall-clock minutes and simply mean new UTC instants after the change; shifts
+are UTC instants, so a near-midnight shift can move to the adjacent local
+date/ISO week in period queries; publication boundaries are local dates, so
+the same shift move can change which publication covers it and flip its
+`diverged` flag. No stored data is migrated or frozen on a timezone change
+(policy from #10/#14).
 
 ## Publications
 

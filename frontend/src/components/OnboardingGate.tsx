@@ -6,15 +6,8 @@ import { Button, Callout, Select, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { ApiError, createOrg, getOrg } from '../api'
+import { TIMEZONES } from '../timezones'
 import { Lockup } from './Lockup'
-
-const TIMEZONES = [
-  { value: 'Europe/Stockholm', label: 'Stockholm' },
-  { value: 'Europe/Oslo', label: 'Oslo' },
-  { value: 'Europe/Copenhagen', label: 'Köpenhamn' },
-  { value: 'Europe/Helsinki', label: 'Helsingfors' },
-  { value: 'UTC', label: 'UTC' },
-]
 
 function Shell({ children }: { children: ReactNode }) {
   return (
