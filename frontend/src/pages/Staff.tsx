@@ -33,9 +33,10 @@ interface FormState {
   email: string
   role: string
   maxHours: string
+  hourlyWage: string
 }
 
-const EMPTY_FORM: FormState = { name: '', phone: '', email: '', role: '', maxHours: '' }
+const EMPTY_FORM: FormState = { name: '', phone: '', email: '', role: '', maxHours: '', hourlyWage: '' }
 
 function formFromStaff(staff: StaffRow): FormState {
   return {
@@ -44,6 +45,7 @@ function formFromStaff(staff: StaffRow): FormState {
     email: staff.email ?? '',
     role: staff.role ?? '',
     maxHours: staff.max_hours_per_week === null ? '' : String(staff.max_hours_per_week),
+    hourlyWage: staff.hourly_wage === null ? '' : String(staff.hourly_wage),
   }
 }
 
@@ -60,6 +62,7 @@ function payloadFromForm(form: FormState): StaffPayload {
     email: form.email.trim() || null,
     role: form.role.trim() || null,
     max_hours_per_week: parseMaxHours(form.maxHours),
+    hourly_wage: parseMaxHours(form.hourlyWage),
   }
 }
 
@@ -68,6 +71,12 @@ function validateForm(form: FormState): string | null {
   const hours = parseMaxHours(form.maxHours)
   if (hours !== null && (Number.isNaN(hours) || hours <= 0 || hours > 168)) {
     return 'Max timmar/vecka måste vara ett tal mellan 0 och 168.'
+  }
+  // Never let NaN/Infinity through: JSON.stringify turns NaN into null,
+  // which would silently clear a saved wage.
+  const wage = parseMaxHours(form.hourlyWage)
+  if (wage !== null && (!Number.isFinite(wage) || wage < 0 || wage > 100000)) {
+    return 'Timlön måste vara ett tal mellan 0 och 100 000.'
   }
   return null
 }
@@ -106,10 +115,16 @@ function MaxHoursField({ form, set }: {
   set: (field: keyof FormState) => (e: ChangeEvent<HTMLInputElement>) => void
 }) {
   return (
-    <label className="mb-5.5 block">
-      <FieldLabel>Max timmar/vecka (tomt = ingen egen gräns)</FieldLabel>
-      <TextField.Root value={form.maxHours} onChange={set('maxHours')} placeholder="t.ex. 30" inputMode="decimal" />
-    </label>
+    <div className="mb-5.5 flex gap-3.5">
+      <label className="min-w-0 flex-1">
+        <FieldLabel>Max timmar/vecka (tomt = ingen egen gräns)</FieldLabel>
+        <TextField.Root value={form.maxHours} onChange={set('maxHours')} placeholder="t.ex. 30" inputMode="decimal" />
+      </label>
+      <label className="min-w-0 flex-1">
+        <FieldLabel>Timlön (kr/h, tomt = ej angiven)</FieldLabel>
+        <TextField.Root value={form.hourlyWage} onChange={set('hourlyWage')} placeholder="t.ex. 173,50" inputMode="decimal" />
+      </label>
+    </div>
   )
 }
 

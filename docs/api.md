@@ -27,17 +27,20 @@ to the period in which it **starts**.
 | Method | Path | Notes |
 |--------|------|-------|
 | GET | `/data/staff` | Active staff. `?include_archived=1` for all. |
-| POST | `/data/staff` | `{name, phone?, email?, role?, max_hours_per_week?, desired_shifts_per_week?, availability_note?}` → 201 |
+| POST | `/data/staff` | `{name, phone?, email?, role?, max_hours_per_week?, desired_shifts_per_week?, availability_note?, hourly_wage?}` → 201 |
 | PATCH | `/data/staff/:id` | Any subset of the above, plus `archived: bool` |
 | DELETE | `/data/staff/:id` | Archives (soft) — history survives; unarchive via PATCH |
 
 Staff JSON: `{id, name, phone, email, role, max_hours_per_week,
-desired_shifts_per_week, availability_note, share_token, archived}`.
-The effective max hours/week for scheduling is the stricter of the org
-rule and the staff member's own value. `desired_shifts_per_week` (integer
-0–50, `null` = unspecified) is a soft target the scheduler ignores today
-(a future suggest-schedule reads it); `availability_note` (≤1000 chars,
-trimmed, empty → `null`) is a free-text note to the manager.
+desired_shifts_per_week, availability_note, hourly_wage, share_token,
+archived}`. The effective max hours/week for scheduling is the stricter
+of the org rule and the staff member's own value. `desired_shifts_per_week`
+(integer 0–50, `null` = unspecified) is a soft target the scheduler ignores
+today (a future suggest-schedule reads it); `availability_note` (≤1000
+chars, trimmed, empty → `null`) is a free-text note to the manager.
+`hourly_wage` (number 0–100000, kr/h, stored with 2 decimals) is `null`
+when unset — labor cost never guesses a wage. It is manager-only data:
+the public `/svar` surface neither exposes nor accepts it.
 
 ## Availability
 
@@ -99,6 +102,44 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
   warning by itself.
 - Each item carries `shift_index` (payload position), `shift_id`,
   `staff_id`, `type`, `message` and type-specific details.
+
+## /compute/labor-cost
+
+`POST /compute/labor-cost` with `{period: "2026-07"}` → monthly scheduled
+hours × hourly wage. Pure — never writes. Unlike the ISO-**week** `period`
+used elsewhere, this endpoint's `period` is an ISO **month** (`YYYY-MM`,
+strictly zero-padded; anything else → 400 `invalid_period`; missing → 400
+`missing_period`; extra body fields → 400 `unknown_field`).
+
+Response:
+
+```json
+{
+  "period": "2026-07",
+  "staff": [{"staff_id", "name", "archived", "hours", "hourly_wage", "cost"}],
+  "totals": {"hours", "cost", "uncosted_hours", "cost_complete"}
+}
+```
+
+- **Month semantics mirror the week rule:** the month is evaluated in the
+  org timezone and a shift belongs to the month in which it **starts** —
+  an overnight shift starting 23:00 on the 31st counts its full length in
+  that month. DST months sum true UTC durations.
+- Sums **live shifts**, not publication snapshots — the report shows
+  *scheduled* hours ("schemalagda timmar"), not worked or published time.
+- Only **assigned** shifts count; open shifts (`staff_id: null`) are
+  excluded. Archived staff with shifts in the period are included
+  (flagged `archived: true`); staff without shifts in the period are
+  omitted.
+- Money math is decimal: per-row `cost` is `hours × hourly_wage` rounded
+  to 2 decimals (half up), `null` when the wage is unset. `totals.cost`
+  sums the **rounded row costs** (the table visibly adds up) over rows
+  with a wage; `totals.uncosted_hours` is the hours on wage-less rows and
+  `totals.cost_complete` is `false` when any such hours exist — the total
+  is then a *known* cost, not the whole cost.
+- **The current wage applies retroactively:** there is no wage history in
+  MVP, so editing a wage changes every past month's computed cost and a
+  mid-month raise applies to the whole month.
 
 ## Actions
 

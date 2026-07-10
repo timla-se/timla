@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from weeks import expand_interval, iso_week_of, local_instant, week_bounds_utc, week_monday
+import pytest
+
+from weeks import (expand_interval, iso_week_of, local_instant, month_bounds_utc,
+                   week_bounds_utc, week_monday)
 
 TZ = 'Europe/Stockholm'
 STHLM = ZoneInfo(TZ)
@@ -56,6 +59,37 @@ def test_minute_1440_is_next_midnight():
     from datetime import date
     day = date(2026, 7, 11)
     assert local_instant(day, 1440, TZ) == local_instant(date(2026, 7, 12), 0, TZ)
+
+
+def test_month_bounds_normal_month():
+    start, end = month_bounds_utc('2026-07', TZ)
+    assert start == local(2026, 7, 1, 0).astimezone(timezone.utc)
+    assert end == local(2026, 8, 1, 0).astimezone(timezone.utc)
+    assert (end - start).total_seconds() / 3600 == 31 * 24
+
+
+def test_month_bounds_year_rollover():
+    start, end = month_bounds_utc('2026-12', TZ)
+    assert start == local(2026, 12, 1, 0).astimezone(timezone.utc)
+    assert end == local(2027, 1, 1, 0).astimezone(timezone.utc)
+
+
+def test_month_bounds_are_dst_aware():
+    def hours(month):
+        start, end = month_bounds_utc(month, TZ)
+        return (end - start).total_seconds() / 3600
+
+    # Spring transition (2026-03-29): one hour is skipped.
+    assert hours('2026-03') == 31 * 24 - 1
+    # Autumn transition (2026-10-25): one hour repeats.
+    assert hours('2026-10') == 31 * 24 + 1
+
+
+@pytest.mark.parametrize('bad', ['2026-7', '2026-13', '2026-00', '2026-07-01',
+                                 'garbage', '', '2026-W28', '202-07'])
+def test_month_bounds_rejects_bad_input(bad):
+    with pytest.raises(ValueError):
+        month_bounds_utc(bad, TZ)
 
 
 def test_dst_gap_wall_time_is_normalized_not_an_error():

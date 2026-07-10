@@ -1,6 +1,6 @@
 import type {
-  AvailabilityDocument, ConflictItem, ConflictResult, ExceptionInterval, Org,
-  Publication, Rules, Shift, ShiftWriteResult, Staff,
+  AvailabilityDocument, ConflictItem, ConflictResult, ExceptionInterval,
+  LaborCostReport, Org, Publication, Rules, Shift, ShiftWriteResult, Staff,
 } from './types'
 
 // Registered once by main.tsx's ClerkBridge; every request awaits this for
@@ -66,6 +66,7 @@ export interface StaffPayload {
   archived?: boolean
   desired_shifts_per_week?: number | null
   availability_note?: string | null
+  hourly_wage?: number | null
 }
 
 export const listStaff = (includeArchived = false) =>
@@ -147,6 +148,10 @@ export const deleteShift = (id: string) =>
 export const computeConflicts = (
   shifts: { id?: string; staff_id?: string | null; starts_at: string; ends_at: string }[],
 ) => request<ConflictResult>('POST', '/compute/conflicts', { shifts })
+
+/** Monthly labor-cost report (issue #17). period: ISO month like '2026-07'. */
+export const computeLaborCost = (period: string) =>
+  request<LaborCostReport>('POST', '/compute/labor-cost', { period })
 
 /** Publications overlapping the period, ordered by start; [] when unpublished. */
 export const getPublications = (period: string) =>

@@ -10,7 +10,7 @@ from db import get_db
 bp = Blueprint('data_staff', __name__)
 
 EDITABLE_FIELDS = ('name', 'phone', 'email', 'role', 'max_hours_per_week',
-                   'desired_shifts_per_week', 'availability_note')
+                   'desired_shifts_per_week', 'availability_note', 'hourly_wage')
 
 
 def staff_json(s):
@@ -23,6 +23,7 @@ def staff_json(s):
         'max_hours_per_week': float(s['max_hours_per_week']) if s['max_hours_per_week'] is not None else None,
         'desired_shifts_per_week': s['desired_shifts_per_week'],
         'availability_note': s['availability_note'],
+        'hourly_wage': float(s['hourly_wage']) if s['hourly_wage'] is not None else None,
         'share_token': s['share_token'],
         'archived': s['archived_at'] is not None,
     }
@@ -46,6 +47,9 @@ def _validate(body, *, require_name, allow_archived):
     dspw = body.get('desired_shifts_per_week')
     if dspw is not None and not (is_strict_int(dspw) and 0 <= dspw <= 50):
         raise ApiError(400, 'invalid', 'desired_shifts_per_week must be an integer 0-50 or null')
+    wage = body.get('hourly_wage')
+    if wage is not None and (not is_number(wage) or not 0 <= wage <= 100000):
+        raise ApiError(400, 'invalid', 'hourly_wage must be a number between 0 and 100000 or null')
     if 'availability_note' in body:
         normalize_note(body['availability_note'], 1000, field='availability_note')
 
@@ -70,12 +74,13 @@ def create_staff():
         with conn.cursor() as cur:
             cur.execute(
                 """INSERT INTO staff (org_id, name, phone, email, role, max_hours_per_week,
-                                      desired_shifts_per_week, availability_note)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING *""",
+                                      desired_shifts_per_week, availability_note, hourly_wage)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *""",
                 (org['id'], body['name'].strip(), body.get('phone'), body.get('email'),
                  body.get('role'), body.get('max_hours_per_week'),
                  body.get('desired_shifts_per_week'),
-                 normalize_note(body.get('availability_note'), 1000, field='availability_note')),
+                 normalize_note(body.get('availability_note'), 1000, field='availability_note'),
+                 body.get('hourly_wage')),
             )
             row = cur.fetchone()
         conn.commit()

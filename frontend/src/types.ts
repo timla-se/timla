@@ -9,6 +9,31 @@ export interface Staff {
   archived: boolean
   desired_shifts_per_week: number | null
   availability_note: string | null
+  hourly_wage: number | null
+}
+
+/** One row of POST /compute/labor-cost (issue #17): scheduled hours in the
+ * month × current hourly wage. `cost` is null when the wage is unset — the
+ * server never guesses a wage. */
+export interface LaborCostRow {
+  staff_id: string
+  name: string
+  archived: boolean
+  hours: number
+  hourly_wage: number | null
+  cost: number | null
+}
+
+export interface LaborCostReport {
+  period: string
+  staff: LaborCostRow[]
+  totals: {
+    hours: number
+    /** Sum of the rounded row costs — a *known* cost when cost_complete is false. */
+    cost: number
+    uncosted_hours: number
+    cost_complete: boolean
+  }
 }
 
 export interface RecurringInterval {

@@ -121,6 +121,25 @@ def test_desired_shifts_per_week_check(db, org_id):
             )
 
 
+def test_hourly_wage_rejects_negative(db, org_id):
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            cur.execute(
+                "INSERT INTO staff (org_id, name, hourly_wage) VALUES (%s, 'X', -1)",
+                (org_id,),
+            )
+
+
+def test_hourly_wage_allows_null_and_zero(db, org_id):
+    with db.cursor() as cur:
+        cur.execute(
+            """INSERT INTO staff (org_id, name, hourly_wage)
+               VALUES (%s, 'NoWage', NULL), (%s, 'ZeroWage', 0) RETURNING hourly_wage""",
+            (org_id, org_id),
+        )
+        assert len(cur.fetchall()) == 2
+
+
 def test_availability_is_recurring_xor_dated(db, org_id, staff_id):
     with pytest.raises(psycopg.errors.CheckViolation):
         with db.cursor() as cur:
