@@ -7,6 +7,7 @@ def register(app):
     from routes.action_publish import bp as action_publish_bp
     from routes.action_staff import bp as action_staff_bp
     from routes.compute_conflicts import bp as conflicts_bp
+    from routes.compute_labor_cost import bp as labor_cost_bp
     from routes.data_availability import bp as availability_bp
     from routes.data_org import bp as org_bp
     from routes.data_publications import bp as publications_bp
@@ -22,6 +23,7 @@ def register(app):
     app.register_blueprint(rules_bp)
     app.register_blueprint(publications_bp)
     app.register_blueprint(conflicts_bp)
+    app.register_blueprint(labor_cost_bp)
     app.register_blueprint(action_publish_bp)
     app.register_blueprint(action_staff_bp)
     app.register_blueprint(svar_bp)

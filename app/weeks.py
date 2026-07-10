@@ -7,6 +7,7 @@ the org timezone and expanded to concrete UTC instants here — zoneinfo
 handles DST, including the skipped/repeated hours at the transitions.
 """
 
+import re
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -42,6 +43,23 @@ def week_bounds_utc(week, tz):
         local_instant(monday, 0, tz),
         local_instant(monday + timedelta(days=7), 0, tz),
     )
+
+
+def month_bounds_utc(month, tz):
+    """[start, end) of a calendar month ('2026-07') as UTC instants.
+
+    Like weeks, months are evaluated in the org timezone and a shift
+    belongs to the month in which it **starts**. DST months are an hour
+    short or long; converting the local month edges handles that.
+
+    Raises ValueError on anything but a strict zero-padded 'YYYY-MM'.
+    """
+    if not isinstance(month, str) or not re.fullmatch(r'\d{4}-(0[1-9]|1[0-2])', month):
+        raise ValueError(f'invalid month: {month!r}')
+    year, mon = int(month[:4]), int(month[5:])
+    first = date(year, mon, 1)
+    first_of_next = date(year + 1, 1, 1) if mon == 12 else date(year, mon + 1, 1)
+    return local_instant(first, 0, tz), local_instant(first_of_next, 0, tz)
 
 
 def local_instant(day, minute, tz):

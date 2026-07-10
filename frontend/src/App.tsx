@@ -8,6 +8,7 @@ import { Layout } from './components/Layout'
 import { OnboardingGate } from './components/OnboardingGate'
 import SignInScreen from './components/SignInScreen'
 import SignUpScreen from './components/SignUpScreen'
+import Reports from './pages/Reports'
 import Schedule from './pages/Schedule'
 import Settings from './pages/Settings'
 import Staff from './pages/Staff'
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/staff/:staffId" element={<StaffDetail />} />
           <Route path="/schema" element={<ScheduleRedirect />} />
           <Route path="/schema/:week" element={<Schedule />} />
+          <Route path="/rapporter" element={<Reports />} />
           <Route path="/installningar" element={<Settings />} />
           <Route path="*" element={<Navigate to="/staff" replace />} />
         </Route>

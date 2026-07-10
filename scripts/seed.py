@@ -31,19 +31,20 @@ TZ = 'Europe/Stockholm'
 ORG_NAME = 'Demo Bistro'
 
 # (name, role, own max h/week or None, desired shifts/week or None,
-#  availability note or None) — the last two are the issue #40 per-staff
-# fields, set for a few people so demo data exercises them.
+#  availability note or None, hourly wage kr/h or None) — desired shifts +
+# note are the issue #40 per-staff fields; the wage is issue #17. A couple
+# of wages stay None on purpose to demo the uncosted state in /rapporter.
 STAFF = [
-    ('Lisa Andersson', 'kock', None, 4, None),
-    ('Erik Lindqvist', 'servis', None, None, None),
-    ('Karin Nilsson', 'servis', 30, 3, None),
-    ('Johan Berg', 'kock', None, None, None),
-    ('Sara Holm', 'servis', None, None, None),
-    ('Ali Hassan', 'kock', None, None, None),
-    ('Emma Sjögren', 'servis', 20, 3, 'Pluggar — helst inte vardagar före 15'),
-    ('Oskar Dahl', 'bar', None, None, None),
-    ('Maria Öberg', 'servis', None, None, None),
-    ('Nils Ek', 'bar', None, None, None),
+    ('Lisa Andersson', 'kock', None, 4, None, 195),
+    ('Erik Lindqvist', 'servis', None, None, None, 168.50),
+    ('Karin Nilsson', 'servis', 30, 3, None, 172),
+    ('Johan Berg', 'kock', None, None, None, 201.25),
+    ('Sara Holm', 'servis', None, None, None, 165),
+    ('Ali Hassan', 'kock', None, None, None, 189),
+    ('Emma Sjögren', 'servis', 20, 3, 'Pluggar — helst inte vardagar före 15', None),
+    ('Oskar Dahl', 'bar', None, None, None, 178.50),
+    ('Maria Öberg', 'servis', None, None, None, 170),
+    ('Nils Ek', 'bar', None, None, None, None),
 ]
 
 LUNCH = (11 * 60, 14 * 60)      # 3 people every day
@@ -84,13 +85,13 @@ def seed_user_binding(cur, org_id):
 def seed_staff(cur, org_id):
     """Returns (staff_ids, sunday_blocked_ids) so scheduling can respect the blocks."""
     staff_ids = []
-    for i, (name, role, max_hours, desired_shifts, availability_note) in enumerate(STAFF):
+    for i, (name, role, max_hours, desired_shifts, availability_note, hourly_wage) in enumerate(STAFF):
         cur.execute(
             """INSERT INTO staff (org_id, name, role, max_hours_per_week, share_token,
-                                  desired_shifts_per_week, availability_note)
-               VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id, share_token""",
+                                  desired_shifts_per_week, availability_note, hourly_wage)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, share_token""",
             (org_id, name, role, max_hours, secrets.token_urlsafe(24),
-             desired_shifts, availability_note),
+             desired_shifts, availability_note, hourly_wage),
         )
         staff_ids.append(cur.fetchone()['id'])
 

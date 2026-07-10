@@ -133,6 +133,22 @@ def test_context_shape(client, org):
     assert sched['shifts'][0]['date']  # date-grouped
 
 
+def test_hourly_wage_never_leaks_to_svar(client, org):
+    # The wage is manager-only data (issue #17); /svar is unauthenticated.
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            staff_id, token = _mk_staff(cur, org)
+            cur.execute('UPDATE staff SET hourly_wage = 173.50 WHERE id = %s', (staff_id,))
+        conn.commit()
+    resp = client.get(f'/svar/{token}/data')
+    assert resp.status_code == 200
+    assert 'hourly_wage' not in resp.get_data(as_text=True)
+
+    resp = client.put(f'/svar/{token}/availability', json={'hourly_wage': 200})
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'unknown_field'
+
+
 # --- PUT: recurring ---
 
 def test_put_recurring_last_write_wins(client, org):

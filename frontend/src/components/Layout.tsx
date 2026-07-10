@@ -23,7 +23,7 @@ const NAV: { to?: string; label: string; icon: typeof Users }[] = [
   { label: 'Bokningar', icon: ClipboardList },
   { to: '/staff', label: 'Personal', icon: Users },
   { label: 'Resurser', icon: Package },
-  { label: 'Rapporter', icon: BarChart3 },
+  { to: '/rapporter', label: 'Rapporter', icon: BarChart3 },
 ]
 
 /** Topbar search ("Sök medarbetare…") — owned by the shell, consumed by the
@@ -105,6 +105,7 @@ function NavItem({ to, label, icon: Icon, badge }: {
 function pageLabel(pathname: string): string {
   if (pathname.startsWith('/staff')) return 'Personal'
   if (pathname.startsWith('/schema')) return 'Arbetsschema'
+  if (pathname.startsWith('/rapporter')) return 'Rapporter'
   if (pathname.startsWith('/installningar')) return 'Inställningar'
   return ''
 }

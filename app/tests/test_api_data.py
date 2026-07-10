@@ -37,9 +37,36 @@ def test_staff_crud_roundtrip(client, make_staff):
 
 
 def test_staff_rejects_unknown_fields(client):
-    resp = client.post('/data/staff', json={'name': 'X', 'hourly_wage': 200})
+    resp = client.post('/data/staff', json={'name': 'X', 'shoe_size': 42})
     assert resp.status_code == 400
     assert resp.get_json()['error'] == 'unknown_field'
+
+
+def test_staff_hourly_wage_roundtrip(client, make_staff):
+    staff = make_staff(hourly_wage=173.50)
+    assert staff['hourly_wage'] == 173.50
+
+    listed = client.get('/data/staff').get_json()
+    assert listed[0]['hourly_wage'] == 173.50
+
+    resp = client.patch(f"/data/staff/{staff['id']}", json={'hourly_wage': 0})
+    assert resp.get_json()['hourly_wage'] == 0
+
+    resp = client.patch(f"/data/staff/{staff['id']}", json={'hourly_wage': None})
+    assert resp.get_json()['hourly_wage'] is None
+
+
+def test_staff_hourly_wage_rounds_to_two_decimals(client, make_staff):
+    # numeric(8,2) rounds a >2-decimal wage at the column.
+    staff = make_staff(hourly_wage=173.505)
+    assert staff['hourly_wage'] == 173.51
+
+
+@pytest.mark.parametrize('bad', [-1, 100001, 'abc', True, False, [], {}])
+def test_staff_hourly_wage_validation_400(client, bad):
+    resp = client.post('/data/staff', json={'name': 'X', 'hourly_wage': bad})
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'invalid'
 
 
 def test_org_isolation(client, make_staff):
