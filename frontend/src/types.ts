@@ -58,9 +58,14 @@ export interface Shift {
   note: string | null
 }
 
+/** One publication overlapping the requested range (issue #10). `from`/`to`
+ * are inclusive local dates; `diverged` means the live shifts no longer match
+ * what staff see for this publication. */
 export interface Publication {
-  week: string
+  from: string
+  to: string
   published_at: string
+  diverged: boolean
 }
 
 /** One entry from the conflict engine (issue #5). `type` drives the Swedish

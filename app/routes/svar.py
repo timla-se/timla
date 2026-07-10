@@ -23,7 +23,6 @@ from flask import Blueprint, jsonify, redirect
 from api_utils import ApiError, get_json_body, is_strict_int, normalize_note
 from db import get_db
 from routes.data_availability import _document, _load_intervals
-from weeks import iso_week_of, week_monday
 
 bp = Blueprint('svar', __name__)
 
@@ -58,25 +57,19 @@ def _initials(name):
 
 def _gather_schedule(conn, staff):
     """This worker's upcoming published shifts over a forward window, as a flat
-    date-grouped list — no ISO-week strings in the output. Today publications
-    are week-keyed, so we union every week's snapshot that overlaps the window;
-    when #10 generalizes publications the contract here is unchanged."""
+    date-grouped list — no ISO-week strings in the output. Publications are
+    date ranges (#10); every snapshot overlapping the window is read with a
+    plain overlap query (non-overlap invariant means no dedupe is needed)."""
     tz = staff['org_timezone']
     zone = ZoneInfo(tz)
     today = datetime.now(timezone.utc).astimezone(zone).date()
     to_date = today + timedelta(days=_SCHEDULE_HORIZON_DAYS)
 
-    # ISO weeks overlapping [today, to_date], from the Monday of today's week.
-    start_monday = week_monday(iso_week_of(datetime.combine(today, datetime.min.time(), tzinfo=zone), tz))
-    weeks, d = [], start_monday
-    while d <= to_date:
-        weeks.append(iso_week_of(datetime.combine(d, datetime.min.time(), tzinfo=zone), tz))
-        d += timedelta(days=7)
-
     with conn.cursor() as cur:
         cur.execute(
-            'SELECT shifts FROM publication WHERE org_id = %s AND week = ANY(%s)',
-            (staff['org_id'], weeks),
+            """SELECT shifts FROM publication
+               WHERE org_id = %s AND period_start <= %s AND period_end > %s""",
+            (staff['org_id'], to_date, today),
         )
         pubs = cur.fetchall()
 

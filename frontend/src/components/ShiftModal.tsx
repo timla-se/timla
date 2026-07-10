@@ -70,8 +70,12 @@ export function ShiftModal({ initial, period, tz, staff, onClose }: {
   const editingId = editShift?.id ?? null
   const queryClient = useQueryClient()
   // A shift's start day decides its ISO week, so a move can change the week —
-  // invalidate the whole prefix, not just the current period.
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['shifts'] })
+  // invalidate the whole prefix, not just the current period. Shift writes
+  // also change divergence, so the publish badge refreshes too (#10).
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['shifts'] })
+    void queryClient.invalidateQueries({ queryKey: ['publication'] })
+  }
 
   const weekDays = useMemo(() => weekIsoDates(parseWeekPeriod(period)), [period])
 

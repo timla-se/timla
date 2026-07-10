@@ -141,6 +141,12 @@ export const computeConflicts = (
   shifts: { id?: string; staff_id?: string | null; starts_at: string; ends_at: string }[],
 ) => request<ConflictResult>('POST', '/compute/conflicts', { shifts })
 
-/** null when the week is unpublished. */
-export const getPublication = (period: string) =>
-  request<Publication | null>('GET', `/data/publications?period=${encodeURIComponent(period)}`)
+/** Publications overlapping the period, ordered by start; [] when unpublished. */
+export const getPublications = (period: string) =>
+  request<Publication[]>('GET', `/data/publications?period=${encodeURIComponent(period)}`)
+
+/** Freeze the period's live shifts into the snapshot staff links read (#10).
+ * The MVP UI publishes one week; the API is range-general from day one. */
+export const publishSchedule = (body: { period: string } | { from: string; to: string }) =>
+  request<{ from: string; to: string; published_at: string; shift_count: number }>(
+    'POST', '/action/publish', body)

@@ -364,20 +364,73 @@ def test_publications_read(client, org_id):
     assert client.get('/data/publications?period=vecka-28').status_code == 400
     assert client.get('/data/publications?period=2026-W99').status_code == 400
 
-    assert client.get('/data/publications?period=2026-W28').get_json() is None
+    # unpublished → empty list (was null pre-#10)
+    assert client.get('/data/publications?period=2026-W28').get_json() == []
 
+    assert client.post('/action/publish', json={'period': '2026-W28'}).status_code == 200
+    body = client.get('/data/publications?period=2026-W28').get_json()
+    assert len(body) == 1
+    assert body[0]['from'] == '2026-07-06' and body[0]['to'] == '2026-07-12'  # to inclusive
+    assert body[0]['published_at']
+    assert body[0]['diverged'] is False
+    # the range form works and finds the same publication
+    ranged = client.get('/data/publications?from=2026-07-01&to=2026-07-31').get_json()
+    assert len(ranged) == 1 and ranged[0]['from'] == '2026-07-06'
+    # other weeks stay unpublished
+    assert client.get('/data/publications?period=2026-W29').get_json() == []
+
+
+def test_publications_org_scoped(client, org_id):
     with psycopg.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
+            cur.execute("INSERT INTO organization (name) VALUES ('Pub other org') RETURNING id")
+            other_org = str(cur.fetchone()[0])
             cur.execute(
-                "INSERT INTO publication (org_id, week, shifts) VALUES (%s, '2026-W28', '[]')",
-                (org_id,),
+                """INSERT INTO publication (org_id, period_start, period_end, shifts)
+                   VALUES (%s, '2026-07-06', '2026-07-13', '[]')""",
+                (other_org,),
             )
         conn.commit()
-    body = client.get('/data/publications?period=2026-W28').get_json()
-    assert body['week'] == '2026-W28'
-    assert body['published_at']
-    # Other weeks stay unpublished
-    assert client.get('/data/publications?period=2026-W29').get_json() is None
+    try:
+        assert client.get('/data/publications?period=2026-W28').get_json() == []
+    finally:
+        with psycopg.connect(DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute('DELETE FROM organization WHERE id = %s', (other_org,))
+            conn.commit()
+
+
+def test_publications_diverged_lifecycle(client, make_staff):
+    staff = make_staff()
+    shift = client.post('/data/shifts', json={
+        'staff_id': staff['id'],
+        'starts_at': '2026-07-07T08:00:00+00:00',
+        'ends_at': '2026-07-07T14:00:00+00:00',
+        'note': 'lunchpass',
+    }).get_json()['shift']
+
+    assert client.post('/action/publish', json={'period': '2026-W28'}).status_code == 200
+    pubs = client.get('/data/publications?period=2026-W28').get_json()
+    assert pubs[0]['diverged'] is False
+
+    # a live edit (even note-only) flips diverged — the snapshot is the record
+    client.patch(f"/data/shifts/{shift['id']}", json={'note': 'ändrat'})
+    assert client.get('/data/publications?period=2026-W28').get_json()[0]['diverged'] is True
+
+    # re-publish converges again
+    client.post('/action/publish', json={'period': '2026-W28'})
+    assert client.get('/data/publications?period=2026-W28').get_json()[0]['diverged'] is False
+
+    # delete + recreate an identical shift (new id) is not divergence
+    assert client.delete(f"/data/shifts/{shift['id']}").status_code == 204
+    recreated = client.post('/data/shifts', json={
+        'staff_id': staff['id'],
+        'starts_at': '2026-07-07T08:00:00+00:00',
+        'ends_at': '2026-07-07T14:00:00+00:00',
+        'note': 'ändrat',
+    })
+    assert recreated.status_code == 201
+    assert client.get('/data/publications?period=2026-W28').get_json()[0]['diverged'] is False
 
 
 # --- rules ---

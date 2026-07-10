@@ -181,14 +181,22 @@ def publish_week(cur, org_id, week, shifts):
             'staff_id': str(s['staff_id']),
             'starts_at': s['starts_at'].isoformat(),
             'ends_at': s['ends_at'].isoformat(),
+            'note': s.get('note'),
         }
         for s in shifts
     ]
+    # ON CONFLICT DO UPDATE can't target an exclusion constraint, so
+    # idempotency is delete-overlapping-then-insert (the same shape the
+    # publish action uses).
+    period_start = week_monday(week)
+    period_end = period_start + timedelta(days=7)
     cur.execute(
-        """INSERT INTO publication (org_id, week, shifts) VALUES (%s, %s, %s)
-           ON CONFLICT (org_id, week)
-           DO UPDATE SET shifts = EXCLUDED.shifts, published_at = now()""",
-        (org_id, week, json.dumps(snapshot)),
+        'DELETE FROM publication WHERE org_id = %s AND period_start < %s AND period_end > %s',
+        (org_id, period_end, period_start),
+    )
+    cur.execute(
+        'INSERT INTO publication (org_id, period_start, period_end, shifts) VALUES (%s, %s, %s, %s)',
+        (org_id, period_start, period_end, json.dumps(snapshot)),
     )
 
 
