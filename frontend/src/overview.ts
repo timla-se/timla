@@ -1,12 +1,15 @@
-import type { WeekRanges } from './ranges'
+import { isWholeDay, type WeekRanges } from './ranges'
+import type { SvarRecurring } from './types'
 
 /**
- * Builds the "Din period i överblick" mini-calendar model (issue #13): the
- * worker's recurring normalvecka + dated blocks projected onto the real
- * period, grouped by month like a wall calendar. Derived live from the current
- * selections so the overview updates as they edit.
+ * Builds the "Din period i överblick" mini-calendar model (issues #13, #41):
+ * the worker's positive normalvecka, the manager-set recurring blocks
+ * (read-only on the phone) and the dated exceptions ("Kan inte" / "Kan extra")
+ * projected onto the real period, grouped by month like a wall calendar.
+ * Derived live from the current selections so the overview updates as they
+ * edit. `partial` means a want day with limited hours (not the whole canvas).
  */
-export type DayStatus = 'want' | 'block' | 'partial' | 'ledig' | 'out' | 'adj'
+export type DayStatus = 'want' | 'block' | 'extra' | 'partial' | 'ledig' | 'out' | 'adj'
 
 export interface CalCell { key: string; num: number; status: DayStatus }
 export interface CalWeek { weekNo: number; cells: CalCell[] }
@@ -39,22 +42,30 @@ export function buildOverview(
   fromIso: string,
   toIsoStr: string,
   want: WeekRanges,
-  cannot: WeekRanges,
-  blockedDates: Set<string>,
+  recurringBlocks: SvarRecurring[], // read-only here; manager-set standing "no"
+  exceptions: { on_date: string; kind: 'wish' | 'block' }[],
 ): CalMonth[] {
   const start = parseIso(fromIso)
   const end = parseIso(toIsoStr)
   if (!start || !end) return []
 
+  // A same-day "Kan inte" beats "Kan extra" — mirrors the engine, which
+  // checks blocks first; never paint a day yellow the engine would refuse.
+  const dated = new Map<string, 'block' | 'extra'>()
+  for (const ex of exceptions) {
+    if (ex.kind === 'block') dated.set(ex.on_date, 'block')
+    else if (dated.get(ex.on_date) !== 'block') dated.set(ex.on_date, 'extra')
+  }
+  const blockedWeekdays = new Set(recurringBlocks.map((b) => b.weekday))
+
   const statusOf = (d: Date): DayStatus => {
     if (d < start || d > end) return 'out'
-    if (blockedDates.has(toIso(d))) return 'block'
+    const ex = dated.get(toIso(d))
+    if (ex) return ex
     const wd = ((d.getDay() + 6) % 7) + 1
-    const w = Boolean(want[wd])
-    const c = Boolean(cannot[wd])
-    if (w && c) return 'partial'
-    if (c) return 'block'
-    if (w) return 'want'
+    if (blockedWeekdays.has(wd)) return 'block'
+    const w = want[wd]
+    if (w) return isWholeDay(w) ? 'want' : 'partial'
     return 'ledig'
   }
 

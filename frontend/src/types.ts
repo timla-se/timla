@@ -87,6 +87,13 @@ export type ShiftWriteResult = { shift: Shift } & ConflictResult
 // --- staff share-link (/svar) surface (issue #13) ---
 
 export interface SvarRecurring {
+  // Additive metadata the server emits (issue #40); the PUT only needs the
+  // three load-bearing fields, so mergedRecurring keeps sending clean
+  // {weekday, start_minute, end_minute} objects.
+  id?: string
+  kind?: 'wish' | 'block'
+  source?: 'staff' | 'manager' | null
+  note?: string | null
   weekday: number
   start_minute: number
   end_minute: number
@@ -97,6 +104,9 @@ export interface SvarException {
   on_date: string
   start_minute: number
   end_minute: number
+  kind: 'wish' | 'block'
+  note: string | null
+  source: 'staff' | 'manager' | null
 }
 
 export interface SvarShift {
@@ -106,7 +116,12 @@ export interface SvarShift {
 }
 
 export interface SvarContext {
-  staff: { first_name: string; name: string }
+  staff: {
+    first_name: string
+    name: string
+    desired_shifts_per_week: number | null
+    availability_note: string | null
+  }
   org: { name: string; initials: string; timezone: string }
   availability: {
     wishes: SvarRecurring[]
@@ -122,9 +137,20 @@ export interface SvarContext {
   }
 }
 
+/** PUT /svar/:token/availability — every key is per-key optional: an omitted
+ * key leaves that layer/field untouched (issue #40). The v2 phone never sends
+ * `blocks`, which is what keeps manager-set recurring blocks intact. */
 export interface SvarPutBody {
-  wishes: SvarRecurring[]
-  blocks: SvarRecurring[]
-  add_exceptions: { on_date: string; start_minute: number; end_minute: number }[]
-  remove_exception_ids: string[]
+  wishes?: SvarRecurring[]
+  blocks?: SvarRecurring[] // v2 never sends this — omitting preserves manager blocks
+  add_exceptions?: {
+    on_date: string
+    start_minute?: number
+    end_minute?: number
+    kind?: 'wish' | 'block'
+    note?: string
+  }[]
+  remove_exception_ids?: string[]
+  desired_shifts_per_week?: number | null
+  availability_note?: string | null
 }
