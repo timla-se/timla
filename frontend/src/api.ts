@@ -64,6 +64,8 @@ export interface StaffPayload {
   role?: string | null
   max_hours_per_week?: number | null
   archived?: boolean
+  desired_shifts_per_week?: number | null
+  availability_note?: string | null
 }
 
 export const listStaff = (includeArchived = false) =>
@@ -92,7 +94,13 @@ export const putAvailability = (
 
 export const addException = (
   staffId: string,
-  exception: { on_date: string; start_minute?: number; end_minute?: number },
+  exception: {
+    on_date: string
+    start_minute?: number
+    end_minute?: number
+    kind?: 'wish' | 'block'
+    note?: string
+  },
 ) => request<ExceptionInterval>('POST', `/data/availability/${staffId}/exceptions`, exception)
 
 export const deleteException = (staffId: string, exceptionId: string) =>

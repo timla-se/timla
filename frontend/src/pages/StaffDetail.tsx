@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { Flex, Heading, Spinner, Text } from '@radix-ui/themes'
-import { Badge, Button, Callout, DatePicker, Select, TextField } from '@swedev/ui'
+import { Badge, Button, Callout, DatePicker, Select, TextArea, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Plus, Trash2 } from 'lucide-react'
 
-import { addException, ApiError, deleteException, getAvailability, listStaff, putAvailability } from '../api'
+import { addException, ApiError, deleteException, getAvailability, listStaff, putAvailability, updateStaff } from '../api'
 import { EmptyState } from '../components/EmptyState'
 import { Mono } from '../components/Mono'
 import { formatIsoDate, intervalLabel, minutesToTime, timeToMinutes, WEEKDAYS, weekdayLabel } from '../time'
@@ -19,6 +19,42 @@ interface PatternRow {
 
 function toRows(intervals: RecurringInterval[]): PatternRow[] {
   return intervals.map(({ weekday, start_minute, end_minute }) => ({ weekday, start_minute, end_minute }))
+}
+
+/** Strict parse for "önskat antal pass/vecka": the server demands an int
+ * 0–50 or null (data_staff.py), so unlike Staff.tsx's parseMaxHours this
+ * rejects decimals and commas outright. Empty = null = unspecified. */
+function parseDesiredShifts(value: string): number | null | 'invalid' {
+  const trimmed = value.trim()
+  if (trimmed === '') return null
+  if (!/^\d+$/.test(trimmed)) return 'invalid'
+  const n = Number(trimmed)
+  return n > 50 ? 'invalid' : n
+}
+
+/** Red "Kan inte" / green "Kan extra" inline pair — same interaction model
+ * as the phone's ExceptionRow, and not SegmentedControl for its documented
+ * reason: the control can't do per-item semantic colors. */
+function KindToggle({ value, onChange }: {
+  value: 'wish' | 'block'
+  onChange: (kind: 'wish' | 'block') => void
+}) {
+  return (
+    <Flex gap="1">
+      <Button
+        size="1" text="Kan inte"
+        semantic={value === 'block' ? 'danger' : 'neutral'}
+        variant={value === 'block' ? 'solid' : 'soft'}
+        onClick={() => onChange('block')}
+      />
+      <Button
+        size="1" text="Kan extra"
+        semantic={value === 'wish' ? 'success' : 'neutral'}
+        variant={value === 'wish' ? 'solid' : 'soft'}
+        onClick={() => onChange('wish')}
+      />
+    </Flex>
+  )
 }
 
 function PatternSection({ title, hint, rows, onChange }: {
@@ -96,9 +132,33 @@ export default function StaffDetail() {
     }
   }, [doc, dirty])
 
+  // Add-exception form: whole day by default; "Vissa tider" reveals the
+  // time inputs (same model as the phone's ExceptionRow).
   const [newExceptionDate, setNewExceptionDate] = useState<Date | null>(null)
+  const [newExceptionKind, setNewExceptionKind] = useState<'wish' | 'block'>('block')
+  const [newExceptionNote, setNewExceptionNote] = useState('')
   const [newExceptionStart, setNewExceptionStart] = useState('00:00')
   const [newExceptionEnd, setNewExceptionEnd] = useState('00:00')
+  const [showTimes, setShowTimes] = useState(false)
+
+  // Önskemål: per-staff fields from /data/staff (not the availability doc) —
+  // their own dirty flag + save so a failed request can't half-save the page.
+  const [desiredShifts, setDesiredShifts] = useState('')
+  const [prefsNote, setPrefsNote] = useState('')
+  const [prefsDirty, setPrefsDirty] = useState(false)
+  const [prefsFor, setPrefsFor] = useState<string | null>(null)
+  useEffect(() => {
+    if (!staff) return
+    // Navigating between staff pages must never show (or save) the previous
+    // person's values — reset unconditionally when the id changes; otherwise
+    // follow the page's dirty-guard convention: only sync while clean.
+    if (staff.id !== prefsFor || !prefsDirty) {
+      setPrefsFor(staff.id)
+      setDesiredShifts(staff.desired_shifts_per_week === null ? '' : String(staff.desired_shifts_per_week))
+      setPrefsNote(staff.availability_note ?? '')
+      setPrefsDirty(false)
+    }
+  }, [staff, prefsDirty, prefsFor])
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['availability', staffId] })
   const errorText = (err: unknown) => (err instanceof ApiError ? err.message : 'Något gick fel.')
@@ -117,9 +177,30 @@ export default function StaffDetail() {
       const on_date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       const start = timeToMinutes(newExceptionStart)
       const end = timeToMinutes(newExceptionEnd, true)
-      return addException(staffId, { on_date, start_minute: start, end_minute: end })
+      const note = newExceptionNote.trim()
+      return addException(staffId, {
+        on_date, start_minute: start, end_minute: end,
+        kind: newExceptionKind, ...(note ? { note } : {}),
+      })
     },
-    onSuccess: () => { invalidate(); setNewExceptionDate(null); setNewExceptionStart('00:00'); setNewExceptionEnd('00:00') },
+    onSuccess: () => {
+      invalidate()
+      setNewExceptionDate(null); setNewExceptionKind('block'); setNewExceptionNote('')
+      setNewExceptionStart('00:00'); setNewExceptionEnd('00:00'); setShowTimes(false)
+    },
+  })
+
+  const parsedDesired = parseDesiredShifts(desiredShifts)
+  const savePrefs = useMutation({
+    mutationFn: () => updateStaff(staffId, {
+      // The save button is disabled while parsedDesired === 'invalid', so the
+      // fallback here only satisfies the type checker.
+      desired_shifts_per_week: parsedDesired === 'invalid' ? null : parsedDesired,
+      availability_note: prefsNote.trim() || null,
+    }),
+    // Invalidate the whole ['staff'] family: this page and Staff.tsx share
+    // the ['staff', true] list query.
+    onSuccess: () => { setPrefsDirty(false); queryClient.invalidateQueries({ queryKey: ['staff'] }) },
   })
 
   const removeException = useMutation({
@@ -141,6 +222,13 @@ export default function StaffDetail() {
   // catch it explicitly so the friendly message shows instead of the API's.
   const invalidRows = [...wishes, ...blocks].some((r) =>
     Number.isNaN(r.start_minute) || Number.isNaN(r.end_minute) || r.start_minute >= r.end_minute)
+
+  // Same NaN-aware guard for the add-exception times (whole day = 0–1440,
+  // which always passes).
+  const exceptionStart = timeToMinutes(newExceptionStart)
+  const exceptionEnd = timeToMinutes(newExceptionEnd, true)
+  const invalidExceptionTimes =
+    Number.isNaN(exceptionStart) || Number.isNaN(exceptionEnd) || exceptionStart >= exceptionEnd
 
   return (
     <Flex direction="column" gap="5" style={{ maxWidth: 640 }}>
@@ -167,7 +255,7 @@ export default function StaffDetail() {
             rows={wishes} onChange={(rows) => { setWishes(rows); setDirty(true) }}
           />
           <PatternSection
-            title="Kan inte jobba" hint="återkommande, per vecka"
+            title="Kan inte jobba" hint="återkommande, per vecka — kan bara ändras här, inte via personalens länk"
             rows={blocks} onChange={(rows) => { setBlocks(rows); setDirty(true) }}
           />
           <Flex gap="3" align="center">
@@ -182,12 +270,50 @@ export default function StaffDetail() {
           </Flex>
 
           <Flex direction="column" gap="2">
-            <Heading size="3">Undantag (datum personen inte kan)</Heading>
-            {doc?.exceptions.length === 0 && <Text size="2" color="gray">Inga undantag.</Text>}
+            <Flex align="center" gap="2">
+              <Heading size="3">Önskemål</Heading>
+              <Text size="1" color="gray">delas med personalens egen länk</Text>
+            </Flex>
+            <Flex align="center" gap="2">
+              <Text size="2">Önskat antal pass/vecka</Text>
+              <TextField.Root
+                inputMode="numeric" placeholder="–" style={{ width: 72 }}
+                value={desiredShifts}
+                onChange={(e) => { setDesiredShifts(e.target.value); setPrefsDirty(true) }}
+              />
+            </Flex>
+            <TextArea.Root
+              placeholder="Anteckning om tillgänglighet — samma text som personalens &quot;Något chefen bör veta?&quot;"
+              maxLength={1000} value={prefsNote}
+              onChange={(e) => { setPrefsNote(e.target.value); setPrefsDirty(true) }}
+            />
+            <Flex gap="3" align="center">
+              <Button
+                semantic="action" text={savePrefs.isPending ? 'Sparar…' : 'Spara önskemål'}
+                disabled={!prefsDirty || parsedDesired === 'invalid' || savePrefs.isPending}
+                onClick={() => savePrefs.mutate()}
+              />
+              {parsedDesired === 'invalid' && <Text size="2" color="red">Önskat antal pass måste vara ett heltal 0–50.</Text>}
+              {savePrefs.isError && <Callout semantic="error" message={errorText(savePrefs.error)} />}
+            </Flex>
+          </Flex>
+
+          <Flex direction="column" gap="2">
+            <Flex align="center" gap="2">
+              <Heading size="3">Avvikelser</Heading>
+              <Text size="1" color="gray">enstaka datum — kan inte, eller kan extra</Text>
+            </Flex>
+            {doc?.exceptions.length === 0 && <Text size="2" color="gray">Inga avvikelser.</Text>}
             {doc?.exceptions.map((exc) => (
-              <Flex key={exc.id} gap="3" align="center">
+              <Flex key={exc.id} gap="2" align="center" wrap="wrap">
                 <Mono className="text-sm">{formatIsoDate(exc.on_date)}</Mono>
+                <Badge
+                  semantic={exc.kind === 'wish' ? 'success' : 'danger'}
+                  text={exc.kind === 'wish' ? 'Kan extra' : 'Kan inte'}
+                />
                 <Badge semantic="neutral" className="font-mono" text={intervalLabel(exc.start_minute, exc.end_minute)} />
+                {exc.source === 'staff' && <Badge semantic="neutral" text="Ifyllt av personalen" />}
+                {exc.note && <Text size="2" color="gray">{exc.note}</Text>}
                 <Button semantic="neutral" variant="ghost" size="1" icon={Trash2}
                   disabled={removeException.isPending}
                   onClick={() => removeException.mutate(exc.id)} />
@@ -195,15 +321,35 @@ export default function StaffDetail() {
             ))}
             <Flex gap="2" align="center" wrap="wrap">
               <DatePicker value={newExceptionDate} onChange={setNewExceptionDate} placeholder="Datum" />
-              <TextField.Root type="time" className="font-mono" value={newExceptionStart} onChange={(e) => setNewExceptionStart(e.target.value)} />
-              <Text size="2" color="gray">till</Text>
-              <TextField.Root type="time" className="font-mono" value={newExceptionEnd} onChange={(e) => setNewExceptionEnd(e.target.value)} />
-              <Text size="1" color="gray">(00:00–00:00 = hela dagen)</Text>
+              <KindToggle value={newExceptionKind} onChange={setNewExceptionKind} />
               <Button
-                semantic="neutral" variant="soft" size="1" icon={Plus} text="Lägg till undantag"
-                disabled={!newExceptionDate || createException.isPending}
+                semantic="neutral" variant={showTimes ? 'soft' : 'ghost'} size="1"
+                icon={ChevronDown} text="Vissa tider" aria-expanded={showTimes}
+                onClick={() => setShowTimes((v) => !v)}
+              />
+            </Flex>
+            {showTimes && (
+              <Flex gap="2" align="center">
+                <TextField.Root type="time" className="font-mono" value={newExceptionStart} onChange={(e) => setNewExceptionStart(e.target.value)} />
+                <Text size="2" color="gray">till</Text>
+                <TextField.Root type="time" className="font-mono" value={newExceptionEnd} onChange={(e) => setNewExceptionEnd(e.target.value)} />
+                <Button
+                  semantic="neutral" variant="ghost" size="1" text="Hela dagen"
+                  onClick={() => { setNewExceptionStart('00:00'); setNewExceptionEnd('00:00') }}
+                />
+              </Flex>
+            )}
+            <TextField.Root
+              placeholder="Orsak (valfritt)" maxLength={500} value={newExceptionNote}
+              onChange={(e) => setNewExceptionNote(e.target.value)}
+            />
+            <Flex gap="3" align="center">
+              <Button
+                semantic="neutral" variant="soft" size="1" icon={Plus} text="Lägg till avvikelse"
+                disabled={!newExceptionDate || invalidExceptionTimes || createException.isPending}
                 onClick={() => createException.mutate()}
               />
+              {invalidExceptionTimes && <Text size="2" color="red">Ange giltiga tider — sluttid måste vara efter starttid.</Text>}
             </Flex>
             {createException.isError && <Callout semantic="error" message={errorText(createException.error)} />}
           </Flex>
