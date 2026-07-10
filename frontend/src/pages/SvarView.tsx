@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Calendar, Check, ChevronDown, ChevronRight, Lock, Plus, Sparkles, X } from 'lucide-react'
@@ -123,6 +123,10 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
   const [dirtyPerWeek, setDirtyPerWeek] = useState(false)
   const [note, setNote] = useState(() => context.staff.availability_note ?? '')
   const [dirtyNote, setDirtyNote] = useState(false)
+  // Monotonic counter for local exception ids: deriving them from the list
+  // length can repeat after a remove (add, add, remove, re-add), duplicating
+  // React keys and cross-wiring per-row note/showTimes state.
+  const nextLocalId = useRef(1)
 
   const save = useMutation({
     mutationFn: () => {
@@ -201,8 +205,9 @@ function Editor({ token, context }: { token: string; context: SvarContext }) {
     // The date input is period-constrained (min/max), but not every browser
     // enforces it — ignore out-of-range picks. ISO dates compare as strings.
     if (!onDate || onDate < schedule.from || onDate > schedule.to) return
+    const id = `new-${nextLocalId.current++}` // outside the updater — updaters must stay pure
     setExceptions((xs) => [...xs, {
-      id: `new-${onDate}-${xs.length}`,
+      id,
       on_date: onDate,
       start_minute: 0,
       end_minute: 1440,

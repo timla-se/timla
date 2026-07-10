@@ -49,8 +49,9 @@ export function buildOverview(
   const end = parseIso(toIsoStr)
   if (!start || !end) return []
 
-  // A same-day "Kan inte" beats "Kan extra" — mirrors the engine, which
-  // checks blocks first; never paint a day yellow the engine would refuse.
+  // Any block beats "Kan extra" — a same-day dated one as much as a recurring
+  // manager block. Mirrors the engine, which refuses blocked time regardless
+  // of wishes; never paint a day yellow the engine would refuse.
   const dated = new Map<string, 'block' | 'extra'>()
   for (const ex of exceptions) {
     if (ex.kind === 'block') dated.set(ex.on_date, 'block')
@@ -61,9 +62,10 @@ export function buildOverview(
   const statusOf = (d: Date): DayStatus => {
     if (d < start || d > end) return 'out'
     const ex = dated.get(toIso(d))
-    if (ex) return ex
+    if (ex === 'block') return 'block'
     const wd = ((d.getDay() + 6) % 7) + 1
     if (blockedWeekdays.has(wd)) return 'block'
+    if (ex) return 'extra'
     const w = want[wd]
     if (w) return isWholeDay(w) ? 'want' : 'partial'
     return 'ledig'
