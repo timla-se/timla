@@ -2,8 +2,10 @@ import { formatDayMonth, minutesToTime } from './time'
 import type { SvarRecurring } from './types'
 
 /**
- * Recurring availability as one time-range per weekday (issue #13). Day-first:
- * a day is off, or on with a single range. The worker canvas is 06:00–22:00
+ * Recurring availability as one time-range per weekday (issues #13, #41).
+ * Day-first: a day is off, or on with a single range. Since #41 the phone
+ * edits only the positive wishes layer this way — recurring blocks are
+ * manager-set and read-only there. The worker canvas is 06:00–22:00
  * (DAY_MIN..DAY_MAX) — "Hela dagen" means the full canvas, not 00–24; nights
  * are a manager-UI concern. Presets (Hela dagen / Morgon / Dag / Kväll) are
  * quick shortcuts on top of a free 15-min slider — not fixed buckets.
