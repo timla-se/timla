@@ -4,7 +4,9 @@
 Creates (idempotently — a rerun wipes and recreates the demo org):
 
 - org "Demo Bistro" (Europe/Stockholm), rules: max 40 h/week, 11 h rest
-- 10 staff with share tokens, wishes and hard blocks
+- 10 staff with share tokens, wishes and hard blocks (issue #40 fields
+  exercised: provenance stamps, "Kan extra" exceptions with notes,
+  desired shifts/week and an availability note)
 - the current ISO week fully scheduled and published
 - next week scheduled as a draft
 
@@ -28,18 +30,20 @@ from weeks import iso_week_of, local_instant, week_monday  # noqa: E402
 TZ = 'Europe/Stockholm'
 ORG_NAME = 'Demo Bistro'
 
-# (name, role, own max h/week or None)
+# (name, role, own max h/week or None, desired shifts/week or None,
+#  availability note or None) — the last two are the issue #40 per-staff
+# fields, set for a few people so demo data exercises them.
 STAFF = [
-    ('Lisa Andersson', 'kock', None),
-    ('Erik Lindqvist', 'servis', None),
-    ('Karin Nilsson', 'servis', 30),
-    ('Johan Berg', 'kock', None),
-    ('Sara Holm', 'servis', None),
-    ('Ali Hassan', 'kock', None),
-    ('Emma Sjögren', 'servis', 20),
-    ('Oskar Dahl', 'bar', None),
-    ('Maria Öberg', 'servis', None),
-    ('Nils Ek', 'bar', None),
+    ('Lisa Andersson', 'kock', None, 4, None),
+    ('Erik Lindqvist', 'servis', None, None, None),
+    ('Karin Nilsson', 'servis', 30, 3, None),
+    ('Johan Berg', 'kock', None, None, None),
+    ('Sara Holm', 'servis', None, None, None),
+    ('Ali Hassan', 'kock', None, None, None),
+    ('Emma Sjögren', 'servis', 20, 3, 'Pluggar — helst inte vardagar före 15'),
+    ('Oskar Dahl', 'bar', None, None, None),
+    ('Maria Öberg', 'servis', None, None, None),
+    ('Nils Ek', 'bar', None, None, None),
 ]
 
 LUNCH = (11 * 60, 14 * 60)      # 3 people every day
@@ -80,31 +84,35 @@ def seed_user_binding(cur, org_id):
 def seed_staff(cur, org_id):
     """Returns (staff_ids, sunday_blocked_ids) so scheduling can respect the blocks."""
     staff_ids = []
-    for i, (name, role, max_hours) in enumerate(STAFF):
+    for i, (name, role, max_hours, desired_shifts, availability_note) in enumerate(STAFF):
         cur.execute(
-            """INSERT INTO staff (org_id, name, role, max_hours_per_week, share_token)
-               VALUES (%s, %s, %s, %s, %s) RETURNING id, share_token""",
-            (org_id, name, role, max_hours, secrets.token_urlsafe(24)),
+            """INSERT INTO staff (org_id, name, role, max_hours_per_week, share_token,
+                                  desired_shifts_per_week, availability_note)
+               VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id, share_token""",
+            (org_id, name, role, max_hours, secrets.token_urlsafe(24),
+             desired_shifts, availability_note),
         )
         staff_ids.append(cur.fetchone()['id'])
 
     sunday_blocked = []
     for i, staff_id in enumerate(staff_ids):
         # Wishes: even indexes prefer daytime Mon–Fri, odd prefer evenings Tue–Sat.
+        # Recurring wishes represent worker answers → source='staff'.
         days, span = ((1, 2, 3, 4, 5), (9 * 60, 17 * 60)) if i % 2 == 0 else ((2, 3, 4, 5, 6), (15 * 60, 23 * 60))
         for weekday in days:
             cur.execute(
                 """INSERT INTO availability_interval
-                       (org_id, staff_id, kind, weekday, start_minute, end_minute)
-                   VALUES (%s, %s, 'wish', %s, %s, %s)""",
+                       (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+                   VALUES (%s, %s, 'wish', %s, %s, %s, 'staff')""",
                 (org_id, staff_id, weekday, *span),
             )
-        # Every third person can never work Sundays.
+        # Every third person can never work Sundays. Standing hard blocks are
+        # the manager's escape hatch (entered in StaffDetail) → source='manager'.
         if i % 3 == 0:
             cur.execute(
                 """INSERT INTO availability_interval
-                       (org_id, staff_id, kind, weekday, start_minute, end_minute)
-                   VALUES (%s, %s, 'block', 7, 0, 1440)""",
+                       (org_id, staff_id, kind, weekday, start_minute, end_minute, source)
+                   VALUES (%s, %s, 'block', 7, 0, 1440, 'manager')""",
                 (org_id, staff_id),
             )
             sunday_blocked.append(staff_id)
@@ -113,9 +121,28 @@ def seed_staff(cur, org_id):
     next_monday = week_monday(iso_week_of(datetime.now(timezone.utc), TZ)) + timedelta(days=7)
     cur.execute(
         """INSERT INTO availability_interval
-               (org_id, staff_id, kind, on_date, start_minute, end_minute)
-           VALUES (%s, %s, 'block', %s, 0, 1440)""",
+               (org_id, staff_id, kind, on_date, start_minute, end_minute, source, note)
+           VALUES (%s, %s, 'block', %s, 0, 1440, 'staff', 'Semester')""",
         (org_id, staff_ids[2], next_monday + timedelta(days=2)),
+    )
+
+    # Two "Kan extra" exceptions (dated wishes, issue #40) inside the seeded
+    # two-week window so the phone's date picker can reach them: one whole-day
+    # entered by the worker, one time-ranged entered by the manager — exercising
+    # both provenance badges ("Inlagt av chefen" on the phone, "Ifyllt av
+    # personalen" in StaffDetail).
+    this_monday = next_monday - timedelta(days=7)
+    cur.execute(
+        """INSERT INTO availability_interval
+               (org_id, staff_id, kind, on_date, start_minute, end_minute, source, note)
+           VALUES (%s, %s, 'wish', %s, 0, 1440, 'staff', 'Kan hoppa in om det behövs')""",
+        (org_id, staff_ids[4], this_monday + timedelta(days=4)),
+    )
+    cur.execute(
+        """INSERT INTO availability_interval
+               (org_id, staff_id, kind, on_date, start_minute, end_minute, source)
+           VALUES (%s, %s, 'wish', %s, %s, %s, 'manager')""",
+        (org_id, staff_ids[7], next_monday + timedelta(days=3), 16 * 60, 22 * 60),
     )
     return staff_ids, sunday_blocked
 

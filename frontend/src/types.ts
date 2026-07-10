@@ -7,10 +7,17 @@ export interface Staff {
   max_hours_per_week: number | null
   share_token: string | null
   archived: boolean
+  desired_shifts_per_week: number | null
+  availability_note: string | null
 }
 
 export interface RecurringInterval {
+  // Additive metadata the server emits (issue #40); the PUT only needs the
+  // three load-bearing fields, so toRows keeps stripping to them.
   id?: string
+  kind?: 'wish' | 'block'
+  source?: 'staff' | 'manager' | null
+  note?: string | null
   weekday: number
   start_minute: number
   end_minute: number
@@ -21,6 +28,9 @@ export interface ExceptionInterval {
   on_date: string
   start_minute: number
   end_minute: number
+  kind: 'wish' | 'block'
+  note: string | null
+  source: 'staff' | 'manager' | null
 }
 
 export interface AvailabilityDocument {
