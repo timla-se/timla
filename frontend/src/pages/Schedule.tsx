@@ -446,8 +446,11 @@ export default function Schedule() {
             >
               <ChevronLeft size={16} strokeWidth={1.9} className="text-ink-soft" />
             </button>
-            <span className="whitespace-nowrap text-15 font-bold">
-              {label.week} <span className="font-semibold text-warm-sand">· {label.range}</span>
+            {/* min-w-55 fits the widest label ("Vecka 14 · 30 mars–5 april
+                2027" measures 217px) so the arrows never shift while paging
+                (#66). */}
+            <span className="inline-flex min-w-55 justify-center whitespace-nowrap text-15 font-bold">
+              {label.week}&nbsp;<span className="font-semibold text-warm-sand">· {label.range}</span>
             </span>
             <button
               aria-label="Nästa vecka"
