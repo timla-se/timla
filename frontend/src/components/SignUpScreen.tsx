@@ -19,7 +19,7 @@ export default function SignUpScreen() {
         <Flex
           direction="column"
           justify="between"
-          className="hidden w-100 shrink-0 bg-ink px-10.5 py-11.5 md:flex"
+          className="hidden w-100 shrink-0 bg-ink px-10.5 py-11.5 lg:flex"
         >
           <Lockup variant="cream" className="h-7.5 w-auto" />
           <div>
@@ -32,8 +32,10 @@ export default function SignUpScreen() {
           </div>
         </Flex>
         {/* Fixed footprint mirrors SignInScreen: Clerk's steps differ in
-            height, and without a reserved size the whole card jumps (#54). */}
-        <Flex align="center" justify="center" className="min-h-144 w-120 max-w-full shrink-0 bg-white">
+            height, and without a reserved size the whole card jumps (#54).
+            The panel may shrink below w-120 (and the brand panel waits for
+            lg:) so the 880px pair never clips on 768–880px viewports. */}
+        <Flex align="center" justify="center" className="min-h-144 w-120 min-w-0 max-w-full bg-white">
           <SignUp routing="hash" signInUrl="/sign-in" appearance={clerkAuthAppearance} />
         </Flex>
       </Flex>
