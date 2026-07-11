@@ -151,10 +151,16 @@ def _sweep_day(day_needs, proposals, staff_rows, org_rules, availability, assign
         run_end = next((p for p in after_t if p >= day_end or missing(p) == 0), day_end)
         block_end = next((p for p in after_t if p >= day_end or _needed(day_needs, p) == 0), day_end)
         first_seg_end = after_t[0]
+        # The shortest shift the greedy may emit here: MIN_SHIFT_MINUTES,
+        # clamped to the need block when the demand itself is shorter. A
+        # candidate must be legal for this whole span — accepting whoever
+        # only fits the first sub-segment (e.g. until their block starts)
+        # would emit confetti shifts below the documented minimum.
+        min_end = min(t + timedelta(minutes=MIN_SHIFT_MINUTES), block_end)
 
         candidates = [
             sid for sid in staff_rows
-            if _legal(sid, t, first_seg_end, staff_rows[sid], org_rules,
+            if _legal(sid, t, min_end, staff_rows[sid], org_rules,
                       blocks_by_staff.get(sid, []), assigned_saved, proposals, tz)
         ]
         if not candidates:
@@ -169,14 +175,16 @@ def _sweep_day(day_needs, proposals, staff_rows, org_rules, availability, assign
             assigned_saved, proposals, tz, period))
         target_end = min(max(run_end, t + timedelta(minutes=MIN_SHIFT_MINUTES)), block_end)
         # Extend across contiguous need while the candidate stays legal:
-        # longer is monotonically harder, so take the longest legal end.
-        end_options = sorted({p for p in after_t if p <= target_end} | {target_end}, reverse=True)
+        # longer is monotonically harder, so take the longest legal end at
+        # or above the minimum length (min_end itself is already verified).
+        end_options = sorted({p for p in after_t if min_end <= p <= target_end}
+                             | {target_end, min_end}, reverse=True)
         for end in end_options:
-            if end > first_seg_end and not _legal(
+            if end > min_end and not _legal(
                     best, t, end, staff_rows[best], org_rules,
                     blocks_by_staff.get(best, []), assigned_saved, proposals, tz):
                 continue
-            proposals.append({'staff_id': best, 'starts_at': t, 'ends_at': max(end, first_seg_end)})
+            proposals.append({'staff_id': best, 'starts_at': t, 'ends_at': end})
             break
 
 

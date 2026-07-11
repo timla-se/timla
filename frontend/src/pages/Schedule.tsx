@@ -339,9 +339,12 @@ export default function Schedule() {
   const label = formatWeekLabel(period)
   const pubState = publishState(days.map((d) => d.isoDate), publications)
   // The issue's contract fills the DRAFT week; a published (or partially
-  // published) week still works but only after an explicit confirm.
+  // published) week still works but only after an explicit confirm. Until
+  // the publications query has resolved, pubState derives from its []
+  // default and would read every week as draft — an unknown publish state
+  // must go through the confirm dialog too, never bypass the gate.
   const runAutoSchedule = () => {
-    if (pubState.kind === 'draft') autoSchedule.mutate()
+    if (publicationLoaded && pubState.kind === 'draft') autoSchedule.mutate()
     else setConfirmAuto(true)
   }
   const scheduledStaff = new Set(shifts.map((s) => s.staff_id).filter(Boolean)).size
@@ -678,8 +681,10 @@ export default function Schedule() {
         <ConfirmModal
           open
           onOpenChange={(o) => { if (!o) setConfirmAuto(false) }}
-          title="Auto-schemalägga en publicerad vecka?"
-          description="Veckan är redan publicerad — nya pass blir ändringar sedan publiceringen tills du publicerar igen."
+          title={publicationLoaded ? 'Auto-schemalägga en publicerad vecka?' : 'Auto-schemalägga veckan?'}
+          description={publicationLoaded
+            ? 'Veckan är redan publicerad — nya pass blir ändringar sedan publiceringen tills du publicerar igen.'
+            : 'Publiceringsstatusen har inte kunnat läsas ännu — om veckan är publicerad blir nya pass ändringar sedan publiceringen.'}
           confirmText="Schemalägg" cancelText="Avbryt"
           onConfirm={() => { setConfirmAuto(false); autoSchedule.mutate() }}
         />

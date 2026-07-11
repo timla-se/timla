@@ -205,6 +205,25 @@ def test_partial_hour_needs_clamp_to_the_block(client, make_staff):
     }]
 
 
+def test_never_emits_shifts_below_minimum_length(client, make_staff):
+    # Regression (PR #53 review): the only candidate is legal just for the
+    # first 30 minutes (their block starts 10:30 mid-run). The greedy must
+    # NOT emit a 30-minute confetti shift below the 120-minute minimum —
+    # the block stays honestly uncovered instead.
+    staff = make_staff('Halvtimmes-Hanna')
+    client.put(f"/data/availability/{staff['id']}", json={
+        'blocks': [{'weekday': 1, 'start_minute': 630, 'end_minute': 1440}], 'wishes': []})
+    put_needs(client, [{'weekday': 1, 'start_minute': 600, 'end_minute': 840, 'headcount': 1}])
+    body = suggest(client)
+    assert body['shifts'] == []
+    assert body['uncovered'] == [{
+        'date': MONDAY,
+        'starts_at': f'{MONDAY}T08:00:00+00:00',
+        'ends_at': f'{MONDAY}T12:00:00+00:00',
+        'missing': 1,
+    }]
+
+
 def test_uncovered_recomputed_from_surviving_set():
     # Pure unit check of the post-filter contract: uncovered is derived from
     # whatever proposals SURVIVE, never from the pre-drop set.
