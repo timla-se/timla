@@ -1,0 +1,13 @@
+# Keep secrets and junk out of the Docker build context. The Dockerfile only
+# COPYs what it needs, but the context should not ship .env files to the
+# daemon at all — and a smaller context uploads faster.
+.git
+.env*
+data/
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+frontend/dist/
+agent-docs/
+*.tsbuildinfo

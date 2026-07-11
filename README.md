@@ -1,7 +1,7 @@
 # Timla
 
-> **Status: idea stage — nothing usable yet.** This repo is the starting
-> point for development; expect everything to change. The first milestone
+> **Status: early stage — staff scheduling MVP under active development.**
+> Expect things to change. The first milestone
 > ([MVP](https://github.com/timla-se/timla/milestone/1)) covers only the
 > staff-scheduling (work schedule) module — booking modules come later.
 
@@ -45,6 +45,25 @@ DATABASE_URL=postgresql://timla:timla@localhost:5433/timla \
 .venv/bin/pytest app
 npm run lint && npm run typecheck:frontend && npm run build:frontend
 ```
+
+## Self-hosting
+
+A production instance runs from [`docker-compose.prod.yml`](docker-compose.prod.yml)
+(gunicorn app + Postgres). Auth is the one hosted dependency: manager
+sign-in goes through a [Clerk](https://clerk.com) application you create —
+everything else lives in your own Postgres.
+
+```bash
+git clone https://github.com/timla-se/timla.git && cd timla
+cp .env.prod.example .env.prod   # fill in secrets + Clerk key first
+docker compose --env-file .env.prod -f docker-compose.prod.yml build
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d postgres
+docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm timla alembic upgrade head
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d timla
+```
+
+Full guide — reverse proxy/TLS, config reference, upgrades, backups:
+[docs/deployment.md](docs/deployment.md).
 
 ## License
 
