@@ -1,12 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
-import { UserButton, useClerk } from '@clerk/react'
-import { DropdownMenu } from '@radix-ui/themes'
+import { UserButton } from '@clerk/react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@swedev/ui'
 import {
-  BarChart3, Bell, CalendarDays, CalendarRange, ChevronDown, ClipboardList,
-  LayoutGrid, LogOut, Package, Search, Settings, Users,
+  BarChart3, Bell, CalendarDays, CalendarRange, ClipboardList,
+  LayoutGrid, Package, Search, Settings, Users,
 } from 'lucide-react'
 
 import { getOrg, listStaff } from '../api'
@@ -122,7 +121,6 @@ const SEARCH_PAGES = new Set(['Personal', 'Arbetsschema'])
 
 export function Layout() {
   const location = useLocation()
-  const { signOut } = useClerk()
   const [query, setQuery] = useState('')
   // The search state is shell-global; a query typed on one page must not
   // silently keep filtering the next one.
@@ -149,28 +147,19 @@ export function Layout() {
           </nav>
           <div className="mt-auto flex flex-col gap-1">
             <NavItem to="/installningar" label="Inställningar" icon={Settings} />
-            {/* The chevron promises a menu, so it gets one — "Logga ut" is a
-                deliberate menu item instead of a native confirm (#60). Future
-                items (org switch, profile) slot in here. */}
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger>
-                <button className="mt-2.5 flex cursor-pointer items-center gap-3 rounded-xl border-0 bg-ink-raised p-2.5 text-left">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-10 bg-ok text-xs font-extrabold tracking-wide text-white">
-                    {org ? initials(orgName) : '–'}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="overflow-hidden text-ellipsis whitespace-nowrap text-13 font-bold text-white">{orgName}</div>
-                    <Mono className="text-11 text-sidebar-faint">Verksamhet</Mono>
-                  </div>
-                  <ChevronDown size={15} strokeWidth={1.9} className="ml-auto shrink-0 text-sidebar-faint" />
-                </button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content align="start" className="min-w-55">
-                <DropdownMenu.Item onSelect={() => void signOut()}>
-                  <LogOut size={15} strokeWidth={1.9} /> Logga ut
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+            {/* Plain display, deliberately no chevron/menu: account actions
+                (sign out, manage account) live in the topbar UserButton, the
+                app's single account menu (#64). The chip becomes interactive
+                again when org switching exists. */}
+            <div className="mt-2.5 flex items-center gap-3 rounded-xl bg-ink-raised p-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-10 bg-ok text-xs font-extrabold tracking-wide text-white">
+                {org ? initials(orgName) : '–'}
+              </div>
+              <div className="min-w-0">
+                <div className="overflow-hidden text-ellipsis whitespace-nowrap text-13 font-bold text-white">{orgName}</div>
+                <Mono className="text-11 text-sidebar-faint">Verksamhet</Mono>
+              </div>
+            </div>
           </div>
         </aside>
 

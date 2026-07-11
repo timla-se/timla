@@ -3,6 +3,7 @@ import { StrictMode, useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider, useAuth } from '@clerk/react'
+import { svSE } from '@clerk/localizations'
 import { Theme } from '@radix-ui/themes'
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 
@@ -59,8 +60,10 @@ function AuthedRoot() {
   if (!publishableKey) {
     throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY (frontend/.env.local for dev, or the Docker build arg)')
   }
+  // svSE: Clerk's UserButton menu + account modal are user-facing chrome
+  // and must speak Swedish like the rest of the app (#64).
   return (
-    <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/">
+    <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/" localization={svSE}>
       <QueryClientProvider client={queryClient}>
         <Theme {...themeProps}>
           <BrowserRouter>
