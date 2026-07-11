@@ -8,22 +8,26 @@ def register(app):
     from routes.action_staff import bp as action_staff_bp
     from routes.compute_conflicts import bp as conflicts_bp
     from routes.compute_labor_cost import bp as labor_cost_bp
+    from routes.compute_suggest import bp as suggest_bp
     from routes.data_availability import bp as availability_bp
     from routes.data_org import bp as org_bp
     from routes.data_publications import bp as publications_bp
     from routes.data_rules import bp as rules_bp
     from routes.data_shifts import bp as shifts_bp
     from routes.data_staff import bp as staff_bp
+    from routes.data_staffing_needs import bp as staffing_needs_bp
     from routes.svar import bp as svar_bp
 
     app.register_blueprint(org_bp)
     app.register_blueprint(staff_bp)
     app.register_blueprint(availability_bp)
     app.register_blueprint(shifts_bp)
+    app.register_blueprint(staffing_needs_bp)
     app.register_blueprint(rules_bp)
     app.register_blueprint(publications_bp)
     app.register_blueprint(conflicts_bp)
     app.register_blueprint(labor_cost_bp)
+    app.register_blueprint(suggest_bp)
     app.register_blueprint(action_publish_bp)
     app.register_blueprint(action_staff_bp)
     app.register_blueprint(svar_bp)

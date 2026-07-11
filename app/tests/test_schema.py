@@ -20,7 +20,8 @@ def _db_available():
 
 pytestmark = pytest.mark.skipif(not _db_available(), reason='no database reachable at DATABASE_URL')
 
-TABLES = ['organization', 'org_rule', 'staff', 'shift', 'availability_interval', 'publication']
+TABLES = ['organization', 'org_rule', 'staff', 'shift', 'availability_interval', 'publication',
+          'staffing_need']
 
 
 @pytest.fixture
@@ -160,6 +161,68 @@ def test_dated_block_is_allowed(db, org_id, staff_id):
             (org_id, staff_id),
         )
         assert cur.fetchone()[0] is not None
+
+
+def _insert_need(cur, org_id, *, weekday=None, on_date=None, start=0, end=1440, headcount=1):
+    cur.execute(
+        """INSERT INTO staffing_need (org_id, weekday, on_date, start_minute, end_minute, headcount)
+           VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
+        (org_id, weekday, on_date, start, end, headcount),
+    )
+    return cur.fetchone()[0]
+
+
+def test_staffing_need_accepts_recurring_and_dated_rows(db, org_id):
+    with db.cursor() as cur:
+        assert _insert_need(cur, org_id, weekday=1, start=600, end=720, headcount=2) is not None
+        assert _insert_need(cur, org_id, on_date='2026-12-24', headcount=0) is not None
+
+
+def test_staffing_need_rejects_recurring_zero_headcount(db, org_id):
+    # headcount 0 is the dated "closed that day" sentinel only.
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            _insert_need(cur, org_id, weekday=1, headcount=0)
+
+
+def test_staffing_need_rejects_partial_day_zero(db, org_id):
+    # A zero row must span the whole day — a partial zero interval is
+    # meaningless (closed time is simply not covered by any row).
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            _insert_need(cur, org_id, on_date='2026-12-24', start=600, end=720, headcount=0)
+
+
+def test_staffing_need_rejects_both_weekday_and_date(db, org_id):
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            _insert_need(cur, org_id, weekday=1, on_date='2026-12-24')
+
+
+def test_staffing_need_rejects_neither_weekday_nor_date(db, org_id):
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            _insert_need(cur, org_id)
+
+
+def test_staffing_need_rejects_non_positive_span(db, org_id):
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            _insert_need(cur, org_id, weekday=1, start=720, end=720)
+
+
+def test_staffing_need_rejects_headcount_above_cap(db, org_id):
+    with pytest.raises(psycopg.errors.CheckViolation):
+        with db.cursor() as cur:
+            _insert_need(cur, org_id, weekday=1, headcount=201)
+
+
+def test_staffing_need_cascades_with_org(db, org_id):
+    with db.cursor() as cur:
+        need_id = _insert_need(cur, org_id, weekday=1)
+        cur.execute('DELETE FROM organization WHERE id = %s', (org_id,))
+        cur.execute('SELECT count(*) FROM staffing_need WHERE id = %s', (need_id,))
+        assert cur.fetchone()[0] == 0
 
 
 def _insert_publication(cur, org_id, start, end):

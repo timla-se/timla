@@ -7,6 +7,8 @@ Creates (idempotently — a rerun wipes and recreates the demo org):
 - 10 staff with share tokens, wishes and hard blocks (issue #40 fields
   exercised: provenance stamps, "Kan extra" exceptions with notes,
   desired shifts/week and an availability note)
+- a recurring staffing-needs curve (issue #11) with luckor versus the
+  seeded shifts, plus a dated "closed" exception on next week's Wednesday
 - the current ISO week fully scheduled and published
 - next week scheduled as a draft
 
@@ -50,6 +52,17 @@ STAFF = [
 LUNCH = (11 * 60, 14 * 60)      # 3 people every day
 EVENING = (17 * 60, 21 * 60)    # 1 person every day
 SATURDAY_CLOSE = (18 * 60, 26 * 60)  # overnight: Sat 18:00 → Sun 02:00
+
+# Staffing needs (issue #11): a recurring weekly demand step curve.
+# Mon–Fri 10–12: 1, 12–16: 2, 16–18: 1; Sat 10–16: 2; Sun closed (no rows).
+# Deliberately NOT identical to the seeded shifts, so the heat strip shows
+# real luckor for "Auto-schemalägg" to fill.
+NEEDS = (
+    [(wd, 10 * 60, 12 * 60, 1) for wd in (1, 2, 3, 4, 5)]
+    + [(wd, 12 * 60, 16 * 60, 2) for wd in (1, 2, 3, 4, 5)]
+    + [(wd, 16 * 60, 18 * 60, 1) for wd in (1, 2, 3, 4, 5)]
+    + [(6, 10 * 60, 16 * 60, 2)]
+)
 
 
 def seed_org(cur):
@@ -148,6 +161,23 @@ def seed_staff(cur, org_id):
     return staff_ids, sunday_blocked
 
 
+def seed_needs(cur, org_id, next_monday):
+    """The recurring demand curve plus one dated full-day closed sentinel
+    (headcount 0) on the draft week's Wednesday — demoing the day-level
+    override rule. Idempotent via the org wipe in seed_org."""
+    for weekday, start_min, end_min, headcount in NEEDS:
+        cur.execute(
+            """INSERT INTO staffing_need (org_id, weekday, start_minute, end_minute, headcount)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (org_id, weekday, start_min, end_min, headcount),
+        )
+    cur.execute(
+        """INSERT INTO staffing_need (org_id, on_date, start_minute, end_minute, headcount)
+           VALUES (%s, %s, 0, 1440, 0)""",
+        (org_id, next_monday + timedelta(days=2)),
+    )
+
+
 def seed_week(cur, org_id, staff_ids, sunday_ok, monday):
     """Schedule one week: 3 on lunch + 1 on evening daily, Saturday close overnight.
 
@@ -211,6 +241,7 @@ def main():
             org_id = seed_org(cur)
             seed_user_binding(cur, org_id)
             staff_ids, sunday_blocked = seed_staff(cur, org_id)
+            seed_needs(cur, org_id, monday + timedelta(days=7))
             sunday_ok = [s for s in staff_ids if s not in sunday_blocked]
             published_shifts = seed_week(cur, org_id, staff_ids, sunday_ok, monday)
             publish_week(cur, org_id, this_week, published_shifts)

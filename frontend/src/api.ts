@@ -1,6 +1,7 @@
 import type {
   AvailabilityDocument, ConflictItem, ConflictResult, ExceptionInterval,
-  LaborCostReport, Org, Publication, Rules, Shift, ShiftWriteResult, Staff,
+  LaborCostReport, NeedsExpansion, Org, Publication, Rules, Shift,
+  ShiftWriteResult, Staff, SuggestResult,
 } from './types'
 
 // Registered once by main.tsx's ClerkBridge; every request awaits this for
@@ -124,6 +125,21 @@ export const updateOrg = (payload: { name?: string; timezone?: string }) =>
 /** period: ISO week like '2026-W28' */
 export const listShifts = (period: string) =>
   request<Shift[]>('GET', `/data/shifts?period=${encodeURIComponent(period)}`)
+
+/** from/to: inclusive ISO dates. The schedule fetches [monday−1, sunday] so a
+ * previous-Sunday overnight shift's tail counts into Monday coverage (#11). */
+export const listShiftsRange = (from: string, to: string) =>
+  request<Shift[]>('GET', `/data/shifts?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
+
+/** The week's demand curve expanded to UTC intervals (issue #11). */
+export const getStaffingNeeds = (period: string) =>
+  request<NeedsExpansion>('GET', `/data/staffing-needs?period=${encodeURIComponent(period)}`)
+
+/** Pure greedy suggestion for one ISO week (issue #11). The caller applies
+ * the shifts through createShift so server-side enforcement re-runs per
+ * write — a stale suggestion can never save a hard conflict. */
+export const suggestSchedule = (period: string) =>
+  request<SuggestResult>('POST', '/compute/suggest-schedule', { period })
 
 export interface ShiftPayload {
   staff_id?: string | null
