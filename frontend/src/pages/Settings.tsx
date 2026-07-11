@@ -178,7 +178,7 @@ function RulesCard({ rules }: { rules: Rules }) {
     e.preventDefault()
     if (pristine || mutation.isPending) return
     const problem = validateRule(maxHours, 'Max timmar/vecka')
-      ?? validateRule(minRest, 'Min vila mellan pass')
+      ?? validateRule(minRest, 'Minsta vila mellan pass')
     setClientError(problem)
     if (problem) return
     // PUT is a full replace — always send both fields.
@@ -193,7 +193,7 @@ function RulesCard({ rules }: { rules: Rules }) {
       <form onSubmit={handleSubmit}>
         <Flex direction="column" gap="4">
           <div className="flex gap-3.5">
-            <label className="min-w-0 flex-1">
+            <label className="flex min-w-0 flex-1 flex-col justify-end">
               <FieldLabel>Max timmar/vecka</FieldLabel>
               <TextField.Root
                 value={maxHours}
@@ -202,8 +202,10 @@ function RulesCard({ rules }: { rules: Rules }) {
                 inputMode="decimal"
               />
             </label>
-            <label className="min-w-0 flex-1">
-              <FieldLabel>Min vila mellan pass, timmar</FieldLabel>
+            <label className="flex min-w-0 flex-1 flex-col justify-end">
+              {/* "Minsta", not "Min" — the manager reads this, and the
+                  possessive reading is actively wrong (#61). */}
+              <FieldLabel>Minsta vila mellan pass (timmar)</FieldLabel>
               <TextField.Root
                 value={minRest}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setMinRest(e.target.value)}

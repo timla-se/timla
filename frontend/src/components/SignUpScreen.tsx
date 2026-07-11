@@ -31,7 +31,9 @@ export default function SignUpScreen() {
             </p>
           </div>
         </Flex>
-        <Flex align="center" justify="center" className="shrink-0 bg-white">
+        {/* Fixed footprint mirrors SignInScreen: Clerk's steps differ in
+            height, and without a reserved size the whole card jumps (#54). */}
+        <Flex align="center" justify="center" className="min-h-144 w-120 max-w-full shrink-0 bg-white">
           <SignUp routing="hash" signInUrl="/sign-in" appearance={clerkAuthAppearance} />
         </Flex>
       </Flex>

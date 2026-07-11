@@ -114,13 +114,15 @@ function MaxHoursField({ form, set }: {
   form: FormState
   set: (field: keyof FormState) => (e: ChangeEvent<HTMLInputElement>) => void
 }) {
+  // justify-end keeps the two inputs on a shared baseline even when one
+  // label wraps to more lines than the other (#57).
   return (
     <div className="mb-5.5 flex gap-3.5">
-      <label className="min-w-0 flex-1">
+      <label className="flex min-w-0 flex-1 flex-col justify-end">
         <FieldLabel>Max timmar/vecka (tomt = ingen egen gräns)</FieldLabel>
         <TextField.Root value={form.maxHours} onChange={set('maxHours')} placeholder="t.ex. 30" inputMode="decimal" />
       </label>
-      <label className="min-w-0 flex-1">
+      <label className="flex min-w-0 flex-1 flex-col justify-end">
         <FieldLabel>Timlön (kr/h, tomt = ej angiven)</FieldLabel>
         <TextField.Root value={form.hourlyWage} onChange={set('hourlyWage')} placeholder="t.ex. 173,50" inputMode="decimal" />
       </label>
