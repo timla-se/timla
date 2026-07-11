@@ -1,0 +1,69 @@
+# Production compose file — self-contained, does NOT layer on the dev
+# docker-compose.yml (which stays dev-only: --reload, source mounts, dev
+# credentials). Keep the two files in sync by eye when service shapes change.
+#
+# Run with an explicit env file and file flag — never bare `docker compose`:
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+#
+# Full clone-to-running guide: docs/deployment.md
+
+# Explicit project name so this stack never collides with the dev compose
+# project (which uses the directory-derived name). Without it, prod commands
+# run from the same directory would recreate dev containers and vice versa.
+name: timla-prod
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: timla
+      POSTGRES_DB: timla
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}
+    # No host port mapping: the app reaches postgres on the compose network.
+    # Use `docker compose ... exec postgres psql -U timla` for admin access.
+    volumes:
+      # Named volume (not a bind mount) so git operations in the checkout can
+      # never touch the database. PG18+ expects the mount at
+      # /var/lib/postgresql, with data under a version-specific subdir.
+      # A volume is persistence, not a backup — see docs/deployment.md.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U timla -d timla"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  timla:
+    build:
+      context: .
+      args:
+        # Vite inlines VITE_* into the frontend bundle at image build time —
+        # same single key as the backend runtime env below, so the two halves
+        # can never verify against different Clerk applications.
+        - VITE_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:?set CLERK_PUBLISHABLE_KEY in .env.prod}
+    ports:
+      # Loopback by default: TLS termination is a reverse proxy's job, and
+      # ProxyFix trusts exactly one X-Forwarded-* hop. Overriding TIMLA_BIND
+      # to a non-loopback address without network-level restrictions enables
+      # IP spoofing and rate-limit bypass — see docs/deployment.md.
+      - "${TIMLA_BIND:-127.0.0.1:8899}:8899"
+    environment:
+      - TIMLA_ENV=prod
+      - DATABASE_URL=postgresql://timla:${POSTGRES_PASSWORD}@postgres:5432/timla
+      - SECRET_KEY=${SECRET_KEY:?set SECRET_KEY in .env.prod}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:?set CLERK_PUBLISHABLE_KEY in .env.prod}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # The slim image has no curl; use the stdlib. /api/health proves
+      # liveness (process up, env sane), not database correctness.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8899/api/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  pgdata:

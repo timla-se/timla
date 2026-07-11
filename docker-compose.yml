@@ -1,3 +1,6 @@
+# Dev compose — --reload, source mounts, dev credentials, loopback ports.
+# Production deployments use docker-compose.prod.yml (see docs/deployment.md);
+# keep service shapes in sync between the two files when editing.
 services:
   postgres:
     image: postgres:18-alpine
