@@ -44,8 +44,12 @@ flow works — no real email, no secrets, automatable in the browser:
 1. **Test account** (already registered): `dev+clerk_test@timla.se` /
    password `timla-dev-testkonto-42`. Any `…+clerk_test@…` address works for
    new accounts; the email-verification step always accepts code **424242**
-   in dev instances. Clerk's Turnstile bot check passes with a single click
-   on "Verify you are human" in a real (non-headless) browser.
+   in dev instances — as does the **client-trust check** ("You're signing in
+   from a new device"), which appears when signing in from a fresh browser
+   context (e.g. chrome-devtools' `isolatedContext`, useful precisely because
+   its clean cookie state exercises that flow). Clerk's Turnstile bot check
+   passes with a single click on "Verify you are human" in a real
+   (non-headless) browser.
 2. **Sign in** at `/sign-in` (email + password + Continue). If a Turnstile
    checkbox appears, click it.
 3. **Bind the account to the seeded org** (seeding wipes and recreates the
@@ -63,6 +67,14 @@ flow works — no real email, no secrets, automatable in the browser:
    account — that env var is for the developer's own account binding.)
 4. Now `/staff`, `/staff/:id`, `/schema/:week` and the modals render with
    real seeded data. The public `/svar/:token` page needs none of this.
+
+The same recipe works against the **production compose stack**
+(`docs/deployment.md`) — it uses the same `pk_test_…` key, so the test
+account, code 424242 and first-org onboarding are all drivable in the
+browser there too. Remember migrate-before-serve: a bare `up -d` skips
+migrations and `/data/org` 500s (`relation "org_user" does not exist`) —
+run the quickstart's `alembic upgrade head` step first, and tear down with
+`down -v` afterwards.
 
 ## Gotchas
 
