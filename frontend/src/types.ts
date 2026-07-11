@@ -83,6 +83,37 @@ export interface Shift {
   note: string | null
 }
 
+/** One interval of the org's demand curve expanded to concrete UTC instants
+ * (issue #11). `source` says whether the day's curve came from the recurring
+ * pattern or was overridden by dated exception rows. headcount 0 appears only
+ * as a dated full-day "closed" sentinel. */
+export interface NeedsInterval {
+  date: string
+  starts_at: string
+  ends_at: string
+  headcount: number
+  source: 'recurring' | 'exception'
+}
+
+/** GET /data/staffing-needs?period=… `configured` is org-global (any needs
+ * rows at all), distinguishing "never configured" from "closed this week". */
+export interface NeedsExpansion {
+  from: string
+  to: string
+  configured: boolean
+  intervals: NeedsInterval[]
+}
+
+/** POST /compute/suggest-schedule (issue #11) — a best-effort greedy
+ * suggestion for one ISO week. `uncovered` reports residual gaps honestly;
+ * `warnings` are soft wish warnings from the conflict engine. */
+export interface SuggestResult {
+  period: string
+  shifts: { staff_id: string; starts_at: string; ends_at: string }[]
+  uncovered: { date: string; starts_at: string; ends_at: string; missing: number }[]
+  warnings: ConflictItem[]
+}
+
 /** One publication overlapping the requested range (issue #10). `from`/`to`
  * are inclusive local dates; `diverged` means the live shifts no longer match
  * what staff see for this publication. */

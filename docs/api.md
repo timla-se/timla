@@ -71,6 +71,16 @@ wall-clock minutes in the org timezone, `0 <= start_minute < end_minute <=
 
 Archived staff cannot be assigned shifts (400 `archived_staff`).
 
+**Open shifts are utannonserade pass (issue #11):** `staff_id: null`
+means a *posted* slot someone can take, not "här saknas folk". Once an
+org has a staffing-needs curve, unmet need is derived as
+`staffed(t) < needed(t)` — the single source of truth for gaps — and
+open shifts neither count as staffed nor mark luckor. (Before any needs
+exist, the schedule UI keeps the interim reading where an open shift
+marks the gap.) Coverage itself is a **frontend derivation**, not an
+object: the schedule fetches the week's needs expansion alongside the
+shifts and compares the two step functions at exact minute boundaries.
+
 **Conflict enforcement:** POST and PATCH run the conflict engine. Hard
 conflicts reject the write with **409** `conflict` (body includes
 `conflicts` and `warnings`); `?force=true` overrides — the manager has
@@ -81,6 +91,39 @@ skips enforcement — it introduces no new conflict, and a force-created
 shift must stay editable. Check+write is serialized per staff member
 (advisory lock), so concurrent saves can't slip a double booking past
 the check.
+
+## Staffing needs
+
+The org's demand curve (issue #11): how many people are needed when, as
+a step curve per day. Org-level — no `staff_id`. Stored exactly like
+availability: **recurring** rows (`weekday: 1-7`) plus **dated** rows
+(`on_date`), in wall-clock minutes in the org timezone (DST-safe),
+`0 <= start_minute < end_minute <= 1440`, `headcount` 0–200.
+
+Two rules differ from availability:
+
+- **Dated rows are a day-level OVERRIDE, not additive.** If a date has
+  any dated rows, they replace the recurring pattern entirely for that
+  date ("julafton: 0 hela dagen" must not stack on the normal curve).
+  Deleting the last dated row for a date restores the recurring curve —
+  the rule reads live rows, no extra state.
+- **`headcount: 0` is the dated full-day "closed that day" sentinel
+  only.** Recurring rows must have positive headcount, and a zero row
+  must span 0–1440 (a partial zero interval is meaningless — closed
+  time is simply not covered by any row). Both are DB CHECKs and route
+  validations.
+
+Overlapping intervals within one weekday (PUT payload) or one date
+(against existing dated rows) are rejected 400 — overlap has no meaning
+for a step curve.
+
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/data/staffing-needs` | The document: `{recurring, exceptions}`; each row `{id, start_minute, end_minute, headcount}` plus `weekday` or `on_date`. |
+| GET | `/data/staffing-needs?period=…` | Read-only expansion: `{from, to, configured, intervals: [{date, starts_at, ends_at, headcount, source: recurring \| exception}]}`. `configured` is true iff the org has **any** needs rows at all (not just in the window) — it distinguishes "never configured" from "configured but closed/empty this week". Zero-headcount sentinels are emitted so clients can tell "closed by exception" from "no data". |
+| PUT | `/data/staffing-needs` | `{recurring: [{weekday, start_minute, end_minute, headcount}]}` replaces the whole recurring pattern atomically (`[]` clears it). Never touches dated exceptions. |
+| POST | `/data/staffing-needs/exceptions` | `{on_date, start_minute?=0, end_minute?=1440, headcount}` → 201. `headcount: 0` only as a full-day row. |
+| DELETE | `/data/staffing-needs/exceptions/:id` | |
 
 ## /compute/conflicts
 
@@ -102,6 +145,43 @@ ends_at}]}` (max 500) → `{conflicts, warnings}`. Pure — never writes.
   warning by itself.
 - Each item carries `shift_index` (payload position), `shift_id`,
   `staff_id`, `type`, `message` and type-specific details.
+
+## /compute/suggest-schedule
+
+`POST /compute/suggest-schedule` with `{period: "2026-W28"}` — **one ISO
+week only**, no `from`/`to` ranges in v0 (unknown fields → 400
+`unknown_field`, malformed week → 400 `invalid_period`). Pure — never
+writes; the client applies suggestions through the normal enforced
+`POST /data/shifts` path, so even a suggestion gone stale between
+compute and apply cannot save a hard conflict.
+
+Response:
+
+```json
+{
+  "period": "2026-W28",
+  "shifts": [{"staff_id", "starts_at", "ends_at"}],
+  "uncovered": [{"date", "starts_at", "ends_at", "missing"}],
+  "warnings": [ /* soft outside_wishes items from the conflict engine */ ]
+}
+```
+
+- **Best-effort greedy v0.** Hard constraints (blocks, double booking,
+  effective max hours, min rest) are absolute; wishes are soft
+  preferences the ranking maximizes (then: furthest below
+  `desired_shifts_per_week`, fewest assigned hours in the week, and
+  `staff_id` as the final stable tiebreak — output is deterministic).
+  It may leave genuinely-coverable gaps a human could solve by
+  reshuffling; those are reported honestly in `uncovered`
+  (constant-`missing` segments), never papered over with open shifts.
+- Residual need = needs − saved **assigned** shifts; open shifts cover
+  no one. Suggested shifts have a 120-minute minimum length, clamped to
+  the need block when the demand itself is shorter.
+- Belt and braces: the final set is validated with the full conflict
+  engine; any hard-conflicted shift is dropped, the remainder
+  revalidated iteratively, and `uncovered` recomputed from the
+  surviving set — the zero-hard-conflicts contract holds even if the
+  greedy misjudged.
 
 ## /compute/labor-cost
 

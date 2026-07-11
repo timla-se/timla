@@ -1,21 +1,22 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { Flex, Spinner } from '@radix-ui/themes'
-import { Button, Callout } from '@swedev/ui'
+import { Button, Callout, ConfirmModal } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarPlus, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 
-import { ApiError, getOrg, getPublications, listShifts, listStaff, publishSchedule } from '../api'
+import { ApiError, createShift, getOrg, getPublications, getStaffingNeeds, listShiftsRange, listStaff, publishSchedule, suggestSchedule } from '../api'
 import { EmptyState } from '../components/EmptyState'
 import { useTopbarSearch } from '../components/Layout'
 import { Mono } from '../components/Mono'
 import { ShiftModal, type ShiftModalInitial } from '../components/ShiftModal'
 import { addWeeks, formatDayDate, formatIsoDate, formatWeekLabel, minutesToTime, parseWeekPeriod, wallClock } from '../time'
-import type { Publication, Shift } from '../types'
+import type { NeedsExpansion, Publication, Shift } from '../types'
 
-/** Read-only Arbetsschema week view (issue #8), per
+/** Arbetsschema week view (issue #8), per
  * design/Timla App - Arbetsschema Strandkiosken.dc.html. Editing is #9,
- * publishing #10, auto-scheduling #11. */
+ * publishing #10; coverage reads the staffing-needs curve and
+ * "Auto-schemalägg" fills it (#11). */
 
 const WEEKDAY_LABELS = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag']
 
@@ -136,11 +137,88 @@ export function publishState(isoDates: string[], pubs: Publication[]): PublishSt
   return { kind: 'published', publishedAt }
 }
 
-function hourSpan(days: Day[]): { firstHour: number; lastHour: number } {
-  const all = days.flatMap((d) => d.shifts)
-  if (all.length === 0) return { firstHour: 8, lastHour: 20 }
-  let first = Math.floor(Math.min(...all.map((s) => s.startMinute)) / 60)
-  let last = Math.ceil(Math.max(...all.map((s) => s.endMinute)) / 60)
+/** One positive-headcount segment of a day's demand curve, in day-local
+ * wall-clock minutes (issue #11). */
+export interface NeedSeg {
+  start: number
+  end: number
+  headcount: number
+}
+
+/** Positive-headcount need segments per local date. The headcount-0 "closed"
+ * sentinel contributes nothing to needed(t) — closed time is neutral. */
+export function needsByDate(needs: NeedsExpansion | undefined, tz: string): Map<string, NeedSeg[]> {
+  const map = new Map<string, NeedSeg[]>()
+  for (const n of needs?.intervals ?? []) {
+    if (n.headcount <= 0) continue
+    const start = wallClock(n.starts_at, tz)
+    const end = wallClock(n.ends_at, tz)
+    const seg = {
+      start: start.minuteOfDay,
+      // A stored need never crosses midnight; end minute 1440 shows up as
+      // next-day 00:00 after the UTC round-trip.
+      end: end.isoDate !== start.isoDate ? 1440 : end.minuteOfDay,
+      headcount: n.headcount,
+    }
+    map.set(start.isoDate, [...(map.get(start.isoDate) ?? []), seg])
+  }
+  return map
+}
+
+/** The worst point of staffed(t) − needed(t) inside [cellStart, cellEnd),
+ * evaluated at the exact event boundaries (shifts and needs both start at
+ * arbitrary minutes — "any overlap counts as the whole hour" would falsely
+ * mark covered). Null when the cell has no positive demand: neutral time,
+ * never "covered". */
+export function worstPoint(
+  staffed: { start: number; end: number }[],
+  needs: NeedSeg[],
+  cellStart: number,
+  cellEnd: number,
+): { minute: number; staffed: number; needed: number } | null {
+  const points = new Set<number>([cellStart])
+  for (const seg of [...staffed, ...needs]) {
+    if (seg.start > cellStart && seg.start < cellEnd) points.add(seg.start)
+    if (seg.end > cellStart && seg.end < cellEnd) points.add(seg.end)
+  }
+  let worst: { minute: number; staffed: number; needed: number } | null = null
+  for (const t of [...points].sort((a, b) => a - b)) {
+    const needed = needs.reduce((sum, n) => sum + (n.start <= t && t < n.end ? n.headcount : 0), 0)
+    if (needed === 0) continue
+    const have = staffed.filter((s) => s.start <= t && t < s.end).length
+    if (worst === null || have - needed < worst.staffed - worst.needed) {
+      worst = { minute: t, staffed: have, needed }
+    }
+  }
+  return worst
+}
+
+/** Merged "Öppet 10–20" label from a day's positive-need segments; disjoint
+ * windows list out ("Öppet 10–12, 14–18") rather than faking a span. */
+export function openLabel(segs: NeedSeg[]): string | null {
+  if (segs.length === 0) return null
+  const merged: { start: number; end: number }[] = []
+  for (const s of [...segs].sort((a, b) => a.start - b.start || a.end - b.end)) {
+    const last = merged[merged.length - 1]
+    if (last && s.start <= last.end) last.end = Math.max(last.end, s.end)
+    else merged.push({ start: s.start, end: s.end })
+  }
+  const compact = (m: number) => (m % 60 === 0 ? String(m === 1440 ? 24 : m / 60) : minutesToTime(m))
+  return `Öppet ${merged.map((w) => `${compact(w.start)}–${compact(w.end)}`).join(', ')}`
+}
+
+function hourSpan(days: Day[], needs: Map<string, NeedSeg[]>): { firstHour: number; lastHour: number } {
+  // The axis derives from shifts AND positive-headcount needs: an empty week
+  // with unmet needs must still show where the demand is.
+  const starts: number[] = []
+  const ends: number[] = []
+  for (const d of days) {
+    for (const s of d.shifts) { starts.push(s.startMinute); ends.push(s.endMinute) }
+    for (const n of needs.get(d.isoDate) ?? []) { starts.push(n.start); ends.push(n.end) }
+  }
+  if (starts.length === 0) return { firstHour: 8, lastHour: 20 }
+  let first = Math.floor(Math.min(...starts) / 60)
+  let last = Math.ceil(Math.max(...ends) / 60)
   while (last - first < 8) {
     if (first > 0) first--
     if (last - first < 8 && last < 24) last++
@@ -167,11 +245,28 @@ export default function Schedule() {
     queryKey: ['staff', true],
     queryFn: () => listStaff(true),
   })
-  const { data: shifts = [], isLoading, isError: shiftsError } = useQuery({
+  // Fetch [monday−1, sunday]: /data/shifts filters on where a shift STARTS,
+  // so Monday coverage would otherwise miss a previous-Sunday overnight tail.
+  const { data: fetchedShifts = [], isLoading: shiftsLoading, isError: shiftsError } = useQuery({
     queryKey: ['shifts', period],
-    queryFn: () => listShifts(period),
+    queryFn: () => {
+      const monday = parseWeekPeriod(period)
+      const iso = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const prev = new Date(monday)
+      prev.setDate(monday.getDate() - 1)
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      return listShiftsRange(iso(prev), iso(sunday))
+    },
     enabled: validPeriod,
   })
+  const { data: needs, isLoading: needsLoading, isError: needsError } = useQuery({
+    queryKey: ['staffing-needs', period],
+    queryFn: () => getStaffingNeeds(period),
+    enabled: validPeriod,
+  })
+  const isLoading = shiftsLoading || needsLoading
   const { data: publications = [], isSuccess: publicationLoaded } = useQuery({
     queryKey: ['publication', period],
     queryFn: () => getPublications(period),
@@ -184,12 +279,56 @@ export default function Schedule() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['publication'] }),
   })
 
+  // "Auto-schemalägg" (#11): pure suggest, then each shift through the normal
+  // enforced create path — server-side enforcement re-runs per write, so a
+  // suggestion gone stale between compute and apply can't save a hard
+  // conflict. Per-shift failures don't abort the batch; the week is refetched
+  // afterwards so remaining luckor derive from PERSISTED shifts (the suggest
+  // response is not authoritative after a partial failure).
+  const [confirmAuto, setConfirmAuto] = useState(false)
+  const autoSchedule = useMutation({
+    mutationFn: async () => {
+      const result = await suggestSchedule(period)
+      let created = 0
+      let rejected = 0
+      for (const s of result.shifts) {
+        try {
+          await createShift({ staff_id: s.staff_id, starts_at: s.starts_at, ends_at: s.ends_at })
+          created++
+        } catch {
+          rejected++
+        }
+      }
+      return { created, rejected, suggested: result.shifts.length }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      void queryClient.invalidateQueries({ queryKey: ['publication'] })
+    },
+  })
+
   const tz = org?.timezone ?? 'Europe/Stockholm'
+  // The week's own shifts (header counts, empty state); the extra monday−1
+  // fetch day only feeds buildDays' carry-in.
+  const shifts = useMemo(() => {
+    if (!validPeriod) return []
+    const monday = parseWeekPeriod(period)
+    const mondayIso = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`
+    return fetchedShifts.filter((s) => wallClock(s.starts_at, tz).isoDate >= mondayIso)
+  }, [fetchedShifts, tz, period, validPeriod])
   const days = useMemo(
-    () => (validPeriod ? buildDays(shifts, tz, period) : []),
-    [shifts, tz, period, validPeriod],
+    () => (validPeriod ? buildDays(fetchedShifts, tz, period) : []),
+    [fetchedShifts, tz, period, validPeriod],
   )
-  const { firstHour, lastHour } = useMemo(() => hourSpan(days), [days])
+  // Fallback gate (issue #11): with a needs curve configured, needs are the
+  // only lucka source; without one (or when the fetch failed) the strip keeps
+  // the interim semantics where an open shift marks the gap.
+  const configured = !needsError && (needs?.configured ?? false)
+  const needSegs = useMemo(() => needsByDate(needs, tz), [needs, tz])
+  const { firstHour, lastHour } = useMemo(
+    () => hourSpan(days, configured ? needSegs : new Map()),
+    [days, configured, needSegs],
+  )
   const hours = Array.from({ length: lastHour - firstHour }, (_, i) => firstHour + i)
   const spanMinutes = (lastHour - firstHour) * 60
 
@@ -199,6 +338,15 @@ export default function Schedule() {
   const today = wallClock(new Date().toISOString(), tz).isoDate
   const label = formatWeekLabel(period)
   const pubState = publishState(days.map((d) => d.isoDate), publications)
+  // The issue's contract fills the DRAFT week; a published (or partially
+  // published) week still works but only after an explicit confirm. Until
+  // the publications query has resolved, pubState derives from its []
+  // default and would read every week as draft — an unknown publish state
+  // must go through the confirm dialog too, never bypass the gate.
+  const runAutoSchedule = () => {
+    if (publicationLoaded && pubState.kind === 'draft') autoSchedule.mutate()
+    else setConfirmAuto(true)
+  }
   const scheduledStaff = new Set(shifts.map((s) => s.staff_id).filter(Boolean)).size
   const needle = query.trim().toLowerCase()
 
@@ -217,8 +365,27 @@ export default function Schedule() {
     return Math.max(firstHour, Math.min(lastHour - 1, Math.floor(minute / 60))) * 60
   }
 
-  const coverageFor = (day: Day, hour: number): { color: string; count: number } => {
+  const coverageFor = (day: Day, hour: number): { color: string; title: string } => {
     const hourStart = hour * 60, hourEnd = hourStart + 60
+    const hourLabel = `${String(hour).padStart(2, '0')}:00`
+    if (configured) {
+      // Real coverage (issue #11): staffed(t) − needed(t) at exact minute
+      // boundaries; the cell is a lucka if it dips below the need anywhere
+      // inside the hour. Open shifts (utannonserade pass) cover no one and
+      // no longer force the gap color. needed = 0 time stays neutral.
+      const staffed = [
+        ...day.shifts
+          .filter((s) => s.shift.staff_id)
+          .map((s) => ({ start: s.startMinute, end: s.endMinute })),
+        ...day.carryIn.filter((c) => c.staffId).map((c) => ({ start: 0, end: c.endMinute })),
+      ]
+      const worst = worstPoint(staffed, needSegs.get(day.isoDate) ?? [], hourStart, hourEnd)
+      if (worst === null) return { color: COVERAGE.outside, title: `${hourLabel} · inget behov` }
+      return {
+        color: worst.staffed < worst.needed ? COVERAGE.gap : COVERAGE.ok,
+        title: `${minutesToTime(worst.minute)} · ${worst.staffed} av ${worst.needed}`,
+      }
+    }
     const overlaps = (s: DayShift) => s.startMinute < hourEnd && s.endMinute > hourStart
     // carryIn covers [0, endMinute) of this day, wrapped from a shift that
     // started the previous day — it overlaps whenever the hour starts
@@ -227,19 +394,20 @@ export default function Schedule() {
     const count =
       day.shifts.filter((s) => s.shift.staff_id && overlaps(s)).length +
       day.carryIn.filter((c) => c.staffId && carryOverlaps(c)).length
-    // Lucka = an open shift (staff_id null: an explicit, unstaffed need)
+    const title = `${hourLabel} · ${count} i tjänst`
+    // Interim semantics (pre-needs): lucka = an open shift (staff_id null)
     // covers the hour. It takes priority over count-based tiers so a
     // manager-created gap is never masked by unrelated coverage. Hours
-    // with no shifts at all are neutral — without opening-hours data we
-    // can't know they're gaps rather than closed.
+    // with no shifts at all are neutral — without a needs curve we can't
+    // know they're gaps rather than closed.
     const openHere =
       day.shifts.some((s) => !s.shift.staff_id && overlaps(s)) ||
       day.carryIn.some((c) => !c.staffId && carryOverlaps(c))
-    if (openHere) return { color: COVERAGE.gap, count }
-    if (count >= 3) return { color: COVERAGE.ok, count }
-    if (count === 2) return { color: COVERAGE.two, count }
-    if (count === 1) return { color: COVERAGE.one, count }
-    return { color: COVERAGE.outside, count }
+    if (openHere) return { color: COVERAGE.gap, title }
+    if (count >= 3) return { color: COVERAGE.ok, title }
+    if (count === 2) return { color: COVERAGE.two, title }
+    if (count === 1) return { color: COVERAGE.one, title }
+    return { color: COVERAGE.outside, title }
   }
 
   if (isLoading) return <Flex justify="center" py="8"><Spinner /></Flex>
@@ -247,7 +415,22 @@ export default function Schedule() {
     return <Callout semantic="error" title="Kunde inte hämta schemat" message="Kontrollera anslutningen och ladda om sidan." />
   }
 
-  const empty = shifts.length === 0
+  // An empty week with unmet needs is the most important gap state — the
+  // grid must render (all-lucka strip) rather than hide behind EmptyState.
+  const weekHasNeeds = configured && days.some((d) => (needSegs.get(d.isoDate) ?? []).length > 0)
+  const empty = shifts.length === 0 && !weekHasNeeds
+
+  // Remaining luckor derive from the REFETCHED persisted shifts on screen,
+  // not from the suggest response (stale after any per-shift rejection).
+  const gapHours = configured
+    ? days.reduce((sum, d) => sum + hours.filter((h) => coverageFor(d, h).color === COVERAGE.gap).length, 0)
+    : 0
+  const autoSummary = (r: { created: number; rejected: number; suggested: number }): string => {
+    const luckor = gapHours === 0 ? 'inga luckor kvar' : gapHours === 1 ? '1 lucka kvar' : `${gapHours} luckor kvar`
+    if (r.suggested === 0) return `Inga nya pass att föreslå · ${luckor}`
+    const rejected = r.rejected > 0 ? `, ${r.rejected} avvisades` : ''
+    return `${r.created} pass skapade${rejected} · ${luckor}`
+  }
 
   return (
     <div>
@@ -278,7 +461,6 @@ export default function Schedule() {
             {shifts.length} pass · {scheduledStaff} i personal
           </Mono>
         </div>
-        {/* "Auto-schemalägg" (#11) lands here too */}
         <div className="mb-0.5 flex items-center gap-3">
           {publicationLoaded && (
             pubState.kind === 'published' ? (
@@ -298,6 +480,11 @@ export default function Schedule() {
               </span>
             )
           )}
+          <Button
+            semantic="action" variant="surface" icon={Sparkles}
+            text={autoSchedule.isPending ? 'Schemalägger…' : 'Auto-schemalägg'}
+            disabled={autoSchedule.isPending} onClick={runAutoSchedule}
+          />
           <Button
             semantic="action" variant="surface" text={publish.isPending ? 'Publicerar…' : 'Publicera schema'}
             disabled={publish.isPending} onClick={() => publish.mutate()}
@@ -321,10 +508,47 @@ export default function Schedule() {
         </div>
       )}
 
-      {/* Legend (Erfarenhet group joins via #27) */}
+      {autoSchedule.isError && (
+        <div className="mb-3.5">
+          <Callout
+            semantic="error"
+            title="Kunde inte auto-schemalägga"
+            message="Något gick fel — försök igen."
+          />
+        </div>
+      )}
+      {autoSchedule.isSuccess && (
+        <div className="mb-3.5">
+          <Callout
+            semantic={autoSchedule.data.rejected > 0 ? 'warning' : 'success'}
+            title="Auto-schemaläggning klar"
+            message={autoSummary(autoSchedule.data)}
+            dismissible
+            onDismiss={() => autoSchedule.reset()}
+          />
+        </div>
+      )}
+
+      {needsError && (
+        <div className="mb-3.5">
+          <Callout
+            semantic="warning"
+            title="Kunde inte hämta bemanningsbehovet"
+            message="Luckor visas tills vidare utifrån öppna pass."
+          />
+        </div>
+      )}
+
+      {/* Legend (Erfarenhet group joins via #27). With a needs curve the
+          strip means staffed vs needed; without one, the interim
+          count-per-hour tiers. Öppet pass = utannonserat pass (#11) — it
+          covers no one. */}
       <div className="mb-3.5 flex flex-wrap items-center gap-4 text-13">
         <Mono className="text-10 uppercase text-warm-caption">Täckning / h</Mono>
-        {([['Lucka', COVERAGE.gap, 'var(--color-stop-strong)'], ['1 (tunt)', COVERAGE.one, 'var(--color-wait-strong)'], ['2', COVERAGE.two, 'var(--color-ok-strong)'], ['3+ (ok)', COVERAGE.ok, 'var(--color-ok-strong)']] as const).map(([text, bg, fg]) => (
+        {(configured
+          ? ([['Lucka (under behov)', COVERAGE.gap, 'var(--color-stop-strong)'], ['Täckt', COVERAGE.ok, 'var(--color-ok-strong)']] as const)
+          : ([['Lucka', COVERAGE.gap, 'var(--color-stop-strong)'], ['1 (tunt)', COVERAGE.one, 'var(--color-wait-strong)'], ['2', COVERAGE.two, 'var(--color-ok-strong)'], ['3+ (ok)', COVERAGE.ok, 'var(--color-ok-strong)']] as const)
+        ).map(([text, bg, fg]) => (
           <span key={text} className="flex items-center gap-1.5" style={{ color: fg }}>
             <span className="h-2 w-4 rounded-xs" style={{ background: bg }} /> {text}
           </span>
@@ -378,6 +602,11 @@ export default function Schedule() {
                     <Mono className={`text-11 ${isToday ? 'text-wait-strong' : 'text-warm-sand'}`}>
                       {formatIsoDate(day.isoDate).replace(/^\S+ /, '')}
                     </Mono>
+                    {configured && openLabel(needSegs.get(day.isoDate) ?? []) && (
+                      <Mono className="mt-1 inline-block rounded-md bg-chip px-1.5 py-0.5 text-10 text-warm-gray">
+                        {openLabel(needSegs.get(day.isoDate) ?? [])}
+                      </Mono>
+                    )}
                   </div>
                   <div
                     className="relative cursor-pointer"
@@ -396,11 +625,11 @@ export default function Schedule() {
                       style={{ height: 7, gridTemplateColumns: `repeat(${hours.length}, 1fr)` }}
                     >
                       {hours.map((h) => {
-                        const { color, count } = coverageFor(day, h)
+                        const { color, title } = coverageFor(day, h)
                         return (
                           <span
                             key={h}
-                            title={`${String(h).padStart(2, '0')}:00 · ${count} i tjänst`}
+                            title={title}
                             className="rounded-xs"
                             style={{ background: color }}
                           />
@@ -446,6 +675,19 @@ export default function Schedule() {
             })}
           </div>
         </div>
+      )}
+
+      {confirmAuto && (
+        <ConfirmModal
+          open
+          onOpenChange={(o) => { if (!o) setConfirmAuto(false) }}
+          title={publicationLoaded ? 'Auto-schemalägga en publicerad vecka?' : 'Auto-schemalägga veckan?'}
+          description={publicationLoaded
+            ? 'Veckan är redan publicerad — nya pass blir ändringar sedan publiceringen tills du publicerar igen.'
+            : 'Publiceringsstatusen har inte kunnat läsas ännu — om veckan är publicerad blir nya pass ändringar sedan publiceringen.'}
+          confirmText="Schemalägg" cancelText="Avbryt"
+          onConfirm={() => { setConfirmAuto(false); autoSchedule.mutate() }}
+        />
       )}
 
       {modal && (
